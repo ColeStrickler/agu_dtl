@@ -55,6 +55,7 @@ private:
 	std::vector<DeclNode *> * myGlobals;
 };
 
+
 class ExpNode : public ASTNode{
 protected:
 	ExpNode(const Position * p) : ASTNode(p){ }
@@ -65,6 +66,69 @@ public:
 	//virtual void typeAnalysis(TypeAnalysis *) = 0;
 	//virtual Opd * flatten(Procedure * proc) = 0;
 };
+
+class LocNode : public ExpNode{
+public:
+	LocNode(const Position * p) : ExpNode(p) {} //, //mySymbol(nullptr){}
+	//void attachSymbol(SemSymbol * symbolIn);
+	//SemSymbol * getSymbol() { return mySymbol; }
+	//virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
+	//virtual void typeAnalysis(TypeAnalysis *) override = 0;
+	//virtual Opd * flatten(Procedure * proc) override = 0;
+	//private:
+	//SemSymbol * mySymbol;
+	private:
+};
+class StmtNode : public ASTNode{
+public:
+	StmtNode(const Position * p) : ASTNode(p){ }
+	//virtual void unparse(std::ostream& out, int indent) override = 0;
+	//virtual void typeAnalysis(TypeAnalysis *) = 0;
+	//virtual void to3AC(Procedure * proc) = 0;
+};
+
+
+
+class DeclNode : public StmtNode{
+public:
+	DeclNode(const Position * p) : StmtNode(p){ }
+	//void unparse(std::ostream& out, int indent) override =0;
+	//virtual std::string getName() = 0;
+	//virtual void typeAnalysis(TypeAnalysis *) override = 0;
+	//virtual void to3AC(IRProgram * prog) = 0;
+	//virtual void to3AC(Procedure * proc) override = 0;
+};
+
+
+class ConstDeclNode : public DeclNode {
+public:
+	ConstDeclNode(const Position* p, IDNode* id, ExpNode* assignval) : DeclNode(p), myID(id), myVal(assignval)
+	{
+
+	}
+	//void unparse(std::ostream& out, int indent) override;
+
+
+private:
+	IDNode* myID;
+	ExpNode* myVal;
+};
+
+class PostIncStmtNode : public StmtNode{
+public:
+	PostIncStmtNode(const Position * p, LocNode * inLoc)
+	: StmtNode(p), myLoc(inLoc){ }
+	//void unparse(std::ostream& out, int indent) override;
+	//virtual bool nameAnalysis(SymbolTable * symTab) override;
+	//virtual void typeAnalysis(TypeAnalysis *) override;
+	//virtual void to3AC(Procedure * prog) override;
+private:
+	LocNode * myLoc;
+};
+
+
+
+
 
 
 
@@ -79,18 +143,7 @@ public:
 
 
 
-class LocNode : public ExpNode{
-public:
-	LocNode(const Position * p) : ExpNode(p) {} //, //mySymbol(nullptr){}
-	//void attachSymbol(SemSymbol * symbolIn);
-	//SemSymbol * getSymbol() { return mySymbol; }
-	//virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
-	//virtual void typeAnalysis(TypeAnalysis *) override = 0;
-	//virtual Opd * flatten(Procedure * proc) override = 0;
-	//private:
-	//SemSymbol * mySymbol;
-	private:
-};
+
 
 class IDNode : public LocNode{
 public:
@@ -136,61 +189,43 @@ private:
 	const int myNum;
 };
 
+class BinaryExpNode : public ExpNode{
+public:
+	BinaryExpNode(const Position * p, ExpNode * lhs, ExpNode * rhs)
+	: ExpNode(p), myExp1(lhs), myExp2(rhs) { }
+	//bool nameAnalysis(SymbolTable * symTab) override;
+	//virtual void typeAnalysis(TypeAnalysis *) override = 0;
+	//virtual Opd * flatten(Procedure * prog) override = 0;
+protected:
+	ExpNode * myExp1;
+	ExpNode * myExp2;
+	//void binaryLogicTyping(TypeAnalysis * typing);
+	//void binaryEqTyping(TypeAnalysis * typing);
+	//void binaryRelTyping(TypeAnalysis * typing);
+	//void binaryMathTyping(TypeAnalysis * typing);
+};
+
+class PlusNode : public BinaryExpNode{
+public:
+	PlusNode(const Position * p, ExpNode * e1, ExpNode * e2)
+	: BinaryExpNode(p, e1, e2){ }
+	//void unparse(std::ostream& out, int indent) override;
+	//virtual void typeAnalysis(TypeAnalysis *) override;
+	//virtual Opd * flatten(Procedure * prog) override;
+};
+class TimesNode : public BinaryExpNode{
+public:
+	TimesNode(const Position * p, ExpNode * e1In, ExpNode * e2In)
+	: BinaryExpNode(p, e1In, e2In){ }
+	//void unparse(std::ostream& out, int indent) override;
+	//virtual void typeAnalysis(TypeAnalysis *) override;
+	//virtual Opd * flatten(Procedure * prog) override;
+};
+
 
 
 /*
 
-class StmtNode : public ASTNode{
-public:
-	StmtNode(const Position * p) : ASTNode(p){ }
-	virtual void unparse(std::ostream& out, int indent) override = 0;
-	virtual void typeAnalysis(TypeAnalysis *) = 0;
-	virtual void to3AC(Procedure * proc) = 0;
-};
-
-class DeclNode : public StmtNode{
-public:
-	DeclNode(const Position * p) : StmtNode(p){ }
-	void unparse(std::ostream& out, int indent) override =0;
-	virtual std::string getName() = 0;
-	virtual void typeAnalysis(TypeAnalysis *) override = 0;
-	virtual void to3AC(IRProgram * prog) = 0;
-	virtual void to3AC(Procedure * proc) override = 0;
-};
-
-class VarDeclNode : public DeclNode{
-public:
-	VarDeclNode(const Position * p, IDNode * inID,
-	TypeNode * inType, ExpNode * inInit)
-	: DeclNode(p), myID(inID), myType(inType), myInit(inInit){
-		if (myType == nullptr){
-			throw new InternalError("null typenode");
-		}
-	}
-	void unparse(std::ostream& out, int indent) override;
-	IDNode * ID(){ return myID; }
-	virtual std::string getName() override { 
-		return myID->getName(); 
-	}
-	virtual TypeNode * getTypeNode(){ return myType; }
-	bool nameAnalysis(SymbolTable * symTab) override;
-	void typeAnalysis(TypeAnalysis * typing) override;
-	virtual void to3AC(Procedure * proc) override;
-	virtual void to3AC(IRProgram * prog) override;
-private:
-	IDNode * myID;
-	TypeNode * myType;
-	ExpNode * myInit;
-};
-
-class FormalDeclNode : public VarDeclNode{
-public:
-	FormalDeclNode(const Position * p, IDNode * id, TypeNode * type)
-	: VarDeclNode(p, id, type, nullptr){ }
-	void unparse(std::ostream& out, int indent) override;
-	virtual void to3AC(Procedure * proc) override;
-	virtual void to3AC(IRProgram * prog) override;
-};
 
 class FnDeclNode : public DeclNode{
 public:
@@ -288,17 +323,7 @@ private:
 	LocNode * myLoc;
 };
 
-class PostIncStmtNode : public StmtNode{
-public:
-	PostIncStmtNode(const Position * p, LocNode * inLoc)
-	: StmtNode(p), myLoc(inLoc){ }
-	void unparse(std::ostream& out, int indent) override;
-	virtual bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual void to3AC(Procedure * prog) override;
-private:
-	LocNode * myLoc;
-};
+
 
 class IfStmtNode : public StmtNode{
 public:
@@ -374,30 +399,8 @@ private:
 	std::list<ExpNode *> * myArgs;
 };
 
-class BinaryExpNode : public ExpNode{
-public:
-	BinaryExpNode(const Position * p, ExpNode * lhs, ExpNode * rhs)
-	: ExpNode(p), myExp1(lhs), myExp2(rhs) { }
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override = 0;
-	virtual Opd * flatten(Procedure * prog) override = 0;
-protected:
-	ExpNode * myExp1;
-	ExpNode * myExp2;
-	void binaryLogicTyping(TypeAnalysis * typing);
-	void binaryEqTyping(TypeAnalysis * typing);
-	void binaryRelTyping(TypeAnalysis * typing);
-	void binaryMathTyping(TypeAnalysis * typing);
-};
 
-class PlusNode : public BinaryExpNode{
-public:
-	PlusNode(const Position * p, ExpNode * e1, ExpNode * e2)
-	: BinaryExpNode(p, e1, e2){ }
-	void unparse(std::ostream& out, int indent) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * prog) override;
-};
+
 
 class MinusNode : public BinaryExpNode{
 public:
@@ -408,14 +411,6 @@ public:
 	virtual Opd * flatten(Procedure * prog) override;
 };
 
-class TimesNode : public BinaryExpNode{
-public:
-	TimesNode(const Position * p, ExpNode * e1In, ExpNode * e2In)
-	: BinaryExpNode(p, e1In, e2In){ }
-	void unparse(std::ostream& out, int indent) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * prog) override;
-};
 
 class DivideNode : public BinaryExpNode{
 public:

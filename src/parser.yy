@@ -77,7 +77,10 @@
 
 
 %type <DTL::ExpNode*> factor
-
+%type <DTL::ExpNode*> term
+%type <DTL::ExpNode*> expr
+%type <DTL::StmtNode*> unarystmt
+%type <DTL::LocNode*> loc
 
 
 %%
@@ -85,29 +88,81 @@ program: constdecls forstatement {
     
 }
 constdecls: constdecls constdecl
+        {
+            // return vector of const decls
+        }
         | /* empty */ ;
-constdecl: INT ID ASSIGN INTLITERAL SEMICOL ;
-forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY forstatement RCURLY
-         | FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY outstatements RCURLY;
-outstatements : outstatements outstatement
-        | outstatement;
-outstatement : OUT ASSIGN expr SEMICOL;
-expr: expr CROSS term
-    | unaryexpr
-    | term ;
+constdecl: type loc ASSIGN INTLITERAL SEMICOL
+        {
 
-unaryexpr: ID POSTINC;
+        }
+forstatement: FOR LPAREN type loc ASSIGN INTLITERAL SEMICOL loc LESS factor SEMICOL unarystmt RPAREN LCURLY forstatement RCURLY
+        {
+
+        }
+        | FOR LPAREN type loc ASSIGN INTLITERAL SEMICOL loc LESS factor SEMICOL unarystmt RPAREN LCURLY outstatements RCURLY
+        {
+
+        }
+outstatements : outstatements outstatement
+        {
+
+        }
+        | outstatement
+        {
+
+        }
+outstatement : OUT ASSIGN expr SEMICOL
+            {
+
+            }
+
+type : INT // we may add other types?
+    {
+        // need to add type nodes
+    }
+expr: expr CROSS term
+    {
+        const Position * p = new Position($1->pos(), $3->pos());
+        $$ = new PlusNode(p, $1, $3);
+    }
+    | term
+    {
+        $$ = $1;
+    }
+
+unarystmt: loc POSTINC
+        {
+            const Position* p = new Position($1->pos(), $2->pos());
+            $$ = new PostIncStmtNode(p, $1);
+        }
+
+
+
 term: term STAR factor
-    | factor ;
+    {
+        const Position * p = new Position($1->pos(), $3->pos());
+        $$ = new TimesNode(p, $1, $3);
+    }
+    | factor 
+    {
+        $$ = $1;
+    }
 factor: INTLITERAL 
     {
         $$ = new IntLitNode($1->pos(), $1->num());
         printf("Intlitnode\n");
     }
-    | ID {
+    | loc 
+    {
+        $$ = $1;
+    }
+loc : ID 
+    {
         $$ = new IDNode($1->pos(), $1->value());
-        printf("IDNode %s\n", $1->value().c_str());
-    };
+    }
+
+
 %%
 
 

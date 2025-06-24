@@ -399,6 +399,8 @@ namespace DTL {
     /// An auxiliary type to compute the largest semantic type.
     union union_type
     {
+      // expr
+      // term
       // factor
       char dummy1[sizeof (DTL::ExpNode*)];
 
@@ -407,6 +409,12 @@ namespace DTL {
 
       // INTLITERAL
       char dummy3[sizeof (DTL::IntLitToken *)];
+
+      // loc
+      char dummy4[sizeof (DTL::LocNode*)];
+
+      // unarystmt
+      char dummy5[sizeof (DTL::StmtNode*)];
 
       // ASSIGN
       // INT
@@ -421,7 +429,7 @@ namespace DTL {
       // STAR
       // FOR
       // OUT
-      char dummy4[sizeof (DTL::Token *)];
+      char dummy6[sizeof (DTL::Token *)];
     };
 
     /// The size of the largest semantic type.
@@ -523,10 +531,12 @@ namespace DTL {
         S_forstatement = 22,                     // forstatement
         S_outstatements = 23,                    // outstatements
         S_outstatement = 24,                     // outstatement
-        S_expr = 25,                             // expr
-        S_unaryexpr = 26,                        // unaryexpr
-        S_term = 27,                             // term
-        S_factor = 28                            // factor
+        S_type = 25,                             // type
+        S_expr = 26,                             // expr
+        S_unarystmt = 27,                        // unarystmt
+        S_term = 28,                             // term
+        S_factor = 29,                           // factor
+        S_loc = 30                               // loc
       };
     };
 
@@ -561,6 +571,8 @@ namespace DTL {
       {
         switch (this->kind ())
     {
+      case symbol_kind::S_expr: // expr
+      case symbol_kind::S_term: // term
       case symbol_kind::S_factor: // factor
         value.move< DTL::ExpNode* > (std::move (that.value));
         break;
@@ -571,6 +583,14 @@ namespace DTL {
 
       case symbol_kind::S_INTLITERAL: // INTLITERAL
         value.move< DTL::IntLitToken * > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_loc: // loc
+        value.move< DTL::LocNode* > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_unarystmt: // unarystmt
+        value.move< DTL::StmtNode* > (std::move (that.value));
         break;
 
       case symbol_kind::S_ASSIGN: // ASSIGN
@@ -647,6 +667,30 @@ namespace DTL {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, DTL::LocNode*&& v)
+        : Base (t)
+        , value (std::move (v))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const DTL::LocNode*& v)
+        : Base (t)
+        , value (v)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, DTL::StmtNode*&& v)
+        : Base (t)
+        , value (std::move (v))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const DTL::StmtNode*& v)
+        : Base (t)
+        , value (v)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
       basic_symbol (typename Base::kind_type t, DTL::Token *&& v)
         : Base (t)
         , value (std::move (v))
@@ -682,6 +726,8 @@ namespace DTL {
         // Value type destructor.
 switch (yykind)
     {
+      case symbol_kind::S_expr: // expr
+      case symbol_kind::S_term: // term
       case symbol_kind::S_factor: // factor
         value.template destroy< DTL::ExpNode* > ();
         break;
@@ -692,6 +738,14 @@ switch (yykind)
 
       case symbol_kind::S_INTLITERAL: // INTLITERAL
         value.template destroy< DTL::IntLitToken * > ();
+        break;
+
+      case symbol_kind::S_loc: // loc
+        value.template destroy< DTL::LocNode* > ();
+        break;
+
+      case symbol_kind::S_unarystmt: // unarystmt
+        value.template destroy< DTL::StmtNode* > ();
         break;
 
       case symbol_kind::S_ASSIGN: // ASSIGN
@@ -1245,7 +1299,7 @@ switch (yykind)
 
 #if YYDEBUG
     // YYRLINE[YYN] -- Source line where rule number YYN was defined.
-    static const signed char yyrline_[];
+    static const unsigned char yyrline_[];
     /// Report on the debug stream that the rule \a r is going to be reduced.
     virtual void yy_reduce_print_ (int r) const;
     /// Print the state stack on the debug stream.
@@ -1472,8 +1526,8 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 43,     ///< Last index in yytable_.
-      yynnts_ = 11,  ///< Number of nonterminal symbols.
+      yylast_ = 37,     ///< Last index in yytable_.
+      yynnts_ = 13,  ///< Number of nonterminal symbols.
       yyfinal_ = 3 ///< Termination state number.
     };
 
@@ -1487,7 +1541,7 @@ switch (yykind)
 
 #line 5 "parser.yy"
 } // DTL
-#line 1491 "frontend.hh"
+#line 1545 "frontend.hh"
 
 
 
