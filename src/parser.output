@@ -1,0 +1,476 @@
+Grammar
+
+    0 $accept: program "end file"
+
+    1 program: constdecls forstatement
+
+    2 constdecls: constdecls constdecl
+    3           | ε
+
+    4 constdecl: INT ID ASSIGN INTLITERAL SEMICOL
+
+    5 forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY forstatement RCURLY
+    6             | FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY outstatements RCURLY
+
+    7 outstatements: outstatements outstatement
+    8              | outstatement
+
+    9 outstatement: OUT ASSIGN expr SEMICOL
+
+   10 expr: expr CROSS term
+   11     | unaryexpr
+   12     | term
+
+   13 unaryexpr: ID POSTINC
+
+   14 term: term STAR factor
+   15     | factor
+
+   16 factor: INTLITERAL
+   17       | ID
+
+
+Terminals, with rules where they appear
+
+    "end file" (0) 0
+    error (256)
+    ASSIGN <DTL::Token *> (258) 4 5 6 9
+    ID <DTL::IDToken *> (259) 4 5 6 13 17
+    INT <DTL::Token *> (260) 4 5 6
+    INTLITERAL <DTL::IntLitToken *> (261) 4 5 6 16
+    LCURLY <DTL::Token *> (262) 5 6
+    LESS <DTL::Token *> (263) 5 6
+    LPAREN <DTL::Token *> (264) 5 6
+    CROSS <DTL::Token *> (265) 10
+    POSTINC <DTL::Token *> (266) 13
+    RCURLY <DTL::Token *> (267) 5 6
+    RPAREN <DTL::Token *> (268) 5 6
+    SEMICOL <DTL::Token *> (269) 4 5 6 9
+    STAR <DTL::Token *> (270) 14
+    FOR <DTL::Token *> (271) 5 6
+    OUT <DTL::Token *> (272) 9
+
+
+Nonterminals, with rules where they appear
+
+    $accept (18)
+        on left: 0
+    program (19)
+        on left: 1
+        on right: 0
+    constdecls (20)
+        on left: 2 3
+        on right: 1 2
+    constdecl (21)
+        on left: 4
+        on right: 2
+    forstatement (22)
+        on left: 5 6
+        on right: 1 5
+    outstatements (23)
+        on left: 7 8
+        on right: 6 7
+    outstatement (24)
+        on left: 9
+        on right: 7 8
+    expr (25)
+        on left: 10 11 12
+        on right: 9 10
+    unaryexpr (26)
+        on left: 13
+        on right: 5 6 11
+    term (27)
+        on left: 14 15
+        on right: 10 12 14
+    factor <DTL::ExpNode*> (28)
+        on left: 16 17
+        on right: 5 6 14 15
+
+
+State 0
+
+    0 $accept: • program "end file"
+
+    $default  reduce using rule 3 (constdecls)
+
+    program     go to state 1
+    constdecls  go to state 2
+
+
+State 1
+
+    0 $accept: program • "end file"
+
+    "end file"  shift, and go to state 3
+
+
+State 2
+
+    1 program: constdecls • forstatement
+    2 constdecls: constdecls • constdecl
+
+    INT  shift, and go to state 4
+    FOR  shift, and go to state 5
+
+    constdecl     go to state 6
+    forstatement  go to state 7
+
+
+State 3
+
+    0 $accept: program "end file" •
+
+    $default  accept
+
+
+State 4
+
+    4 constdecl: INT • ID ASSIGN INTLITERAL SEMICOL
+
+    ID  shift, and go to state 8
+
+
+State 5
+
+    5 forstatement: FOR • LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY forstatement RCURLY
+    6             | FOR • LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY outstatements RCURLY
+
+    LPAREN  shift, and go to state 9
+
+
+State 6
+
+    2 constdecls: constdecls constdecl •
+
+    $default  reduce using rule 2 (constdecls)
+
+
+State 7
+
+    1 program: constdecls forstatement •
+
+    $default  reduce using rule 1 (program)
+
+
+State 8
+
+    4 constdecl: INT ID • ASSIGN INTLITERAL SEMICOL
+
+    ASSIGN  shift, and go to state 10
+
+
+State 9
+
+    5 forstatement: FOR LPAREN • INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY forstatement RCURLY
+    6             | FOR LPAREN • INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY outstatements RCURLY
+
+    INT  shift, and go to state 11
+
+
+State 10
+
+    4 constdecl: INT ID ASSIGN • INTLITERAL SEMICOL
+
+    INTLITERAL  shift, and go to state 12
+
+
+State 11
+
+    5 forstatement: FOR LPAREN INT • ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY forstatement RCURLY
+    6             | FOR LPAREN INT • ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY outstatements RCURLY
+
+    ID  shift, and go to state 13
+
+
+State 12
+
+    4 constdecl: INT ID ASSIGN INTLITERAL • SEMICOL
+
+    SEMICOL  shift, and go to state 14
+
+
+State 13
+
+    5 forstatement: FOR LPAREN INT ID • ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY forstatement RCURLY
+    6             | FOR LPAREN INT ID • ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY outstatements RCURLY
+
+    ASSIGN  shift, and go to state 15
+
+
+State 14
+
+    4 constdecl: INT ID ASSIGN INTLITERAL SEMICOL •
+
+    $default  reduce using rule 4 (constdecl)
+
+
+State 15
+
+    5 forstatement: FOR LPAREN INT ID ASSIGN • INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY forstatement RCURLY
+    6             | FOR LPAREN INT ID ASSIGN • INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY outstatements RCURLY
+
+    INTLITERAL  shift, and go to state 16
+
+
+State 16
+
+    5 forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL • SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY forstatement RCURLY
+    6             | FOR LPAREN INT ID ASSIGN INTLITERAL • SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY outstatements RCURLY
+
+    SEMICOL  shift, and go to state 17
+
+
+State 17
+
+    5 forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL • ID LESS factor SEMICOL unaryexpr RPAREN LCURLY forstatement RCURLY
+    6             | FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL • ID LESS factor SEMICOL unaryexpr RPAREN LCURLY outstatements RCURLY
+
+    ID  shift, and go to state 18
+
+
+State 18
+
+    5 forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID • LESS factor SEMICOL unaryexpr RPAREN LCURLY forstatement RCURLY
+    6             | FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID • LESS factor SEMICOL unaryexpr RPAREN LCURLY outstatements RCURLY
+
+    LESS  shift, and go to state 19
+
+
+State 19
+
+    5 forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS • factor SEMICOL unaryexpr RPAREN LCURLY forstatement RCURLY
+    6             | FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS • factor SEMICOL unaryexpr RPAREN LCURLY outstatements RCURLY
+
+    ID          shift, and go to state 20
+    INTLITERAL  shift, and go to state 21
+
+    factor  go to state 22
+
+
+State 20
+
+   17 factor: ID •
+
+    $default  reduce using rule 17 (factor)
+
+
+State 21
+
+   16 factor: INTLITERAL •
+
+    $default  reduce using rule 16 (factor)
+
+
+State 22
+
+    5 forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor • SEMICOL unaryexpr RPAREN LCURLY forstatement RCURLY
+    6             | FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor • SEMICOL unaryexpr RPAREN LCURLY outstatements RCURLY
+
+    SEMICOL  shift, and go to state 23
+
+
+State 23
+
+    5 forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL • unaryexpr RPAREN LCURLY forstatement RCURLY
+    6             | FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL • unaryexpr RPAREN LCURLY outstatements RCURLY
+
+    ID  shift, and go to state 24
+
+    unaryexpr  go to state 25
+
+
+State 24
+
+   13 unaryexpr: ID • POSTINC
+
+    POSTINC  shift, and go to state 26
+
+
+State 25
+
+    5 forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr • RPAREN LCURLY forstatement RCURLY
+    6             | FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr • RPAREN LCURLY outstatements RCURLY
+
+    RPAREN  shift, and go to state 27
+
+
+State 26
+
+   13 unaryexpr: ID POSTINC •
+
+    $default  reduce using rule 13 (unaryexpr)
+
+
+State 27
+
+    5 forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN • LCURLY forstatement RCURLY
+    6             | FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN • LCURLY outstatements RCURLY
+
+    LCURLY  shift, and go to state 28
+
+
+State 28
+
+    5 forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY • forstatement RCURLY
+    6             | FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY • outstatements RCURLY
+
+    FOR  shift, and go to state 5
+    OUT  shift, and go to state 29
+
+    forstatement   go to state 30
+    outstatements  go to state 31
+    outstatement   go to state 32
+
+
+State 29
+
+    9 outstatement: OUT • ASSIGN expr SEMICOL
+
+    ASSIGN  shift, and go to state 33
+
+
+State 30
+
+    5 forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY forstatement • RCURLY
+
+    RCURLY  shift, and go to state 34
+
+
+State 31
+
+    6 forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY outstatements • RCURLY
+    7 outstatements: outstatements • outstatement
+
+    RCURLY  shift, and go to state 35
+    OUT     shift, and go to state 29
+
+    outstatement  go to state 36
+
+
+State 32
+
+    8 outstatements: outstatement •
+
+    $default  reduce using rule 8 (outstatements)
+
+
+State 33
+
+    9 outstatement: OUT ASSIGN • expr SEMICOL
+
+    ID          shift, and go to state 37
+    INTLITERAL  shift, and go to state 21
+
+    expr       go to state 38
+    unaryexpr  go to state 39
+    term       go to state 40
+    factor     go to state 41
+
+
+State 34
+
+    5 forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY forstatement RCURLY •
+
+    $default  reduce using rule 5 (forstatement)
+
+
+State 35
+
+    6 forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY outstatements RCURLY •
+
+    $default  reduce using rule 6 (forstatement)
+
+
+State 36
+
+    7 outstatements: outstatements outstatement •
+
+    $default  reduce using rule 7 (outstatements)
+
+
+State 37
+
+   13 unaryexpr: ID • POSTINC
+   17 factor: ID •
+
+    POSTINC  shift, and go to state 26
+
+    $default  reduce using rule 17 (factor)
+
+
+State 38
+
+    9 outstatement: OUT ASSIGN expr • SEMICOL
+   10 expr: expr • CROSS term
+
+    CROSS    shift, and go to state 42
+    SEMICOL  shift, and go to state 43
+
+
+State 39
+
+   11 expr: unaryexpr •
+
+    $default  reduce using rule 11 (expr)
+
+
+State 40
+
+   12 expr: term •
+   14 term: term • STAR factor
+
+    STAR  shift, and go to state 44
+
+    $default  reduce using rule 12 (expr)
+
+
+State 41
+
+   15 term: factor •
+
+    $default  reduce using rule 15 (term)
+
+
+State 42
+
+   10 expr: expr CROSS • term
+
+    ID          shift, and go to state 20
+    INTLITERAL  shift, and go to state 21
+
+    term    go to state 45
+    factor  go to state 41
+
+
+State 43
+
+    9 outstatement: OUT ASSIGN expr SEMICOL •
+
+    $default  reduce using rule 9 (outstatement)
+
+
+State 44
+
+   14 term: term STAR • factor
+
+    ID          shift, and go to state 20
+    INTLITERAL  shift, and go to state 21
+
+    factor  go to state 46
+
+
+State 45
+
+   10 expr: expr CROSS term •
+   14 term: term • STAR factor
+
+    STAR  shift, and go to state 44
+
+    $default  reduce using rule 10 (expr)
+
+
+State 46
+
+   14 term: term STAR factor •
+
+    $default  reduce using rule 14 (term)

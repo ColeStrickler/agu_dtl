@@ -62,6 +62,8 @@ int main()
 		std::cerr << "InternalError: " << e->msg() << std::endl;
 		return 1;
 	}
-    
+
+	
+    printf("Successfully parsed!\n");
     return 0;
 }

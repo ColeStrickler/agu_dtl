@@ -35,5 +35,8 @@ compiler: $(OBJ_SRCS)
 	$(CXX) $(FLAGS) -g -std=c++14 -o $@ $(OBJ_SRCS)
 	chmod a+x compiler
 
+run: compiler
+	./compiler
+
 clean:
 	rm -rf *.output *.o *.cc *.hh ac parser.dot parser.png

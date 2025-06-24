@@ -75,19 +75,39 @@
 %left CROSS
 %left STAR 
 
+
+%type <DTL::ExpNode*> factor
+
+
+
 %%
-program: constdecls forstatement;
+program: constdecls forstatement {
+    
+}
 constdecls: constdecls constdecl
         | /* empty */ ;
 constdecl: INT ID ASSIGN INTLITERAL SEMICOL ;
-forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL ID POSTINC RPAREN LCURLY forstatement RCURLY
-         | FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL ID POSTINC RPAREN LCURLY outstatement RCURLY;
+forstatement: FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY forstatement RCURLY
+         | FOR LPAREN INT ID ASSIGN INTLITERAL SEMICOL ID LESS factor SEMICOL unaryexpr RPAREN LCURLY outstatements RCURLY;
+outstatements : outstatements outstatement
+        | outstatement;
 outstatement : OUT ASSIGN expr SEMICOL;
 expr: expr CROSS term
+    | unaryexpr
     | term ;
+
+unaryexpr: ID POSTINC;
 term: term STAR factor
     | factor ;
-factor: INTLITERAL | ID;
+factor: INTLITERAL 
+    {
+        $$ = new IntLitNode($1->pos(), $1->num());
+        printf("Intlitnode\n");
+    }
+    | ID {
+        $$ = new IDNode($1->pos(), $1->value());
+        printf("IDNode %s\n", $1->value().c_str());
+    };
 %%
 
 
