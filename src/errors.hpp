@@ -11,6 +11,33 @@
 
 namespace DTL{
 
+
+
+/* This class is used to encapsulate error messages that the 
+   user of the compiler will see in cases where the spec wants 
+   a specific output format. */
+class Report{
+public:
+	static void fatal(
+		const Position * pos,
+		const char * msg
+	){
+		std::cerr << "FATAL " 
+		<< pos->span()
+		<< ": " 
+		<< msg  << std::endl;
+	}
+
+	static void fatal(
+		const Position * pos,
+		const std::string msg
+	){
+		fatal(pos,msg.c_str());
+	}
+};
+
+
+
 /* This class is used to denote a situation where the 
    compiler (or compiler-writer) made a mistake */
 class InternalError{
@@ -45,28 +72,26 @@ private:
 	const char * myMsg;
 };
 
-/* This class is used to encapsulate error messages that the 
-   user of the compiler will see in cases where the spec wants 
-   a specific output format. */
-class Report{
-public:
-	static void fatal(
-		const Position * pos,
-		const char * msg
-	){
-		std::cerr << "FATAL " 
-		<< pos->span()
-		<< ": " 
-		<< msg  << std::endl;
-	}
 
-	static void fatal(
-		const Position * pos,
-		const std::string msg
-	){
-		fatal(pos,msg.c_str());
-	}
+class NameErr{
+public:
+static bool undeclID(const Position * pos){
+	Report::fatal(pos, "Undeclared identifier");
+	return false;
+}
+static bool badVarType(const Position * pos){
+	Report::fatal(pos, "Invalid type in declaration");
+	return false;
+}
+static bool multiDecl(const Position * pos){
+	Report::fatal(pos, "Multiply declared identifier");
+	return false;
+}
 };
+
+
+
+
 
 }
 

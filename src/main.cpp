@@ -4,6 +4,7 @@
 #include "errors.hpp"
 #include "scanner.hpp"
 #include "frontend.hh"
+#include "name_analysis.hpp"
 
 static void writeTokenStream(const char * inPath, const char * outPath){
 	std::ifstream inStream(inPath);
@@ -48,7 +49,8 @@ static DTL::ProgramNode * parse(const char * inFile){
 	
 
 	int errCode = parser.parse();
-	if (errCode != 0){ return nullptr; }
+	
+	if (errCode != 0){ printf("parse() errCode: %d\n", errCode); return nullptr; }
 
 	return root;
 }
@@ -57,6 +59,10 @@ int main()
     try {
         writeTokenStream("./test.dtl", "./dtltokens.out");
         auto prog = parse("./test.dtl");
+		assert(prog != nullptr);
+		std::cout << prog->Check();
+
+		auto na = DTL::NameAnalysis::build(prog);
 
     } catch (DTL::InternalError * e){
 		std::cerr << "InternalError: " << e->msg() << std::endl;

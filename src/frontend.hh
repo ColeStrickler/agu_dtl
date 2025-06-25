@@ -404,17 +404,25 @@ namespace DTL {
       // factor
       char dummy1[sizeof (DTL::ExpNode*)];
 
-      // ID
-      char dummy2[sizeof (DTL::IDToken *)];
-
-      // INTLITERAL
-      char dummy3[sizeof (DTL::IntLitToken *)];
+      // forstatement
+      char dummy2[sizeof (DTL::ForStmtNode*)];
 
       // loc
-      char dummy4[sizeof (DTL::LocNode*)];
+      char dummy3[sizeof (DTL::IDNode*)];
 
+      // ID
+      char dummy4[sizeof (DTL::IDToken *)];
+
+      // INTLITERAL
+      char dummy5[sizeof (DTL::IntLitToken *)];
+
+      // program
+      char dummy6[sizeof (DTL::ProgramNode*)];
+
+      // constdecl
+      // outstatement
       // unarystmt
-      char dummy5[sizeof (DTL::StmtNode*)];
+      char dummy7[sizeof (DTL::StmtNode*)];
 
       // ASSIGN
       // INT
@@ -429,7 +437,14 @@ namespace DTL {
       // STAR
       // FOR
       // OUT
-      char dummy6[sizeof (DTL::Token *)];
+      char dummy8[sizeof (DTL::Token *)];
+
+      // type
+      char dummy9[sizeof (DTL::TypeNode*)];
+
+      // constdecls
+      // outstatements
+      char dummy10[sizeof (std::vector<DTL::StmtNode*>)];
     };
 
     /// The size of the largest semantic type.
@@ -577,6 +592,14 @@ namespace DTL {
         value.move< DTL::ExpNode* > (std::move (that.value));
         break;
 
+      case symbol_kind::S_forstatement: // forstatement
+        value.move< DTL::ForStmtNode* > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_loc: // loc
+        value.move< DTL::IDNode* > (std::move (that.value));
+        break;
+
       case symbol_kind::S_ID: // ID
         value.move< DTL::IDToken * > (std::move (that.value));
         break;
@@ -585,10 +608,12 @@ namespace DTL {
         value.move< DTL::IntLitToken * > (std::move (that.value));
         break;
 
-      case symbol_kind::S_loc: // loc
-        value.move< DTL::LocNode* > (std::move (that.value));
+      case symbol_kind::S_program: // program
+        value.move< DTL::ProgramNode* > (std::move (that.value));
         break;
 
+      case symbol_kind::S_constdecl: // constdecl
+      case symbol_kind::S_outstatement: // outstatement
       case symbol_kind::S_unarystmt: // unarystmt
         value.move< DTL::StmtNode* > (std::move (that.value));
         break;
@@ -607,6 +632,15 @@ namespace DTL {
       case symbol_kind::S_FOR: // FOR
       case symbol_kind::S_OUT: // OUT
         value.move< DTL::Token * > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_type: // type
+        value.move< DTL::TypeNode* > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_constdecls: // constdecls
+      case symbol_kind::S_outstatements: // outstatements
+        value.move< std::vector<DTL::StmtNode*> > (std::move (that.value));
         break;
 
       default:
@@ -643,6 +677,30 @@ namespace DTL {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, DTL::ForStmtNode*&& v)
+        : Base (t)
+        , value (std::move (v))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const DTL::ForStmtNode*& v)
+        : Base (t)
+        , value (v)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, DTL::IDNode*&& v)
+        : Base (t)
+        , value (std::move (v))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const DTL::IDNode*& v)
+        : Base (t)
+        , value (v)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
       basic_symbol (typename Base::kind_type t, DTL::IDToken *&& v)
         : Base (t)
         , value (std::move (v))
@@ -667,12 +725,12 @@ namespace DTL {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
-      basic_symbol (typename Base::kind_type t, DTL::LocNode*&& v)
+      basic_symbol (typename Base::kind_type t, DTL::ProgramNode*&& v)
         : Base (t)
         , value (std::move (v))
       {}
 #else
-      basic_symbol (typename Base::kind_type t, const DTL::LocNode*& v)
+      basic_symbol (typename Base::kind_type t, const DTL::ProgramNode*& v)
         : Base (t)
         , value (v)
       {}
@@ -697,6 +755,30 @@ namespace DTL {
       {}
 #else
       basic_symbol (typename Base::kind_type t, const DTL::Token *& v)
+        : Base (t)
+        , value (v)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, DTL::TypeNode*&& v)
+        : Base (t)
+        , value (std::move (v))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const DTL::TypeNode*& v)
+        : Base (t)
+        , value (v)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, std::vector<DTL::StmtNode*>&& v)
+        : Base (t)
+        , value (std::move (v))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const std::vector<DTL::StmtNode*>& v)
         : Base (t)
         , value (v)
       {}
@@ -732,6 +814,14 @@ switch (yykind)
         value.template destroy< DTL::ExpNode* > ();
         break;
 
+      case symbol_kind::S_forstatement: // forstatement
+        value.template destroy< DTL::ForStmtNode* > ();
+        break;
+
+      case symbol_kind::S_loc: // loc
+        value.template destroy< DTL::IDNode* > ();
+        break;
+
       case symbol_kind::S_ID: // ID
         value.template destroy< DTL::IDToken * > ();
         break;
@@ -740,10 +830,12 @@ switch (yykind)
         value.template destroy< DTL::IntLitToken * > ();
         break;
 
-      case symbol_kind::S_loc: // loc
-        value.template destroy< DTL::LocNode* > ();
+      case symbol_kind::S_program: // program
+        value.template destroy< DTL::ProgramNode* > ();
         break;
 
+      case symbol_kind::S_constdecl: // constdecl
+      case symbol_kind::S_outstatement: // outstatement
       case symbol_kind::S_unarystmt: // unarystmt
         value.template destroy< DTL::StmtNode* > ();
         break;
@@ -762,6 +854,15 @@ switch (yykind)
       case symbol_kind::S_FOR: // FOR
       case symbol_kind::S_OUT: // OUT
         value.template destroy< DTL::Token * > ();
+        break;
+
+      case symbol_kind::S_type: // type
+        value.template destroy< DTL::TypeNode* > ();
+        break;
+
+      case symbol_kind::S_constdecls: // constdecls
+      case symbol_kind::S_outstatements: // outstatements
+        value.template destroy< std::vector<DTL::StmtNode*> > ();
         break;
 
       default:
@@ -1526,7 +1627,7 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 37,     ///< Last index in yytable_.
+      yylast_ = 44,     ///< Last index in yytable_.
       yynnts_ = 13,  ///< Number of nonterminal symbols.
       yyfinal_ = 3 ///< Termination state number.
     };
@@ -1541,7 +1642,7 @@ switch (yykind)
 
 #line 5 "parser.yy"
 } // DTL
-#line 1545 "frontend.hh"
+#line 1646 "frontend.hh"
 
 
 

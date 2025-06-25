@@ -72,59 +72,95 @@
 %token  <DTL::Token *>       FOR
 %token  <DTL::Token *>       OUT
 
+%left LESS
 %left CROSS
 %left STAR 
 
-
+%type <DTL::ProgramNode*> program
 %type <DTL::ExpNode*> factor
 %type <DTL::ExpNode*> term
 %type <DTL::ExpNode*> expr
 %type <DTL::StmtNode*> unarystmt
-%type <DTL::LocNode*> loc
+%type <DTL::StmtNode*> constdecl
+%type <DTL::ForStmtNode*> forstatement
+%type <std::vector<DTL::StmtNode*>> constdecls
+%type <std::vector<DTL::StmtNode*>> outstatements
+%type <DTL::StmtNode*> outstatement
+%type <DTL::IDNode*> loc
+%type <DTL::TypeNode*> type
+
 
 
 %%
-program: constdecls forstatement {
-    
-}
+program: constdecls forstatement 
+        {
+            $1.push_back($2);
+            *root = new ProgramNode($1);
+            $$ = *root;
+        }
 constdecls: constdecls constdecl
         {
-            // return vector of const decls
+            $1.push_back($2);
+            $$ = $1;
         }
-        | /* empty */ ;
-constdecl: type loc ASSIGN INTLITERAL SEMICOL
+        | /* empty */ 
         {
+            auto ret = std::vector<DTL::StmtNode*>();
+            $$ = ret;
+        }
+constdecl: type loc ASSIGN expr SEMICOL
+        {
+            const Position * p = new Position($1->pos(), $5->pos());
+            $$ = new ConstDeclNode(p, $1, $2, $4);
+        }
+forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY forstatement RCURLY
+        {
+            const Position * p = new Position($1->pos(), $10->pos());
+            std::vector<StmtNode*> stmt_vec;
+            stmt_vec.push_back($9);
+            $$ = new ForStmtNode(p, $3, $4, $6, stmt_vec);
 
         }
-forstatement: FOR LPAREN type loc ASSIGN INTLITERAL SEMICOL loc LESS factor SEMICOL unarystmt RPAREN LCURLY forstatement RCURLY
+        | FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY outstatements RCURLY
         {
-
-        }
-        | FOR LPAREN type loc ASSIGN INTLITERAL SEMICOL loc LESS factor SEMICOL unarystmt RPAREN LCURLY outstatements RCURLY
-        {
-
+            const Position * p = new Position($1->pos(), $10->pos());
+            $$ = new ForStmtNode(p, $3, $4, $6, $9);
         }
 outstatements : outstatements outstatement
         {
-
+            $1.push_back($2);
+            $$ = $1;
         }
         | outstatement
         {
-
+            std::vector<StmtNode*> stmt_vec;
+            stmt_vec.push_back($1);
+            $$ = stmt_vec;
         }
 outstatement : OUT ASSIGN expr SEMICOL
             {
-
+                const Position * p = new Position($1->pos(), $4->pos());
+                $$ = new OutStmtNode(p, $3);
             }
 
 type : INT // we may add other types?
     {
-        // need to add type nodes
+        $$ = new IntTypeNode($1->pos());
     }
-expr: expr CROSS term
+expr: expr CROSS expr
     {
         const Position * p = new Position($1->pos(), $3->pos());
         $$ = new PlusNode(p, $1, $3);
+    }
+    | expr LESS expr
+    {
+        const Position * p = new Position($1->pos(), $3->pos());
+        $$ = new LessNode(p, $1, $3);
+    }
+    | expr STAR expr
+    {
+        const Position * p = new Position($1->pos(), $3->pos());
+        $$ = new TimesNode(p, $1, $3);
     }
     | term
     {
@@ -139,12 +175,7 @@ unarystmt: loc POSTINC
 
 
 
-term: term STAR factor
-    {
-        const Position * p = new Position($1->pos(), $3->pos());
-        $$ = new TimesNode(p, $1, $3);
-    }
-    | factor 
+term: factor 
     {
         $$ = $1;
     }
