@@ -63,6 +63,7 @@ int main()
 		std::cout << prog->Check();
 
 		auto na = DTL::NameAnalysis::build(prog);
+		auto ta = DTL::TypeAnalysis::build(na);
 
     } catch (DTL::InternalError * e){
 		std::cerr << "InternalError: " << e->msg() << std::endl;

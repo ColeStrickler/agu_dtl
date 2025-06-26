@@ -1,5 +1,6 @@
 #include "name_analysis.hpp"
 #include "errors.hpp"
+#include "ast.hpp"
 
 
 using namespace DTL;
@@ -19,7 +20,8 @@ bool ProgramNode::nameAnalysis(SymbolTable *symTab)
     return true;
 }
 
-bool ForStmtNode::nameAnalysis(SymbolTable* symTab)
+
+bool ForStmtNode::nameAnalysis(SymbolTable *symTab)
 {
     printf("ForStmtNode::nameAnalysis()\n");
     symTab->enterScope();
@@ -42,6 +44,10 @@ bool ForStmtNode::nameAnalysis(SymbolTable* symTab)
     return true;
 }
 
+
+/*
+    For now this is the only way we can declare variables
+*/
 bool ConstDeclNode::nameAnalysis(SymbolTable* symTab)
 {
     printf("ConstDeclNode::nameAnalysis()\n");
@@ -53,7 +59,10 @@ bool ConstDeclNode::nameAnalysis(SymbolTable* symTab)
     if (type->asError() || type->isVoid())
         return NameErr::badVarType(myID->pos());
 
-    symTab->insert(new VarSymbol(name, type));
+
+    auto sym = new VarSymbol(name, type);
+    myID->attachSymbol(sym);
+    symTab->insert(sym);
     return myVal->nameAnalysis(symTab);
 }
 
@@ -73,11 +82,11 @@ bool PostIncStmtNode::nameAnalysis(SymbolTable* symTab)
     return myLoc->nameAnalysis(symTab);
 }
 
+
 bool OutStmtNode::nameAnalysis(SymbolTable* symTab)
 {
     return myExp->nameAnalysis(symTab);
 }
-
 
 
 

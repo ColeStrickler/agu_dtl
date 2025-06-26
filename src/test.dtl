@@ -1,3 +1,5 @@
+int swagyolo = 40;
+
 for (int i = 0; i < 100; i++)
 {
 	for (int j = 0; j < 468; j++)
@@ -5,7 +7,7 @@ for (int i = 0; i < 100; i++)
 		for (int k = 0; k < 200; k++)
 		{
 			out = i*j*k;
-			out = i*j*k+1;
+			out = i*j*k+69+swagyolo;
 		}
 	}
 }
