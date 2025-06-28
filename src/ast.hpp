@@ -11,10 +11,11 @@
 #include "errors.hpp"
 #include "type_analysis.hpp"
 #include <vector>
-
+#include <fstream>
 namespace DTL {
 
 class TypeAnalysis;
+class ResourceAnalysis;
 
 class Opd;
 
@@ -57,6 +58,7 @@ public:
 	std::string Check() {return "CHECK\n";}
 	virtual bool nameAnalysis(SymbolTable * symTab) = 0;
 	NODETAG getTag() const {return myTag;}
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) = 0;
 	//Note that there is no ASTNode::typeAnalysis. To allow
 	// for different type signatures, type analysis is
 	// implemented as needed in various subclasses
@@ -75,6 +77,12 @@ public:
 	//void unparse(std::ostream&, int) override;
 	virtual bool nameAnalysis(SymbolTable *) override;
 	virtual void typeAnalysis(TypeAnalysis * ta);
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) {return "";};
+	virtual void PrintAST(const std::string& file);
+	
+
+
 	//IRProgram * to3AC(TypeAnalysis * ta);
 	virtual ~ProgramNode(){ }
 private:
@@ -90,6 +98,8 @@ public:
 	//virtual void unparse(std::ostream& out, int indent) override = 0;
 	virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	virtual void typeAnalysis(TypeAnalysis * ta) = 0;
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
 	//virtual Opd * flatten(Procedure * proc) = 0;
 };
 
@@ -100,6 +110,8 @@ public:
 	SemSymbol * getSymbol() { return mySymbol; }
 	virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	virtual void typeAnalysis(TypeAnalysis *) override = 0;
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
 	//virtual Opd * flatten(Procedure * proc) override = 0;
 private:
 	SemSymbol * mySymbol;
@@ -111,6 +123,8 @@ public:
 	virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	//virtual void unparse(std::ostream& out, int indent) override = 0;
 	virtual void typeAnalysis(TypeAnalysis *) = 0;
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
 	//virtual void to3AC(Procedure * proc) = 0;
 };
 
@@ -123,6 +137,8 @@ public:
 	//virtual std::string getName() = 0;
 	virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	virtual void typeAnalysis(TypeAnalysis *) override = 0;
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
 	//virtual void to3AC(IRProgram * prog) = 0;
 	//virtual void to3AC(Procedure * proc) override = 0;
 };
@@ -139,6 +155,10 @@ public:
 	//void unparse(std::ostream& out, int indent) override;
 	virtual void typeAnalysis(TypeAnalysis *) override;
 	virtual bool nameAnalysis(SymbolTable * symTab) override;
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
+	
+
 private:
 	TypeNode* myType;
 	IDNode* myID;
@@ -152,6 +172,10 @@ public:
 	//void unparse(std::ostream& out, int indent) override;
 	virtual bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
+
+
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
 	//virtual void to3AC(Procedure * prog) override;
 private:
 	LocNode * myLoc;
@@ -167,6 +191,8 @@ public:
 	//void unparse(std::ostream& out, int indent) override;
 	virtual bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis *) override;
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
 	//virtual void to3AC(Procedure * prog) override;
 
 private:
@@ -183,6 +209,10 @@ public:
 	//void unparse(std::ostream& out, int indent) override;
 	virtual bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis *) override;
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
+
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
+
 	//virtual void to3AC(Procedure * prog) override;
 private:
 	ExpNode * myExp;
@@ -196,6 +226,8 @@ public:
 	virtual const DataType * getType() const = 0;
 	virtual bool nameAnalysis(SymbolTable *) override {return true;}
 	virtual void typeAnalysis(TypeAnalysis *){return;};
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
+	
 };
 
 
@@ -206,6 +238,7 @@ public:
 	virtual const DataType* getType() const {return BasicType::produce(BaseType::INT);}
 	//virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	//void unparse(std::ostream& out, int indent) override;
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
 	//virtual const DataType * getType() const override;
 };
 
@@ -219,6 +252,9 @@ public:
 	//void unparseNested(std::ostream& out) override;
 	bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis * ta) override;
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) {return;};
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
+	
 	//virtual Opd * flatten(Procedure * proc) override;
 private:
 	std::string name;
@@ -235,6 +271,7 @@ public:
 	//virtual void unparse(std::ostream& out, int indent) override = 0;
 	virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	virtual void typeAnalysis(TypeAnalysis *) override = 0;
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
 	//virtual Opd * flatten(Procedure * prog) override = 0;
 protected:
 	ExpNode * myExp;
@@ -247,9 +284,12 @@ public:
 	//	unparse(out, 0);
 	//}
 	virtual bool nameAnalysis(SymbolTable * symTab) override {printf("IntLitNode::nameAnalysis()\n");return true;}
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
 	//void unparse(std::ostream& out, int indent) override;
 	//bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
+
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
 	//virtual Opd * flatten(Procedure * prog) override;
 private:
 	const int myNum;
@@ -261,6 +301,8 @@ public:
 	: ExpNode(p), myExp1(lhs), myExp2(rhs) { }
 	bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis *) override = 0;
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
 	//virtual Opd * flatten(Procedure * prog) override = 0;
 protected:
 	ExpNode * myExp1;
@@ -278,6 +320,8 @@ public:
 	//virtual bool nameAnalysis(SymbolTable * symTab) override;
 	//void unparse(std::ostream& out, int indent) override;
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
 	//virtual Opd * flatten(Procedure * prog) override;
 };
 class TimesNode : public BinaryExpNode{
@@ -287,6 +331,9 @@ public:
 	//virtual bool nameAnalysis(SymbolTable * symTab) override;
 	//void unparse(std::ostream& out, int indent) override;
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
+
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
 	//virtual Opd * flatten(Procedure * prog) override;
 };
 
@@ -298,6 +345,19 @@ public:
 	//virtual bool nameAnalysis(SymbolTable * symTab) override;
 	//void unparse(std::ostream& out, int indent) override;
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer){return;};
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override
+	{
+		node_num++;
+		std::string name = "LessNode" + std::to_string(node_num);
+		auto exp1NodeString = myExp1->PrintAST(node_num, outfile);
+		auto exp2NodeString = myExp2->PrintAST(node_num, outfile);
+
+		outfile << name << " -> " << exp1NodeString << ";\n";
+		outfile << name << " -> " << exp2NodeString << ";\n";
+		
+		return name;
+	}
 	//virtual Opd * flatten(Procedure * proc) override;
 };
 
@@ -305,11 +365,12 @@ class LessEqNode : public BinaryExpNode{
 public:
 	LessEqNode(const Position * pos, ExpNode * e1, ExpNode * e2)
 	: BinaryExpNode(pos, e1, e2){ myTag = NODETAG::LESSEQNODE; }
-
+	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
 
 	//virtual bool nameAnalysis(SymbolTable * symTab) override;
 	//void unparse(std::ostream& out, int indent) override;
 	virtual void typeAnalysis(TypeAnalysis *) override;
+	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer){return;};
 	//virtual Opd * flatten(Procedure * prog) override;
 };
 

@@ -28,6 +28,12 @@ bool ForStmtNode::nameAnalysis(SymbolTable *symTab)
     auto init =  myInit->nameAnalysis(symTab);
     printf("init ok\n");
 
+    /*
+        We need to impose the constraint of making sure the init variable is the same
+        as the left hand side of the condition statement
+    */
+
+
     auto cond = myCondExp->nameAnalysis(symTab);
     assert(cond);
     printf("cond ok\n");
@@ -65,6 +71,7 @@ bool ConstDeclNode::nameAnalysis(SymbolTable* symTab)
     symTab->insert(sym);
     return myVal->nameAnalysis(symTab);
 }
+
 
 bool BinaryExpNode::nameAnalysis(SymbolTable* symTab)
 {

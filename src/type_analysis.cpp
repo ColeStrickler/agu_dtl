@@ -10,12 +10,13 @@ TypeAnalysis * TypeAnalysis::build(NameAnalysis * nameAnalysis){
 	TypeAnalysis * typeAnalysis = new TypeAnalysis();
 	auto ast = nameAnalysis->ast;
 	typeAnalysis->ast = ast;
-
+	printf("here\n");
+	
 	ast->typeAnalysis(typeAnalysis);
 	if (typeAnalysis->hasError){
 		return nullptr;
 	}
-
+	
 	return typeAnalysis;
 
 }
@@ -23,6 +24,7 @@ TypeAnalysis * TypeAnalysis::build(NameAnalysis * nameAnalysis){
 
 void DTL::ProgramNode::typeAnalysis(TypeAnalysis *ta)
 {
+	printf("here\n");
     for (auto& stmt: myStatements)
         stmt->typeAnalysis(ta);
 }
@@ -30,11 +32,12 @@ void DTL::ProgramNode::typeAnalysis(TypeAnalysis *ta)
 
 void DTL::ForStmtNode::typeAnalysis(TypeAnalysis* ta)
 {
+	
 	myInit->typeAnalysis(ta);
 	myCondExp->typeAnalysis(ta);
 	myUpdateStmt->typeAnalysis(ta);
 	bool ok = true;
-
+	
 
 	for (auto& stmt: myStatements)
 	{
@@ -116,6 +119,7 @@ void DTL::PostIncStmtNode::typeAnalysis(TypeAnalysis *ta)
 
 void DTL::ConstDeclNode::typeAnalysis(TypeAnalysis* ta)
 {
+	
 	auto res = checkAssign(myID, myVal, ta);
 	if (!res)
 	{
@@ -178,7 +182,7 @@ void DTL::LessNode::typeAnalysis(TypeAnalysis* ta)
 
 
 
-void DTL::LessEqNode::typeAnalysis(TypeAnalysis* ta)
+void DTL::LessEqNode::typeAnalysis(TypeAnalysis *ta)
 {
 	myExp1->typeAnalysis(ta);
 	myExp2->typeAnalysis(ta);
@@ -272,6 +276,8 @@ void DTL::IntLitNode::typeAnalysis(TypeAnalysis* ta)
 	ta->nodeType(this, BasicType::INT());
 }
 
+
+
 void DTL::IDNode::typeAnalysis(TypeAnalysis* ta)
 {
 	std::cout << getName()<< "\n";
@@ -279,6 +285,7 @@ void DTL::IDNode::typeAnalysis(TypeAnalysis* ta)
 	const DataType * type = getSymbol()->getDataType();
 	ta->nodeType(this, type);
 }
+
 
 
 static bool validAssignOpd(const DataType * type){

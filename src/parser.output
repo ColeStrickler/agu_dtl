@@ -7,7 +7,7 @@ Grammar
     2 constdecls: constdecls constdecl
     3           | ε
 
-    4 constdecl: type loc ASSIGN expr SEMICOL
+    4 constdecl: type loc ASSIGN factor SEMICOL
 
     5 forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY forstatement RCURLY
     6             | FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY outstatements RCURLY
@@ -27,11 +27,12 @@ Grammar
    15 unarystmt: loc POSTINC
 
    16 term: factor
+   17     | LPAREN expr RPAREN
 
-   17 factor: INTLITERAL
-   18       | loc
+   18 factor: INTLITERAL
+   19       | loc
 
-   19 loc: ID
+   20 loc: ID
 
 
 Terminals, with rules where they appear
@@ -39,16 +40,16 @@ Terminals, with rules where they appear
     "end file" (0) 0
     error (256)
     ASSIGN <DTL::Token *> (258) 4 9
-    ID <DTL::IDToken *> (259) 19
+    ID <DTL::IDToken *> (259) 20
     INT <DTL::Token *> (260) 10
-    INTLITERAL <DTL::IntLitToken *> (261) 17
+    INTLITERAL <DTL::IntLitToken *> (261) 18
     LCURLY <DTL::Token *> (262) 5 6
     LESS <DTL::Token *> (263) 12
-    LPAREN <DTL::Token *> (264) 5 6
+    LPAREN <DTL::Token *> (264) 5 6 17
     CROSS <DTL::Token *> (265) 11
     POSTINC <DTL::Token *> (266) 15
     RCURLY <DTL::Token *> (267) 5 6
-    RPAREN <DTL::Token *> (268) 5 6
+    RPAREN <DTL::Token *> (268) 5 6 17
     SEMICOL <DTL::Token *> (269) 4 5 6 9
     STAR <DTL::Token *> (270) 13
     FOR <DTL::Token *> (271) 5 6
@@ -82,19 +83,19 @@ Nonterminals, with rules where they appear
         on right: 4
     expr <DTL::ExpNode*> (26)
         on left: 11 12 13 14
-        on right: 4 5 6 9 11 12 13
+        on right: 5 6 9 11 12 13 17
     unarystmt <DTL::StmtNode*> (27)
         on left: 15
         on right: 5 6
     term <DTL::ExpNode*> (28)
-        on left: 16
+        on left: 16 17
         on right: 14
     factor <DTL::ExpNode*> (29)
-        on left: 17 18
-        on right: 16
+        on left: 18 19
+        on right: 4 16
     loc <DTL::IDNode*> (30)
-        on left: 19
-        on right: 4 15 18
+        on left: 20
+        on right: 4 15 19
 
 
 State 0
@@ -165,7 +166,7 @@ State 7
 
 State 8
 
-    4 constdecl: type • loc ASSIGN expr SEMICOL
+    4 constdecl: type • loc ASSIGN factor SEMICOL
 
     ID  shift, and go to state 10
 
@@ -185,14 +186,14 @@ State 9
 
 State 10
 
-   19 loc: ID •
+   20 loc: ID •
 
-    $default  reduce using rule 19 (loc)
+    $default  reduce using rule 20 (loc)
 
 
 State 11
 
-    4 constdecl: type loc • ASSIGN expr SEMICOL
+    4 constdecl: type loc • ASSIGN factor SEMICOL
 
     ASSIGN  shift, and go to state 13
 
@@ -204,34 +205,47 @@ State 12
 
     ID          shift, and go to state 10
     INTLITERAL  shift, and go to state 14
+    LPAREN      shift, and go to state 15
 
-    expr    go to state 15
-    term    go to state 16
-    factor  go to state 17
-    loc     go to state 18
+    expr    go to state 16
+    term    go to state 17
+    factor  go to state 18
+    loc     go to state 19
 
 
 State 13
 
-    4 constdecl: type loc ASSIGN • expr SEMICOL
+    4 constdecl: type loc ASSIGN • factor SEMICOL
 
     ID          shift, and go to state 10
     INTLITERAL  shift, and go to state 14
 
-    expr    go to state 19
-    term    go to state 16
-    factor  go to state 17
-    loc     go to state 18
+    factor  go to state 20
+    loc     go to state 19
 
 
 State 14
 
-   17 factor: INTLITERAL •
+   18 factor: INTLITERAL •
 
-    $default  reduce using rule 17 (factor)
+    $default  reduce using rule 18 (factor)
 
 
 State 15
+
+   17 term: LPAREN • expr RPAREN
+
+    ID          shift, and go to state 10
+    INTLITERAL  shift, and go to state 14
+    LPAREN      shift, and go to state 15
+
+    expr    go to state 21
+    term    go to state 17
+    factor  go to state 18
+    loc     go to state 19
+
+
+State 16
 
     5 forstatement: FOR LPAREN constdecl expr • SEMICOL unarystmt RPAREN LCURLY forstatement RCURLY
     6             | FOR LPAREN constdecl expr • SEMICOL unarystmt RPAREN LCURLY outstatements RCURLY
@@ -239,144 +253,161 @@ State 15
    12     | expr • LESS expr
    13     | expr • STAR expr
 
-    LESS     shift, and go to state 20
-    CROSS    shift, and go to state 21
-    SEMICOL  shift, and go to state 22
-    STAR     shift, and go to state 23
+    LESS     shift, and go to state 22
+    CROSS    shift, and go to state 23
+    SEMICOL  shift, and go to state 24
+    STAR     shift, and go to state 25
 
 
-State 16
+State 17
 
    14 expr: term •
 
     $default  reduce using rule 14 (expr)
 
 
-State 17
+State 18
 
    16 term: factor •
 
     $default  reduce using rule 16 (term)
 
 
-State 18
-
-   18 factor: loc •
-
-    $default  reduce using rule 18 (factor)
-
-
 State 19
 
-    4 constdecl: type loc ASSIGN expr • SEMICOL
-   11 expr: expr • CROSS expr
-   12     | expr • LESS expr
-   13     | expr • STAR expr
+   19 factor: loc •
 
-    LESS     shift, and go to state 20
-    CROSS    shift, and go to state 21
-    SEMICOL  shift, and go to state 24
-    STAR     shift, and go to state 23
+    $default  reduce using rule 19 (factor)
 
 
 State 20
+
+    4 constdecl: type loc ASSIGN factor • SEMICOL
+
+    SEMICOL  shift, and go to state 26
+
+
+State 21
+
+   11 expr: expr • CROSS expr
+   12     | expr • LESS expr
+   13     | expr • STAR expr
+   17 term: LPAREN expr • RPAREN
+
+    LESS    shift, and go to state 22
+    CROSS   shift, and go to state 23
+    RPAREN  shift, and go to state 27
+    STAR    shift, and go to state 25
+
+
+State 22
 
    12 expr: expr LESS • expr
 
     ID          shift, and go to state 10
     INTLITERAL  shift, and go to state 14
+    LPAREN      shift, and go to state 15
 
-    expr    go to state 25
-    term    go to state 16
-    factor  go to state 17
-    loc     go to state 18
+    expr    go to state 28
+    term    go to state 17
+    factor  go to state 18
+    loc     go to state 19
 
 
-State 21
+State 23
 
    11 expr: expr CROSS • expr
 
     ID          shift, and go to state 10
     INTLITERAL  shift, and go to state 14
+    LPAREN      shift, and go to state 15
 
-    expr    go to state 26
-    term    go to state 16
-    factor  go to state 17
-    loc     go to state 18
+    expr    go to state 29
+    term    go to state 17
+    factor  go to state 18
+    loc     go to state 19
 
 
-State 22
+State 24
 
     5 forstatement: FOR LPAREN constdecl expr SEMICOL • unarystmt RPAREN LCURLY forstatement RCURLY
     6             | FOR LPAREN constdecl expr SEMICOL • unarystmt RPAREN LCURLY outstatements RCURLY
 
     ID  shift, and go to state 10
 
-    unarystmt  go to state 27
-    loc        go to state 28
+    unarystmt  go to state 30
+    loc        go to state 31
 
 
-State 23
+State 25
 
    13 expr: expr STAR • expr
 
     ID          shift, and go to state 10
     INTLITERAL  shift, and go to state 14
+    LPAREN      shift, and go to state 15
 
-    expr    go to state 29
-    term    go to state 16
-    factor  go to state 17
-    loc     go to state 18
+    expr    go to state 32
+    term    go to state 17
+    factor  go to state 18
+    loc     go to state 19
 
 
-State 24
+State 26
 
-    4 constdecl: type loc ASSIGN expr SEMICOL •
+    4 constdecl: type loc ASSIGN factor SEMICOL •
 
     $default  reduce using rule 4 (constdecl)
 
 
-State 25
+State 27
+
+   17 term: LPAREN expr RPAREN •
+
+    $default  reduce using rule 17 (term)
+
+
+State 28
 
    11 expr: expr • CROSS expr
    12     | expr • LESS expr
    12     | expr LESS expr •
    13     | expr • STAR expr
 
-    CROSS  shift, and go to state 21
-    STAR   shift, and go to state 23
+    CROSS  shift, and go to state 23
+    STAR   shift, and go to state 25
 
     $default  reduce using rule 12 (expr)
 
 
-State 26
+State 29
 
    11 expr: expr • CROSS expr
    11     | expr CROSS expr •
    12     | expr • LESS expr
    13     | expr • STAR expr
 
-    STAR  shift, and go to state 23
+    STAR  shift, and go to state 25
 
     $default  reduce using rule 11 (expr)
 
 
-State 27
+State 30
 
     5 forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt • RPAREN LCURLY forstatement RCURLY
     6             | FOR LPAREN constdecl expr SEMICOL unarystmt • RPAREN LCURLY outstatements RCURLY
 
-    RPAREN  shift, and go to state 30
+    RPAREN  shift, and go to state 33
 
 
-State 28
+State 31
 
    15 unarystmt: loc • POSTINC
 
-    POSTINC  shift, and go to state 31
+    POSTINC  shift, and go to state 34
 
 
-State 29
+State 32
 
    11 expr: expr • CROSS expr
    12     | expr • LESS expr
@@ -386,114 +417,115 @@ State 29
     $default  reduce using rule 13 (expr)
 
 
-State 30
+State 33
 
     5 forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN • LCURLY forstatement RCURLY
     6             | FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN • LCURLY outstatements RCURLY
 
-    LCURLY  shift, and go to state 32
+    LCURLY  shift, and go to state 35
 
 
-State 31
+State 34
 
    15 unarystmt: loc POSTINC •
 
     $default  reduce using rule 15 (unarystmt)
 
 
-State 32
+State 35
 
     5 forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY • forstatement RCURLY
     6             | FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY • outstatements RCURLY
 
     FOR  shift, and go to state 5
-    OUT  shift, and go to state 33
+    OUT  shift, and go to state 36
 
-    forstatement   go to state 34
-    outstatements  go to state 35
-    outstatement   go to state 36
+    forstatement   go to state 37
+    outstatements  go to state 38
+    outstatement   go to state 39
 
 
-State 33
+State 36
 
     9 outstatement: OUT • ASSIGN expr SEMICOL
 
-    ASSIGN  shift, and go to state 37
+    ASSIGN  shift, and go to state 40
 
 
-State 34
+State 37
 
     5 forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY forstatement • RCURLY
 
-    RCURLY  shift, and go to state 38
+    RCURLY  shift, and go to state 41
 
 
-State 35
+State 38
 
     6 forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY outstatements • RCURLY
     7 outstatements: outstatements • outstatement
 
-    RCURLY  shift, and go to state 39
-    OUT     shift, and go to state 33
+    RCURLY  shift, and go to state 42
+    OUT     shift, and go to state 36
 
-    outstatement  go to state 40
+    outstatement  go to state 43
 
 
-State 36
+State 39
 
     8 outstatements: outstatement •
 
     $default  reduce using rule 8 (outstatements)
 
 
-State 37
+State 40
 
     9 outstatement: OUT ASSIGN • expr SEMICOL
 
     ID          shift, and go to state 10
     INTLITERAL  shift, and go to state 14
+    LPAREN      shift, and go to state 15
 
-    expr    go to state 41
-    term    go to state 16
-    factor  go to state 17
-    loc     go to state 18
+    expr    go to state 44
+    term    go to state 17
+    factor  go to state 18
+    loc     go to state 19
 
 
-State 38
+State 41
 
     5 forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY forstatement RCURLY •
 
     $default  reduce using rule 5 (forstatement)
 
 
-State 39
+State 42
 
     6 forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY outstatements RCURLY •
 
     $default  reduce using rule 6 (forstatement)
 
 
-State 40
+State 43
 
     7 outstatements: outstatements outstatement •
 
     $default  reduce using rule 7 (outstatements)
 
 
-State 41
+State 44
 
     9 outstatement: OUT ASSIGN expr • SEMICOL
    11 expr: expr • CROSS expr
    12     | expr • LESS expr
    13     | expr • STAR expr
 
-    LESS     shift, and go to state 20
-    CROSS    shift, and go to state 21
-    SEMICOL  shift, and go to state 42
-    STAR     shift, and go to state 23
+    LESS     shift, and go to state 22
+    CROSS    shift, and go to state 23
+    SEMICOL  shift, and go to state 45
+    STAR     shift, and go to state 25
 
 
-State 42
+State 45
 
     9 outstatement: OUT ASSIGN expr SEMICOL •
 

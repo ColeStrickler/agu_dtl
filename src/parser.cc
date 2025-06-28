@@ -1036,7 +1036,7 @@ namespace DTL {
 #line 1037 "parser.cc"
     break;
 
-  case 5: // constdecl: type loc ASSIGN expr SEMICOL
+  case 5: // constdecl: type loc ASSIGN factor SEMICOL
 #line 112 "parser.yy"
         {
             const Position * p = new Position(yystack_[4].value.as < DTL::TypeNode* > ()->pos(), yystack_[0].value.as < DTL::Token * > ()->pos());
@@ -1154,33 +1154,41 @@ namespace DTL {
 #line 1155 "parser.cc"
     break;
 
-  case 18: // factor: INTLITERAL
+  case 18: // term: LPAREN expr RPAREN
 #line 183 "parser.yy"
+    {
+        yylhs.value.as < DTL::ExpNode* > () = yystack_[1].value.as < DTL::ExpNode* > ();
+    }
+#line 1163 "parser.cc"
+    break;
+
+  case 19: // factor: INTLITERAL
+#line 187 "parser.yy"
     {
         yylhs.value.as < DTL::ExpNode* > () = new IntLitNode(yystack_[0].value.as < DTL::IntLitToken * > ()->pos(), yystack_[0].value.as < DTL::IntLitToken * > ()->num());
         printf("Intlitnode\n");
     }
-#line 1164 "parser.cc"
-    break;
-
-  case 19: // factor: loc
-#line 188 "parser.yy"
-    {
-        yylhs.value.as < DTL::ExpNode* > () = yystack_[0].value.as < DTL::IDNode* > ();
-    }
 #line 1172 "parser.cc"
     break;
 
-  case 20: // loc: ID
+  case 20: // factor: loc
 #line 192 "parser.yy"
     {
-        yylhs.value.as < DTL::IDNode* > () = new IDNode(yystack_[0].value.as < DTL::IDToken * > ()->pos(), yystack_[0].value.as < DTL::IDToken * > ()->value());
+        yylhs.value.as < DTL::ExpNode* > () = yystack_[0].value.as < DTL::IDNode* > ();
     }
 #line 1180 "parser.cc"
     break;
 
+  case 21: // loc: ID
+#line 196 "parser.yy"
+    {
+        yylhs.value.as < DTL::IDNode* > () = new IDNode(yystack_[0].value.as < DTL::IDToken * > ()->pos(), yystack_[0].value.as < DTL::IDToken * > ()->value());
+    }
+#line 1188 "parser.cc"
+    break;
 
-#line 1184 "parser.cc"
+
+#line 1192 "parser.cc"
 
             default:
               break;
@@ -1528,88 +1536,90 @@ namespace DTL {
   }
 
 
-  const signed char Parser::yypact_ninf_ = -14;
+  const signed char Parser::yypact_ninf_ = -16;
 
   const signed char Parser::yytable_ninf_ = -1;
 
   const signed char
   Parser::yypact_[] =
   {
-     -14,     3,    -3,   -14,   -14,     8,   -14,   -14,    17,    23,
-     -14,    29,    27,    27,   -14,     4,   -14,   -14,   -14,    12,
-      27,    27,    17,    27,   -14,    -6,    19,    22,    25,   -14,
-      30,   -14,   -11,    35,    28,    -1,   -14,    27,   -14,   -14,
-     -14,    15,   -14
+     -16,     4,    -3,   -16,   -16,     3,   -16,   -16,     2,     9,
+     -16,    25,    14,    -1,   -16,    14,     1,   -16,   -16,   -16,
+       8,    11,    14,    14,     2,    14,   -16,   -16,    20,    22,
+      26,    27,   -16,    33,   -16,    15,    39,    31,    24,   -16,
+      14,   -16,   -16,   -16,    19,   -16
   };
 
   const signed char
   Parser::yydefact_[] =
   {
        4,     0,     0,     1,    11,     0,     3,     2,     0,     0,
-      20,     0,     0,     0,    18,     0,    15,    17,    19,     0,
-       0,     0,     0,     0,     5,    13,    12,     0,     0,    14,
-       0,    16,     0,     0,     0,     0,     9,     0,     6,     7,
-       8,     0,    10
+      21,     0,     0,     0,    19,     0,     0,    15,    17,    20,
+       0,     0,     0,     0,     0,     0,     5,    18,    13,    12,
+       0,     0,    14,     0,    16,     0,     0,     0,     0,     9,
+       0,     6,     7,     8,     0,    10
   };
 
   const signed char
   Parser::yypgoto_[] =
   {
-     -14,   -14,   -14,    32,     7,   -14,     9,   -14,   -13,   -14,
-     -14,   -14,    -7
+     -16,   -16,   -16,    35,    10,   -16,    12,   -16,   -15,   -16,
+     -16,    34,    -7
   };
 
   const signed char
   Parser::yydefgoto_[] =
   {
-       0,     1,     2,     6,     7,    35,    36,     8,    15,    27,
-      16,    17,    18
+       0,     1,     2,     6,     7,    38,    39,     8,    16,    30,
+      17,    18,    19
   };
 
   const signed char
   Parser::yytable_[] =
   {
-      19,    11,     4,     3,    21,     5,    33,    25,    26,    23,
-      29,    39,    20,     5,    21,    28,    33,     9,    22,    23,
-      20,    10,    21,    20,    41,    21,    24,    23,     4,    42,
-      23,    10,    13,    14,    23,    30,    31,    32,    37,    34,
-      38,    12,     0,     0,    40
+      21,    11,     4,    10,     3,    14,    10,    28,    29,    22,
+      32,    23,     9,     5,     4,    24,    25,    31,    10,    22,
+      14,    23,    26,    15,    27,    44,    25,    22,    13,    23,
+      23,     5,    36,    45,    25,    25,    42,    25,    34,    33,
+      35,    36,    40,    41,    12,    37,     0,    20,     0,     0,
+      43
   };
 
   const signed char
   Parser::yycheck_[] =
   {
-      13,     8,     5,     0,    10,    16,    17,    20,    21,    15,
-      23,    12,     8,    16,    10,    22,    17,     9,    14,    15,
-       8,     4,    10,     8,    37,    10,    14,    15,     5,    14,
-      15,     4,     3,     6,    15,    13,    11,     7,     3,    32,
-      12,     9,    -1,    -1,    35
+      15,     8,     5,     4,     0,     6,     4,    22,    23,     8,
+      25,    10,     9,    16,     5,    14,    15,    24,     4,     8,
+       6,    10,    14,     9,    13,    40,    15,     8,     3,    10,
+      10,    16,    17,    14,    15,    15,    12,    15,    11,    13,
+       7,    17,     3,    12,     9,    35,    -1,    13,    -1,    -1,
+      38
   };
 
   const signed char
   Parser::yystos_[] =
   {
        0,    19,    20,     0,     5,    16,    21,    22,    25,     9,
-       4,    30,    21,     3,     6,    26,    28,    29,    30,    26,
-       8,    10,    14,    15,    14,    26,    26,    27,    30,    26,
-      13,    11,     7,    17,    22,    23,    24,     3,    12,    12,
-      24,    26,    14
+       4,    30,    21,     3,     6,     9,    26,    28,    29,    30,
+      29,    26,     8,    10,    14,    15,    14,    13,    26,    26,
+      27,    30,    26,    13,    11,     7,    17,    22,    23,    24,
+       3,    12,    12,    24,    26,    14
   };
 
   const signed char
   Parser::yyr1_[] =
   {
        0,    18,    19,    20,    20,    21,    22,    22,    23,    23,
-      24,    25,    26,    26,    26,    26,    27,    28,    29,    29,
-      30
+      24,    25,    26,    26,    26,    26,    27,    28,    28,    29,
+      29,    30
   };
 
   const signed char
   Parser::yyr2_[] =
   {
        0,     2,     2,     2,     0,     5,    10,    10,     2,     1,
-       4,     1,     3,     3,     3,     1,     2,     1,     1,     1,
-       1
+       4,     1,     3,     3,     3,     1,     2,     1,     3,     1,
+       1,     1
   };
 
 
@@ -1633,8 +1643,8 @@ namespace DTL {
   Parser::yyrline_[] =
   {
        0,    95,    95,   101,   107,   111,   116,   124,   129,   134,
-     140,   146,   150,   155,   160,   165,   170,   178,   182,   187,
-     191
+     140,   146,   150,   155,   160,   165,   170,   178,   182,   186,
+     191,   195
   };
 
   void
@@ -1715,9 +1725,9 @@ namespace DTL {
 
 #line 5 "parser.yy"
 } // DTL
-#line 1719 "parser.cc"
+#line 1729 "parser.cc"
 
-#line 197 "parser.yy"
+#line 201 "parser.yy"
 
 
 

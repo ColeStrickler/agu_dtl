@@ -38,5 +38,10 @@ compiler: $(OBJ_SRCS)
 run: compiler
 	./compiler
 
+graph: run
+	dot -Tpng astDigraph.dot -o graph.png
+	open graph.png
+
+
 clean:
 	rm -rf *.output *.o *.cc *.hh ac parser.dot parser.png

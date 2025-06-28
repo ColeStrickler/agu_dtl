@@ -108,7 +108,7 @@ constdecls: constdecls constdecl
             auto ret = std::vector<DTL::StmtNode*>();
             $$ = ret;
         }
-constdecl: type loc ASSIGN expr SEMICOL
+constdecl: type loc ASSIGN factor SEMICOL
         {
             const Position * p = new Position($1->pos(), $5->pos());
             $$ = new ConstDeclNode(p, $1, $2, $4);
@@ -178,6 +178,10 @@ unarystmt: loc POSTINC
 term: factor 
     {
         $$ = $1;
+    }
+    | LPAREN expr RPAREN
+    {
+        $$ = $2;
     }
 factor: INTLITERAL 
     {

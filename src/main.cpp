@@ -5,6 +5,7 @@
 #include "scanner.hpp"
 #include "frontend.hh"
 #include "name_analysis.hpp"
+#include "resource_analysis_pass.hpp"
 
 static void writeTokenStream(const char * inPath, const char * outPath){
 	std::ifstream inStream(inPath);
@@ -63,8 +64,14 @@ int main()
 		std::cout << prog->Check();
 
 		auto na = DTL::NameAnalysis::build(prog);
+		if (na == nullptr)
+			return -1;
 		auto ta = DTL::TypeAnalysis::build(na);
-
+		if (ta == nullptr)
+			return -1;
+		auto ra = DTL::ResourceAnalysis::build(prog);
+		std::cout << ra->toString() << "\n";
+		prog->PrintAST("./astDigraph.dot");
     } catch (DTL::InternalError * e){
 		std::cerr << "InternalError: " << e->msg() << std::endl;
 		return 1;
