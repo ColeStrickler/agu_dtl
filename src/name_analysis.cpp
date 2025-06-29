@@ -10,7 +10,6 @@ using namespace DTL;
 bool ProgramNode::nameAnalysis(SymbolTable *symTab)
 {
     symTab->enterScope();
-    printf("ProgramNode::nameAnalysis()\n");
     for (auto& stmt: myStatements)
     {
         if (!stmt->nameAnalysis(symTab))
@@ -23,10 +22,8 @@ bool ProgramNode::nameAnalysis(SymbolTable *symTab)
 
 bool ForStmtNode::nameAnalysis(SymbolTable *symTab)
 {
-    printf("ForStmtNode::nameAnalysis()\n");
     symTab->enterScope();
     auto init =  myInit->nameAnalysis(symTab);
-    printf("init ok\n");
 
     /*
         We need to impose the constraint of making sure the init variable is the same
@@ -36,7 +33,6 @@ bool ForStmtNode::nameAnalysis(SymbolTable *symTab)
 
     auto cond = myCondExp->nameAnalysis(symTab);
     assert(cond);
-    printf("cond ok\n");
     bool outer = init && cond && myUpdateStmt->nameAnalysis(symTab);
     if (!outer)
         return false;
@@ -56,7 +52,6 @@ bool ForStmtNode::nameAnalysis(SymbolTable *symTab)
 */
 bool ConstDeclNode::nameAnalysis(SymbolTable* symTab)
 {
-    printf("ConstDeclNode::nameAnalysis()\n");
     auto name = myID->getName();
     auto type = myType->getType();
     if (symTab->clash(name))
@@ -75,7 +70,6 @@ bool ConstDeclNode::nameAnalysis(SymbolTable* symTab)
 
 bool BinaryExpNode::nameAnalysis(SymbolTable* symTab)
 {
-    printf("BinaryExpNode::nameAnalysis()\n");
     return myExp1->nameAnalysis(symTab) && myExp2->nameAnalysis(symTab);
 }
 
@@ -99,7 +93,6 @@ bool OutStmtNode::nameAnalysis(SymbolTable* symTab)
 
 bool IDNode::nameAnalysis(SymbolTable* symTab)
 {
-    printf("IDNode::nameAnalysis()\n");
     std::string myName = this->getName();
 	SemSymbol * sym = symTab->find(myName);
 	if (sym == nullptr){
@@ -107,7 +100,6 @@ bool IDNode::nameAnalysis(SymbolTable* symTab)
 		return NameErr::undeclID(pos());
 	}
 	this->attachSymbol(sym);
-    printf("Done IDNode::nameAnalysis()\n");
 	return true;
 }
 

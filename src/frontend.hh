@@ -413,16 +413,19 @@ namespace DTL {
       // ID
       char dummy4[sizeof (DTL::IDToken *)];
 
+      // intlit
+      char dummy5[sizeof (DTL::IntLitNode*)];
+
       // INTLITERAL
-      char dummy5[sizeof (DTL::IntLitToken *)];
+      char dummy6[sizeof (DTL::IntLitToken *)];
 
       // program
-      char dummy6[sizeof (DTL::ProgramNode*)];
+      char dummy7[sizeof (DTL::ProgramNode*)];
 
       // constdecl
       // outstatement
       // unarystmt
-      char dummy7[sizeof (DTL::StmtNode*)];
+      char dummy8[sizeof (DTL::StmtNode*)];
 
       // ASSIGN
       // INT
@@ -437,14 +440,14 @@ namespace DTL {
       // STAR
       // FOR
       // OUT
-      char dummy8[sizeof (DTL::Token *)];
+      char dummy9[sizeof (DTL::Token *)];
 
       // type
-      char dummy9[sizeof (DTL::TypeNode*)];
+      char dummy10[sizeof (DTL::TypeNode*)];
 
       // constdecls
       // outstatements
-      char dummy10[sizeof (std::vector<DTL::StmtNode*>)];
+      char dummy11[sizeof (std::vector<DTL::StmtNode*>)];
     };
 
     /// The size of the largest semantic type.
@@ -551,7 +554,8 @@ namespace DTL {
         S_unarystmt = 27,                        // unarystmt
         S_term = 28,                             // term
         S_factor = 29,                           // factor
-        S_loc = 30                               // loc
+        S_intlit = 30,                           // intlit
+        S_loc = 31                               // loc
       };
     };
 
@@ -602,6 +606,10 @@ namespace DTL {
 
       case symbol_kind::S_ID: // ID
         value.move< DTL::IDToken * > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_intlit: // intlit
+        value.move< DTL::IntLitNode* > (std::move (that.value));
         break;
 
       case symbol_kind::S_INTLITERAL: // INTLITERAL
@@ -707,6 +715,18 @@ namespace DTL {
       {}
 #else
       basic_symbol (typename Base::kind_type t, const DTL::IDToken *& v)
+        : Base (t)
+        , value (v)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, DTL::IntLitNode*&& v)
+        : Base (t)
+        , value (std::move (v))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const DTL::IntLitNode*& v)
         : Base (t)
         , value (v)
       {}
@@ -824,6 +844,10 @@ switch (yykind)
 
       case symbol_kind::S_ID: // ID
         value.template destroy< DTL::IDToken * > ();
+        break;
+
+      case symbol_kind::S_intlit: // intlit
+        value.template destroy< DTL::IntLitNode* > ();
         break;
 
       case symbol_kind::S_INTLITERAL: // INTLITERAL
@@ -1627,8 +1651,8 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 50,     ///< Last index in yytable_.
-      yynnts_ = 13,  ///< Number of nonterminal symbols.
+      yylast_ = 47,     ///< Last index in yytable_.
+      yynnts_ = 14,  ///< Number of nonterminal symbols.
       yyfinal_ = 3 ///< Termination state number.
     };
 
@@ -1642,7 +1666,7 @@ switch (yykind)
 
 #line 5 "parser.yy"
 } // DTL
-#line 1646 "frontend.hh"
+#line 1670 "frontend.hh"
 
 
 

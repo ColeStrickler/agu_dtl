@@ -7,7 +7,8 @@ for (int i = 0; i < 100; i++)
 		for (int k = 0; k < 200; k++)
 		{
 			out = i*j*k;
-			out = i*j*k+69+swagyolo+(4+1);
+			out = (i*j*k+109)*j+(36+swagyolo+j)*swagyolo+(430+k*swagyolo*i+j)*k;
+			out = i*(j+k+4)+j*(k*i+swagyolo);
 		}
 	}
 }

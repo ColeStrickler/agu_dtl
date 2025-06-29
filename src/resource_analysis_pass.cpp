@@ -20,6 +20,7 @@ void DTL::ProgramNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
 void DTL::ConstDeclNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
 {
     ra->UseNewConst();
+    ra->RegMapConst(myID, ra); // assign constants a register number
 }
 
 
@@ -33,6 +34,7 @@ void DTL::PostIncStmtNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
 void DTL::ForStmtNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
 {
     ra->UseForLoopRegister(); // 1 per for loop. Necessitated by the grammar;
+    
     /*
         We do not need to do anything for the conditional statement, resources are always allocated
         for the comparison. 
@@ -56,6 +58,7 @@ void DTL::OutStmtNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
 void DTL::IntLitNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
 {
     ra->UseNewConst();
+    ra->RegMapConst(this, ra); // assign constants a register number
 }
 
 void DTL::PlusNode::resourceAnalysis(ResourceAnalysis* ra, int layer)

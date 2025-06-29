@@ -65,7 +65,10 @@ int main()
 
 		auto na = DTL::NameAnalysis::build(prog);
 		if (na == nullptr)
+		{
+			printf("failed name analysis\n");
 			return -1;
+		}
 		auto ta = DTL::TypeAnalysis::build(na);
 		if (ta == nullptr)
 			return -1;

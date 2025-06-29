@@ -10,7 +10,7 @@ TypeAnalysis * TypeAnalysis::build(NameAnalysis * nameAnalysis){
 	TypeAnalysis * typeAnalysis = new TypeAnalysis();
 	auto ast = nameAnalysis->ast;
 	typeAnalysis->ast = ast;
-	printf("here\n");
+
 	
 	ast->typeAnalysis(typeAnalysis);
 	if (typeAnalysis->hasError){
@@ -280,7 +280,6 @@ void DTL::IntLitNode::typeAnalysis(TypeAnalysis* ta)
 
 void DTL::IDNode::typeAnalysis(TypeAnalysis* ta)
 {
-	std::cout << getName()<< "\n";
 	assert(getSymbol() != nullptr);
 	const DataType * type = getSymbol()->getDataType();
 	ta->nodeType(this, type);

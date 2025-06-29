@@ -76,13 +76,34 @@ public:
 	static DTLResources * build(ProgramNode * astIn){
 		ResourceAnalysis * resourceAnalysis = new ResourceAnalysis;
 		if (!resourceAnalysis) return nullptr;
+		
 		astIn->resourceAnalysis(resourceAnalysis, 0);
 
+		
 		return resourceAnalysis->GetResources();
 
 	}
-	ProgramNode * ast;
 
+	static void RegMapConst(ASTNode* node, ResourceAnalysis* ra)
+	{
+		static int constReg = 0;
+		ra->ConstRegMapping.insert(std::make_pair(node,constReg));
+		constReg++;
+	}
+
+	/*
+		Returns -1 on failure;
+	*/
+	int GetConstRegMapping(ASTNode* node, ResourceAnalysis* ra)
+	{
+		auto it = ra->ConstRegMapping.find(node);
+		if (it != ra->ConstRegMapping.end())
+			return it->second;
+		return -1;
+	}
+
+	static std::unordered_map<ASTNode*, int> ConstRegMapping; // Register assignments for Constants
+	ProgramNode * ast;
 	void UseForLoopRegister() 	{ResourcesNeeded->ForLoopsNeeded++;}
 	void UseNewConst() 			{ResourcesNeeded->nConstsNeeded++;}
 	void UseNewOutStatement()	{ResourcesNeeded->nOutStatements++;}
@@ -92,8 +113,6 @@ public:
 	void UseNewMultUnitLayer(int layer) {
 		ResourcesNeeded->LayerFuncUnitAllocations[ResourcesNeeded->CurrentOutStatement()][layer].nMultUnits++;
 	}
-	
-
 	
 	DTLResources* GetResources() const {return ResourcesNeeded;}
 private:

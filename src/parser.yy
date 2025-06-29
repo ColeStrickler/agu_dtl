@@ -88,6 +88,7 @@
 %type <DTL::StmtNode*> outstatement
 %type <DTL::IDNode*> loc
 %type <DTL::TypeNode*> type
+%type <DTL::IntLitNode*> intlit
 
 
 
@@ -108,7 +109,7 @@ constdecls: constdecls constdecl
             auto ret = std::vector<DTL::StmtNode*>();
             $$ = ret;
         }
-constdecl: type loc ASSIGN factor SEMICOL
+constdecl: type loc ASSIGN intlit SEMICOL
         {
             const Position * p = new Position($1->pos(), $5->pos());
             $$ = new ConstDeclNode(p, $1, $2, $4);
@@ -183,15 +184,19 @@ term: factor
     {
         $$ = $2;
     }
-factor: INTLITERAL 
+factor: intlit
     {
-        $$ = new IntLitNode($1->pos(), $1->num());
-        printf("Intlitnode\n");
+        $$ = $1;
     }
     | loc 
     {
         $$ = $1;
     }
+intlit : INTLITERAL
+    {
+        $$ = new IntLitNode($1->pos(), $1->num());
+    }
+
 loc : ID 
     {
         $$ = new IDNode($1->pos(), $1->value());

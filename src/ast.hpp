@@ -16,7 +16,7 @@ namespace DTL {
 
 class TypeAnalysis;
 class ResourceAnalysis;
-
+class ResourceAllocation;
 class Opd;
 
 class SymbolTable;
@@ -30,6 +30,7 @@ class TypeNode;
 class ExpNode;
 class IDNode;
 class ForStmtNode;
+class IntLitNode;
 
 
 enum NODETAG
@@ -78,6 +79,7 @@ public:
 	virtual bool nameAnalysis(SymbolTable *) override;
 	virtual void typeAnalysis(TypeAnalysis * ta);
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) {return "";};
 	virtual void PrintAST(const std::string& file);
 	
@@ -99,7 +101,9 @@ public:
 	virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	virtual void typeAnalysis(TypeAnalysis * ta) = 0;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc) = 0;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
+	virtual int Collapse(ResourceAllocation* ralloc) = 0;
 	//virtual Opd * flatten(Procedure * proc) = 0;
 };
 
@@ -111,7 +115,9 @@ public:
 	virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	virtual void typeAnalysis(TypeAnalysis *) override = 0;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc) = 0;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
+	virtual int Collapse(ResourceAllocation* ralloc) = 0;
 	//virtual Opd * flatten(Procedure * proc) override = 0;
 private:
 	SemSymbol * mySymbol;
@@ -124,7 +130,9 @@ public:
 	//virtual void unparse(std::ostream& out, int indent) override = 0;
 	virtual void typeAnalysis(TypeAnalysis *) = 0;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc) = 0;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
+	virtual int Collapse(ResourceAllocation* ralloc) = 0;
 	//virtual void to3AC(Procedure * proc) = 0;
 };
 
@@ -138,7 +146,9 @@ public:
 	virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	virtual void typeAnalysis(TypeAnalysis *) override = 0;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc) = 0;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
+	virtual int Collapse(ResourceAllocation* ralloc) = 0;
 	//virtual void to3AC(IRProgram * prog) = 0;
 	//virtual void to3AC(Procedure * proc) override = 0;
 };
@@ -148,7 +158,7 @@ public:
 */
 class ConstDeclNode : public DeclNode {
 public:
-	ConstDeclNode(const Position* p, TypeNode* type, IDNode* id, ExpNode* assignval) : DeclNode(p), myType(type), myID(id), myVal(assignval)
+	ConstDeclNode(const Position* p, TypeNode* type, IDNode* id, IntLitNode* assignval) : DeclNode(p), myType(type), myID(id), myVal(assignval)
 	{
 		myTag = NODETAG::CONSTDECLNODE;
 	}
@@ -156,13 +166,15 @@ public:
 	virtual void typeAnalysis(TypeAnalysis *) override;
 	virtual bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
+	virtual int Collapse(ResourceAllocation* ralloc) override;
 	
 
 private:
 	TypeNode* myType;
 	IDNode* myID;
-	ExpNode* myVal;
+	IntLitNode* myVal;
 };
 
 class PostIncStmtNode : public StmtNode{
@@ -173,7 +185,8 @@ public:
 	virtual bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
-
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual int Collapse(ResourceAllocation* ralloc) override;
 
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
 	//virtual void to3AC(Procedure * prog) override;
@@ -192,10 +205,19 @@ public:
 	virtual bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis *) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
+
+
+
+	virtual int Collapse(ResourceAllocation* ralloc) override;
 	//virtual void to3AC(Procedure * prog) override;
 
 private:
+	int RegInitValue;
+	int RegMaxValue;
+
+
 	StmtNode* myInit;
 	ExpNode* myCondExp;
 	StmtNode* myUpdateStmt;
@@ -210,6 +232,8 @@ public:
 	virtual bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis *) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual int Collapse(ResourceAllocation* ralloc) override;
 
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
 
@@ -227,7 +251,8 @@ public:
 	virtual bool nameAnalysis(SymbolTable *) override {return true;}
 	virtual void typeAnalysis(TypeAnalysis *){return;};
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
-	
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc) = 0;
+	virtual int Collapse(ResourceAllocation* ralloc) = 0;
 };
 
 
@@ -239,6 +264,8 @@ public:
 	//virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	//void unparse(std::ostream& out, int indent) override;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual int Collapse(ResourceAllocation* ralloc) override;
 	//virtual const DataType * getType() const override;
 };
 
@@ -253,6 +280,8 @@ public:
 	bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis * ta) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) {return;};
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual int Collapse(ResourceAllocation* ralloc) override;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
 	
 	//virtual Opd * flatten(Procedure * proc) override;
@@ -271,7 +300,9 @@ public:
 	//virtual void unparse(std::ostream& out, int indent) override = 0;
 	virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	virtual void typeAnalysis(TypeAnalysis *) override = 0;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc) = 0;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
+	virtual int Collapse(ResourceAllocation* ralloc) = 0;
 	//virtual Opd * flatten(Procedure * prog) override = 0;
 protected:
 	ExpNode * myExp;
@@ -283,12 +314,13 @@ public:
 	//virtual void unparseNested(std::ostream& out) override{
 	//	unparse(out, 0);
 	//}
-	virtual bool nameAnalysis(SymbolTable * symTab) override {printf("IntLitNode::nameAnalysis()\n");return true;}
+	virtual bool nameAnalysis(SymbolTable * symTab) override {return true;}
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
 	//void unparse(std::ostream& out, int indent) override;
 	//bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
-
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual int Collapse(ResourceAllocation* ralloc);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
 	//virtual Opd * flatten(Procedure * prog) override;
 private:
@@ -303,6 +335,8 @@ public:
 	virtual void typeAnalysis(TypeAnalysis *) override = 0;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc) = 0;
+	virtual int Collapse(ResourceAllocation* ralloc) = 0;
 	//virtual Opd * flatten(Procedure * prog) override = 0;
 protected:
 	ExpNode * myExp1;
@@ -322,6 +356,8 @@ public:
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual int Collapse(ResourceAllocation* ralloc);
 	//virtual Opd * flatten(Procedure * prog) override;
 };
 class TimesNode : public BinaryExpNode{
@@ -332,8 +368,9 @@ public:
 	//void unparse(std::ostream& out, int indent) override;
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
-
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
+	virtual int Collapse(ResourceAllocation* ralloc);
 	//virtual Opd * flatten(Procedure * prog) override;
 };
 
@@ -346,6 +383,7 @@ public:
 	//void unparse(std::ostream& out, int indent) override;
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer){return;};
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override
 	{
 		node_num++;
@@ -358,6 +396,7 @@ public:
 		
 		return name;
 	}
+	virtual int Collapse(ResourceAllocation* ralloc);
 	//virtual Opd * flatten(Procedure * proc) override;
 };
 
@@ -371,6 +410,8 @@ public:
 	//void unparse(std::ostream& out, int indent) override;
 	virtual void typeAnalysis(TypeAnalysis *) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer){return;};
+	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual int Collapse(ResourceAllocation* ralloc);
 	//virtual Opd * flatten(Procedure * prog) override;
 };
 

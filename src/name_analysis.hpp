@@ -15,9 +15,7 @@ public:
 	static NameAnalysis * build(ProgramNode * astIn){
 		NameAnalysis * nameAnalysis = new NameAnalysis;
 		SymbolTable * symTab = new SymbolTable();
-		printf("NameAnalysis::build()\n");
 		bool res = astIn->nameAnalysis(symTab);
-		printf("yolo\n");
 		delete symTab;
 		if (!res){ return nullptr; }
 

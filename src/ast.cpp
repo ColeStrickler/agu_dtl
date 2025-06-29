@@ -1,11 +1,87 @@
 #include "ast.hpp"
 
 
+/*
+    We offer these methods to collapse for loop into a structure
+    suitable for resource allocation. 
+*/
+int DTL::ForStmtNode::Collapse(ResourceAllocation* ralloc)
+{
+    int m = myCondExp->Collapse(ralloc);
+    int init = myInit->Collapse(ralloc);
+
+    RegMaxValue = m;
+    RegInitValue = init;
+    return 0;
+}
+
+
+int DTL::ConstDeclNode::Collapse(ResourceAllocation* ralloc)
+{
+    myID->Collapse(ralloc);
+    int val = myVal->Collapse(ralloc);
+    return val;
+}
+
+int DTL::IntLitNode::Collapse(ResourceAllocation* ralloc)
+{
+    return myNum;
+}
+
+
+int DTL::OutStmtNode::Collapse(ResourceAllocation* ralloc)
+{
+    assert(false); // should never hit
+    return 0;
+}
+
+
+int DTL::PlusNode::Collapse(ResourceAllocation* ralloc)
+{
+    assert(false); // should never hit
+    return 0;
+}
+
+
+int DTL::TimesNode::Collapse(ResourceAllocation* ralloc)
+{
+    assert(false); // should never hit
+    return 0;
+}
+
+int DTL::LessNode::Collapse(ResourceAllocation* ralloc)
+{
+    
+    return myExp2->Collapse(ralloc);
+}
+
+int DTL::LessEqNode::Collapse(ResourceAllocation* ralloc)
+{
+    assert(false); // possibly implement later
+    return 0;
+}
+
+int DTL::PostIncStmtNode::Collapse(ResourceAllocation* ralloc)
+{
+    assert(false); // should never hit
+    return 0;
+}
+
+int DTL::IDNode::Collapse(ResourceAllocation* ralloc)
+{
+    ralloc->MapForLoopReg(getName());
+    return 0;
+}
+
+int DTL::IntTypeNode::Collapse(ResourceAllocation* ralloc)
+{
+    assert(false); // should never hit
+    return 0;
+}
 
 
 void DTL::ProgramNode::PrintAST(const std::string &file)
 {
-    printf("ProgramNode::PrintAST()\n");
 	std::ofstream outfile(file);  // open for writing
 	if (!outfile.is_open()) {
 		std::cerr << "Failed to open file.\n";
@@ -27,7 +103,6 @@ void DTL::ProgramNode::PrintAST(const std::string &file)
 
 std::string DTL::ConstDeclNode::PrintAST(int &node_num, std::ofstream &outfile)
 {
-    printf("ConstDeclNode::PrintAST()\n");
 	node_num++;
 	std::string name = "ConstDeclNode" + std::to_string(node_num);
 	auto typeNodeString = myType->PrintAST(node_num, outfile);
@@ -39,9 +114,9 @@ std::string DTL::ConstDeclNode::PrintAST(int &node_num, std::ofstream &outfile)
 	return name;
 }
 
+
 std::string DTL::PostIncStmtNode::PrintAST(int &node_num, std::ofstream &outfile)
 {
-    printf("PostIncStmtNode::PrintAST()\n");
 	node_num++;
 	std::string name = "PostIncStmtNode" + std::to_string(node_num);
 	auto locNodeString = myLoc->PrintAST(node_num, outfile);
@@ -51,7 +126,6 @@ std::string DTL::PostIncStmtNode::PrintAST(int &node_num, std::ofstream &outfile
 
 std::string DTL::ForStmtNode::PrintAST(int &node_num, std::ofstream &outfile)
 {
-    printf("ForStmtNode::PrintAST()\n");
 	node_num++;
 	std::string name = "ForStmtNode" + std::to_string(node_num);
 	auto initNodeString = myInit->PrintAST(node_num, outfile);
@@ -68,9 +142,9 @@ std::string DTL::ForStmtNode::PrintAST(int &node_num, std::ofstream &outfile)
 	return name;
 }
 
+
 std::string DTL::OutStmtNode::PrintAST(int &node_num, std::ofstream &outfile)
 {
-    printf("OutStmtNode::PrintAST()\n");
 	node_num++;
 	std::string name = "OutStmtNode" + std::to_string(node_num);
 	auto expNodeString = myExp->PrintAST(node_num, outfile);
@@ -81,7 +155,6 @@ std::string DTL::OutStmtNode::PrintAST(int &node_num, std::ofstream &outfile)
 
 std::string DTL::TypeNode::PrintAST(int& node_num, std::ofstream& outfile)
 {
-    printf("TypeNode::PrintAST()\n");
 	node_num++;
 	std::string name = "TypeNode" + std::to_string(node_num);
 	return name;
@@ -89,7 +162,6 @@ std::string DTL::TypeNode::PrintAST(int& node_num, std::ofstream& outfile)
 
 std::string DTL::IntTypeNode::PrintAST(int &node_num, std::ofstream &outfile)
 {
-    printf("IntTypeNode::PrintAST()\n");
 	node_num++;
 	std::string name = "IntTypeNode" + std::to_string(node_num);
 	return name;
@@ -97,16 +169,13 @@ std::string DTL::IntTypeNode::PrintAST(int &node_num, std::ofstream &outfile)
 
 std::string DTL::IDNode::PrintAST(int &node_num, std::ofstream &outfile)
 {
-    printf("IDNode::PrintAST()\n");
 	node_num++;
 	std::string name = "IDNode" + std::to_string(node_num) + "_" + getName();
-    printf("here\n");
 	return name;
 }
 
 std::string DTL::IntLitNode::PrintAST(int &node_num, std::ofstream &outfile)
 {
-    printf("IntLitNode::PrintAST() %d\n", node_num);
 	node_num++;
 	std::string name = "IntLitNode" + std::to_string(node_num) + "_" + std::to_string(myNum);
 	return name;
@@ -114,7 +183,6 @@ std::string DTL::IntLitNode::PrintAST(int &node_num, std::ofstream &outfile)
 
 std::string DTL::PlusNode::PrintAST(int &node_num, std::ofstream &outfile)
 {
-    printf("PlusNode::PrintAST()\n");
 	node_num++;
 	std::string name = "PlusNode" + std::to_string(node_num);
 	auto exp1NodeString = myExp1->PrintAST(node_num, outfile);
@@ -127,7 +195,6 @@ std::string DTL::PlusNode::PrintAST(int &node_num, std::ofstream &outfile)
 
 std::string DTL::LessEqNode::PrintAST(int &node_num, std::ofstream &outfile)
 {
-    printf("LessEqNode::PrintAST()\n");
 	node_num++;
 	std::string name = "LessEqNode" + std::to_string(node_num);
 	auto exp1NodeString = myExp1->PrintAST(node_num, outfile);
