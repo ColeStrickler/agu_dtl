@@ -9,8 +9,8 @@ namespace DTL
 class AGUHardwareStat
 {
 public:
-    AGUHardwareStat(int nAdd, int nMult, int nLayers, int nConst, int nForLoop) :\
-        nLayerAddUnits(nAdd), nLayerMultUnits(nMult), nConstRegisters(nConst), nForLoopRegisters(nForLoop), nLayers(nLayers)
+    AGUHardwareStat(int nAdd, int nMult, int nLayers, int nConst, int nForLoop, int nPassThrough) :\
+        nLayerAddUnits(nAdd), nLayerMultUnits(nMult), nConstRegisters(nConst), nForLoopRegisters(nForLoop), nLayers(nLayers), nLayerPassThrough(nPassThrough)
     {
 
     }
@@ -24,7 +24,7 @@ public:
     {
         return (rsrc->nAddNeeded <= nLayerAddUnits) && (rsrc->nMultNeeded <= nLayerMultUnits) &&\
             (rsrc->ForLoopsNeeded <= nForLoopRegisters) && (rsrc->nConstsNeeded <= nConstRegisters) && \
-            (rsrc->nLayersNeeded <= nLayers); 
+            (rsrc->nLayersNeeded <= nLayers) && (rsrc->nPassThrough <= nLayerPassThrough); 
     }
 
     int nLayerAddUnits;
@@ -32,6 +32,7 @@ public:
     int nLayers;
     int nConstRegisters;
     int nForLoopRegisters;
+    int nLayerPassThrough;
 
 };
 
@@ -47,6 +48,15 @@ struct LoopReg
 class FuncUnit
 {
 public:
+
+    /*
+        Used for passthrough
+    */
+    FuncUnit(int regAssignment, int inputA) : RegAssignment(regAssignment), InputA(inputA)
+    {
+
+    }
+
     FuncUnit(int regAssignment, int inputA, int inputB) : RegAssignment(regAssignment), InputA(inputA), InputB(inputB)
     {
 
@@ -79,8 +89,24 @@ public:
     {
 
     }
+};
 
 
+class PassThrough : public FuncUnit
+{
+public:
+    PassThrough(int regAssignment, int inputA) : FuncUnit(regAssignment, inputA)
+    {
+
+    }
+
+    ~PassThrough()
+    {
+        
+    }
+
+
+private:
 
 };
 

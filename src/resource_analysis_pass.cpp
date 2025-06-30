@@ -74,7 +74,9 @@ void DTL::PlusNode::resourceAnalysis(ResourceAnalysis* ra, int layer)
         layer N-1 is actually layer 1, and so on
     */
     myExp1->resourceAnalysis(ra, layer+1);
-    myExp2->resourceAnalysis(ra, layer+1);
+
+    if (!isPassThrough())
+        myExp2->resourceAnalysis(ra, layer+1);
 }
 
 
