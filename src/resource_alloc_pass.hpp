@@ -4,8 +4,35 @@
 #include <vector>
 namespace DTL
 {
-struct AGUHardwareStat
+
+
+class AGUHardwareStat
 {
+public:
+    AGUHardwareStat(int nAdd, int nMult, int nLayers, int nConst, int nForLoop) :\
+        nLayerAddUnits(nAdd), nLayerMultUnits(nMult), nConstRegisters(nConst), nForLoopRegisters(nForLoop), nLayers(nLayers)
+    {
+
+    }
+
+    ~AGUHardwareStat()
+    {
+
+    }
+
+    bool CheckMeetHardwareConstaints(DTLResources* rsrc) const
+    {
+        return (rsrc->nAddNeeded <= nLayerAddUnits) && (rsrc->nMultNeeded <= nLayerMultUnits) &&\
+            (rsrc->ForLoopsNeeded <= nForLoopRegisters) && (rsrc->nConstsNeeded <= nConstRegisters) && \
+            (rsrc->nLayersNeeded <= nLayers); 
+    }
+
+    int nLayerAddUnits;
+    int nLayerMultUnits;
+    int nLayers;
+    int nConstRegisters;
+    int nForLoopRegisters;
+
 };
 
 
@@ -40,7 +67,7 @@ private:
 
 
 
-class AddUnit :FuncUnit
+class AddUnit : public FuncUnit
 {
 public:
     AddUnit(int regAssignment, int inputA, int inputB) : FuncUnit(regAssignment, inputA, inputB)
@@ -58,7 +85,7 @@ public:
 };
 
 
-class MultUnit : FuncUnit
+class MultUnit : public FuncUnit
 {
 public:
     MultUnit(int regAssignment, int inputA, int inputB) : FuncUnit(regAssignment, inputA, inputB)
@@ -78,7 +105,7 @@ public:
 class AGULayer
 {
 public:
-    AGULayer()
+    AGULayer(int nAddUnits, int nMultUnits) : maxAddUnit(nAddUnits), maxMultUnit(nMultUnits), usedAddUnit(0), usedMultUnit(0)
     {
 
     }
@@ -89,16 +116,23 @@ public:
     }
 
 
-    void MapAddUnit(AddUnit* unit)
+    int MapAddUnit(AddUnit* unit)
     {
-
-        
+        int mapping = usedAddUnit;
+        usedAddUnit++;
+        assert(usedAddUnit <= maxAddUnit);
+        MapFuncUnit(unit);
+        return mapping;
     }
 
 
-    void MapMultUnit()
+    int MapMultUnit(MultUnit* unit)
     {
-
+        int mapping = usedMultUnit;
+        usedMultUnit++;
+        assert(usedMultUnit <= maxMultUnit);
+        MapFuncUnit(unit);
+        return mapping;
     }
 
     void MapFuncUnit(FuncUnit* unit)
@@ -106,14 +140,25 @@ public:
         inputRouting.push_back(unit);
     }
 
+
+    int getNextAddUnit() const
+    {
+        return usedAddUnit;
+    }
+
+    int getNextMultUnit() const
+    {
+        return usedMultUnit;
+    }
+
     std::vector<FuncUnit*> inputRouting;
 private:
     int maxAddUnit;
     int maxMultUnit;
     int usedAddUnit;
-    int usedMultUnit
+    int usedMultUnit;
 
-}
+};
 
 
 /*
@@ -127,7 +172,7 @@ public:
     OutStmtRouting(int layerAddUnits, int layerMultUnits, int nLayers) : LayerAddUnitCount(layerAddUnits), LayerMultUnitCount(layerMultUnits)
     {
         for (int i = 0; i < nLayers; i++)
-            LayerRouting.push_back(new AGULayer);
+            LayerRouting.push_back(new AGULayer(layerAddUnits, layerMultUnits));
     }
 
     ~OutStmtRouting()
@@ -138,31 +183,57 @@ public:
     int RequestAddUnit(int layer, int inputMapA, int inputMapB)
     {
         assert(layer >= 0 && layer < LayerRouting.size());
-        LayerRouting[layer]->MapFuncUnit(new AddUnit())
 
+        auto& routing = LayerRouting[layer];
+        return routing->MapAddUnit(new AddUnit(routing->getNextAddUnit(), inputMapA, inputMapB));
     }
 
     int RequestMultUnit(int layer,  int inputMapA, int inputMapB)
     {
         assert(layer >= 0 && layer < LayerRouting.size());
+        auto& routing = LayerRouting[layer];
+        return routing->MapMultUnit(new MultUnit(routing->getNextMultUnit(), inputMapA, inputMapB));
     }
 
+
+    int GetNodeFuncUnitMapping(ASTNode* node)
+    {
+        if (OpFuncUnitMapping.find(node) != OpFuncUnitMapping.end())
+            return OpFuncUnitMapping[node]; 
+        return -1;
+    }
+
+    void MapNodeFuncUnit(ASTNode* node, int unit)
+    {
+        OpFuncUnitMapping.insert(std::make_pair(node, unit));
+    }
     
 private:
+    std::unordered_map<ASTNode*, int> OpFuncUnitMapping;
     std::vector<AGULayer*> LayerRouting;
     int LayerAddUnitCount;
     int LayerMultUnitCount;
     
-}
+};
 
 
 
 class ResourceAllocation{
 public:
-	static void* build(ResourceAnalysis* ra){
+	static void* build(ResourceAnalysis* ra, AGUHardwareStat* hwStat){
 		ResourceAllocation * resourceAlloc = new ResourceAllocation;
 		if (!resourceAlloc) return nullptr;
 
+        if (!hwStat->CheckMeetHardwareConstaints(ra->GetResources()))
+        {
+            std::cerr << "Configuration uses too many hardware resources.\n";
+            exit(-1);
+        }
+
+
+
+
+        
         /*
             We need to allocate layers inside of resourceAlloc.
 
@@ -197,11 +268,16 @@ public:
         idForLoopRegMap[idName] = loopRegisters.size();
     }
 
+    OutStmtRouting* GetCurrentOutStatement() const
+    {
+        assert(OutStatementRouting.size());
+        return OutStatementRouting[OutStatementRouting.size()-1];
+    }
+
 private:
 
     // [OutStmtNode # -> [Layer # -> N]]
-    std::unordered_map<int, >
-
+    std::vector<OutStmtRouting*> OutStatementRouting;
 
 
     std::unordered_map<std::string, int> idForLoopRegMap;

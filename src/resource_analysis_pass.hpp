@@ -15,25 +15,81 @@ struct DTLUnitAllocation
 {
 	int nMultUnits;
 	int nAddUnits;
+	int nPassThrough;
 };
 
 
 struct DTLResources
 {
-	DTLResources() : ForLoopsNeeded(0), nConstsNeeded(0), nOutStatements(0)
+	DTLResources() : ForLoopsNeeded(0), nConstsNeeded(0), nOutStatements(0), nPassThrough(0)
 	{
 
 	}
 
-	int GetLayersNeeded() const
+	int GetPassThroughNeeded()
+	{
+		int pass_needed = 0;
+		for (auto& e: LayerFuncUnitAllocations)
+		{
+			for (auto& l : e.second)
+			{
+				const DTLUnitAllocation& alloc_layer = l.second;
+				int pass = alloc_layer.nPassThrough;
+				pass_needed = std::max(pass_needed, pass);
+			}
+		}
+		nPassThrough = pass_needed;
+		return nPassThrough;
+	}
+
+	int GetLayersNeeded()
 	{
 		int layers_needed = 0;
 		for (auto& e: LayerFuncUnitAllocations)
 			layers_needed = std::max(layers_needed, static_cast<int>(e.second.size())); // compile time cast
+		nLayersNeeded = layers_needed;
 		return layers_needed;
 	}
 
-	std::string toString() const
+	int GetMultUnitsNeeded()
+	{
+		int mult_needed = 0;
+		for (auto& e: LayerFuncUnitAllocations)
+		{
+			for (auto& l : e.second)
+			{
+				const DTLUnitAllocation& alloc_layer = l.second;
+				int mult = alloc_layer.nMultUnits;
+				mult_needed = std::max(mult_needed, mult);
+			}
+		}
+		nMultNeeded = mult_needed;
+		return nMultNeeded;
+	}
+
+
+	/*
+	
+	
+	*/
+	int GetAddUnitsNeeded()
+	{
+		int add_needed = 0;
+		for (auto& e: LayerFuncUnitAllocations)
+		{
+			for (auto& l : e.second)
+			{
+				const DTLUnitAllocation& alloc_layer = l.second;
+				int add = alloc_layer.nAddUnits;
+				add_needed = std::max(add_needed, add);
+			}
+		}
+		nAddNeeded = add_needed;
+		return nAddNeeded;
+	}
+
+
+	std::string toString()
 	{
 		std::string ret;
 		ret += "ForLoopsNeeded: " + std::to_string(ForLoopsNeeded) + ", ";
@@ -51,9 +107,11 @@ struct DTLResources
 				const DTLUnitAllocation& alloc_layer = l.second;
 				int mult = alloc_layer.nMultUnits;
 				int add = alloc_layer.nAddUnits;
+				int pass = alloc_layer.nPassThrough;
 				auto mult_units = std::to_string(mult);
 				auto add_units = std::to_string(add);
-				ret += "Layer " + std::to_string(l.first) + ", OutStatement" + std::to_string(e.first) + ": MultUnits(" + mult_units + ") AddUnits(" + add_units + ")\n";
+				auto pass_thru = std::to_string(pass);
+				ret += "Layer " + std::to_string(l.first) + ", OutStatement" + std::to_string(e.first) + ": MultUnits(" + mult_units + ") AddUnits(" + add_units + ")" + " PassThrough(" + pass_thru + ")\n";
 
 			}
 		}
@@ -67,6 +125,10 @@ struct DTLResources
 	int ForLoopsNeeded;
 	int nConstsNeeded;
 	int nOutStatements;
+	int nLayersNeeded;
+	int nMultNeeded;
+	int nAddNeeded;
+	int nPassThrough;
 	std::map<int, std::map<int, DTLUnitAllocation>> LayerFuncUnitAllocations;
 };
 
@@ -102,7 +164,7 @@ public:
 		return -1;
 	}
 
-	static std::unordered_map<ASTNode*, int> ConstRegMapping; // Register assignments for Constants
+	std::unordered_map<ASTNode*, int> ConstRegMapping; // Register assignments for Constants
 	ProgramNode * ast;
 	void UseForLoopRegister() 	{ResourcesNeeded->ForLoopsNeeded++;}
 	void UseNewConst() 			{ResourcesNeeded->nConstsNeeded++;}
@@ -114,6 +176,10 @@ public:
 		ResourcesNeeded->LayerFuncUnitAllocations[ResourcesNeeded->CurrentOutStatement()][layer].nMultUnits++;
 	}
 	
+	void UseNewPassThroughLayer(int layer) {
+		ResourcesNeeded->LayerFuncUnitAllocations[ResourcesNeeded->CurrentOutStatement()][layer].nPassThrough++;
+	}
+
 	DTLResources* GetResources() const {return ResourcesNeeded;}
 private:
 	DTLResources* ResourcesNeeded;

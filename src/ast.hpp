@@ -60,6 +60,7 @@ public:
 	virtual bool nameAnalysis(SymbolTable * symTab) = 0;
 	NODETAG getTag() const {return myTag;}
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) = 0;
+	virtual ASTNode* TransformPass() = 0;
 	//Note that there is no ASTNode::typeAnalysis. To allow
 	// for different type signatures, type analysis is
 	// implemented as needed in various subclasses
@@ -79,10 +80,10 @@ public:
 	virtual bool nameAnalysis(SymbolTable *) override;
 	virtual void typeAnalysis(TypeAnalysis * ta);
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) {return "";};
 	virtual void PrintAST(const std::string& file);
-	
+	virtual ASTNode* TransformPass() override;
 
 
 	//IRProgram * to3AC(TypeAnalysis * ta);
@@ -101,9 +102,12 @@ public:
 	virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	virtual void typeAnalysis(TypeAnalysis * ta) = 0;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc) = 0;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth) = 0;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
 	virtual int Collapse(ResourceAllocation* ralloc) = 0;
+	virtual ASTNode* TransformPass() = 0;
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth) = 0;
+	virtual int GetMaxDepth() = 0;
 	//virtual Opd * flatten(Procedure * proc) = 0;
 };
 
@@ -115,9 +119,12 @@ public:
 	virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	virtual void typeAnalysis(TypeAnalysis *) override = 0;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc) = 0;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth) = 0;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
 	virtual int Collapse(ResourceAllocation* ralloc) = 0;
+	virtual ASTNode* TransformPass() = 0;
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth) = 0;
+	virtual int GetMaxDepth() = 0;
 	//virtual Opd * flatten(Procedure * proc) override = 0;
 private:
 	SemSymbol * mySymbol;
@@ -130,9 +137,13 @@ public:
 	//virtual void unparse(std::ostream& out, int indent) override = 0;
 	virtual void typeAnalysis(TypeAnalysis *) = 0;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc) = 0;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth) = 0;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
 	virtual int Collapse(ResourceAllocation* ralloc) = 0;
+	virtual ASTNode* TransformPass() = 0;
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth) = 0;
+
+	int GetMaxDepth() {return 0;}
 	//virtual void to3AC(Procedure * proc) = 0;
 };
 
@@ -146,9 +157,11 @@ public:
 	virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	virtual void typeAnalysis(TypeAnalysis *) override = 0;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc) = 0;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth) = 0;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
 	virtual int Collapse(ResourceAllocation* ralloc) = 0;
+	virtual ASTNode* TransformPass() = 0;
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth) = 0;
 	//virtual void to3AC(IRProgram * prog) = 0;
 	//virtual void to3AC(Procedure * proc) override = 0;
 };
@@ -166,9 +179,11 @@ public:
 	virtual void typeAnalysis(TypeAnalysis *) override;
 	virtual bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
 	virtual int Collapse(ResourceAllocation* ralloc) override;
+	virtual ASTNode* TransformPass() override;
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth);
 	
 
 private:
@@ -185,8 +200,11 @@ public:
 	virtual bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth);
 	virtual int Collapse(ResourceAllocation* ralloc) override;
+	virtual ASTNode* TransformPass() override;
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth) override;
+	virtual int GetMaxDepth();
 
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
 	//virtual void to3AC(Procedure * prog) override;
@@ -205,10 +223,12 @@ public:
 	virtual bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis *) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
+	virtual ASTNode* TransformPass() override;
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth) override;
 
-
+	
 
 	virtual int Collapse(ResourceAllocation* ralloc) override;
 	//virtual void to3AC(Procedure * prog) override;
@@ -232,11 +252,17 @@ public:
 	virtual bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis *) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth);
 	virtual int Collapse(ResourceAllocation* ralloc) override;
-
+	virtual ASTNode* TransformPass();
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
+	virtual int GetMaxDepth();
 
+	int maxDepth; // calling GetMaxDepth() will also set this value
+
+	
+	
 	//virtual void to3AC(Procedure * prog) override;
 private:
 	ExpNode * myExp;
@@ -251,8 +277,9 @@ public:
 	virtual bool nameAnalysis(SymbolTable *) override {return true;}
 	virtual void typeAnalysis(TypeAnalysis *){return;};
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc) = 0;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth) = 0;
 	virtual int Collapse(ResourceAllocation* ralloc) = 0;
+	virtual ASTNode* TransformPass() = 0;
 };
 
 
@@ -264,8 +291,10 @@ public:
 	//virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	//void unparse(std::ostream& out, int indent) override;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth);
 	virtual int Collapse(ResourceAllocation* ralloc) override;
+	virtual ASTNode* TransformPass() override;
+	
 	//virtual const DataType * getType() const override;
 };
 
@@ -280,10 +309,12 @@ public:
 	bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis * ta) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) {return;};
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth);
 	virtual int Collapse(ResourceAllocation* ralloc) override;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
-	
+	virtual ASTNode* TransformPass() override;
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth) override;
+	virtual int GetMaxDepth();
 	//virtual Opd * flatten(Procedure * proc) override;
 private:
 	std::string name;
@@ -300,9 +331,11 @@ public:
 	//virtual void unparse(std::ostream& out, int indent) override = 0;
 	virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
 	virtual void typeAnalysis(TypeAnalysis *) override = 0;
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc) = 0;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth) = 0;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
 	virtual int Collapse(ResourceAllocation* ralloc) = 0;
+	virtual ASTNode* TranformPass() = 0;
+	virtual int GetMaxDepth() = 0;
 	//virtual Opd * flatten(Procedure * prog) override = 0;
 protected:
 	ExpNode * myExp;
@@ -319,9 +352,12 @@ public:
 	//void unparse(std::ostream& out, int indent) override;
 	//bool nameAnalysis(SymbolTable * symTab) override;
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth);
 	virtual int Collapse(ResourceAllocation* ralloc);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
+	virtual ASTNode* TransformPass() override;
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth) override;
+	virtual int GetMaxDepth();
 	//virtual Opd * flatten(Procedure * prog) override;
 private:
 	const int myNum;
@@ -335,8 +371,11 @@ public:
 	virtual void typeAnalysis(TypeAnalysis *) override = 0;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer) = 0;
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override = 0;
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc) = 0;
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth) = 0;
 	virtual int Collapse(ResourceAllocation* ralloc) = 0;
+	virtual ASTNode* TransformPass() = 0;
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth) = 0;
+	virtual int GetMaxDepth() = 0;
 	//virtual Opd * flatten(Procedure * prog) override = 0;
 protected:
 	ExpNode * myExp1;
@@ -350,14 +389,22 @@ protected:
 class PlusNode : public BinaryExpNode{
 public:
 	PlusNode(const Position * p, ExpNode * e1, ExpNode * e2)
-	: BinaryExpNode(p, e1, e2){ myTag = NODETAG::PLUSNODE; }
+	: BinaryExpNode(p, e1, e2), IsPassThrough(false) { myTag = NODETAG::PLUSNODE; }
 	//virtual bool nameAnalysis(SymbolTable * symTab) override;
 	//void unparse(std::ostream& out, int indent) override;
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth);
 	virtual int Collapse(ResourceAllocation* ralloc);
+	virtual ASTNode* TransformPass() override;
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth) override;
+	virtual int GetMaxDepth();
+	bool isPassThrough();
+	void setPassThrough() {IsPassThrough = true;}
+
+private:
+	bool IsPassThrough;
 	//virtual Opd * flatten(Procedure * prog) override;
 };
 class TimesNode : public BinaryExpNode{
@@ -368,9 +415,12 @@ public:
 	//void unparse(std::ostream& out, int indent) override;
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer);
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override;
 	virtual int Collapse(ResourceAllocation* ralloc);
+	virtual ASTNode* TransformPass() override;
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth) override;
+	virtual int GetMaxDepth();
 	//virtual Opd * flatten(Procedure * prog) override;
 };
 
@@ -383,7 +433,7 @@ public:
 	//void unparse(std::ostream& out, int indent) override;
 	virtual void typeAnalysis(TypeAnalysis *ta) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer){return;};
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth);
 	virtual std::string PrintAST(int& node_num, std::ofstream& outfile) override
 	{
 		node_num++;
@@ -397,6 +447,9 @@ public:
 		return name;
 	}
 	virtual int Collapse(ResourceAllocation* ralloc);
+	virtual int GetMaxDepth();
+	virtual ASTNode* TransformPass() override;
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth) override;
 	//virtual Opd * flatten(Procedure * proc) override;
 };
 
@@ -410,386 +463,15 @@ public:
 	//void unparse(std::ostream& out, int indent) override;
 	virtual void typeAnalysis(TypeAnalysis *) override;
 	virtual void resourceAnalysis(ResourceAnalysis* ra, int layer){return;};
-	virtual void resourceAllocation(ResourceAllocation* ralloc, bool alloc);
+	virtual void resourceAllocation(ResourceAllocation* ralloc, int depth);
 	virtual int Collapse(ResourceAllocation* ralloc);
+	virtual ASTNode* TransformPass() override;
+	virtual ASTNode* TransformPass(int currDepth, int requiredDepth) override;
+	virtual int GetMaxDepth();
 	//virtual Opd * flatten(Procedure * prog) override;
 };
 
 
-
-/*
-
-
-class FnDeclNode : public DeclNode{
-public:
-	FnDeclNode(const Position * p,
-	  IDNode * inID,
-	  std::list<FormalDeclNode *> * inFormals,
-	  TypeNode * inRetType,
-	  std::list<StmtNode *> * inBody)
-	: DeclNode(p), myID(inID),
-	  myFormals(inFormals), myRetType(inRetType),
-	  myBody(inBody){
-	}
-	IDNode * ID() const { return myID; }
-	virtual std::string getName() override { 
-		return myID->getName(); 
-	}
-	std::list<FormalDeclNode *> * getFormals() const{
-		return myFormals;
-	}
-	virtual TypeNode * getRetTypeNode() {
-		return myRetType;
-	}
-	void unparse(std::ostream& out, int indent) override;
-	virtual bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	void to3AC(IRProgram * prog) override;
-	void to3AC(Procedure * prog) override;
-private:
-	IDNode * myID;
-	std::list<FormalDeclNode *> * myFormals;
-	TypeNode * myRetType;
-	std::list<StmtNode *> * myBody;
-};
-
-class AssignStmtNode : public StmtNode{
-public:
-	AssignStmtNode(const Position * p, LocNode * inDst, ExpNode * inSrc)
-	: StmtNode(p), myDst(inDst), mySrc(inSrc){ }
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual void to3AC(Procedure * prog) override;
-private:
-	LocNode * myDst;
-	ExpNode * mySrc;
-};
-
-class MaybeStmtNode : public StmtNode{
-public:
-	MaybeStmtNode(const Position * p, LocNode * inDst, ExpNode * inSrc1, ExpNode * inSrc2)
-	: StmtNode(p), myDst(inDst), mySrc1(inSrc1), mySrc2(inSrc2){ }
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual void to3AC(Procedure * prog) override;
-private:
-	LocNode * myDst;
-	ExpNode * mySrc1;
-	ExpNode * mySrc2;
-};
-
-class FromConsoleStmtNode : public StmtNode{
-public:
-	FromConsoleStmtNode(const Position * p, LocNode * inDst)
-	: StmtNode(p), myDst(inDst){ }
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual void to3AC(Procedure * prog) override;
-private:
-	LocNode * myDst;
-};
-
-class ToConsoleStmtNode : public StmtNode{
-public:
-	ToConsoleStmtNode(const Position * p, ExpNode * inSrc)
-	: StmtNode(p), mySrc(inSrc){ }
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual void to3AC(Procedure * prog) override;
-private:
-	ExpNode * mySrc;
-};
-
-class PostDecStmtNode : public StmtNode{
-public:
-	PostDecStmtNode(const Position * p, LocNode * inLoc)
-	: StmtNode(p), myLoc(inLoc){ }
-	void unparse(std::ostream& out, int indent) override;
-	virtual bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual void to3AC(Procedure * prog) override;
-private:
-	LocNode * myLoc;
-};
-
-
-
-class IfStmtNode : public StmtNode{
-public:
-	IfStmtNode(const Position * p, ExpNode * condIn,
-	  std::list<StmtNode *> * bodyIn)
-	: StmtNode(p), myCond(condIn), myBody(bodyIn){ }
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual void to3AC(Procedure * prog) override;
-private:
-	ExpNode * myCond;
-	std::list<StmtNode *> * myBody;
-};
-
-class IfElseStmtNode : public StmtNode{
-public:
-	IfElseStmtNode(const Position * p, ExpNode * condIn,
-	  std::list<StmtNode *> * bodyTrueIn,
-	  std::list<StmtNode *> * bodyFalseIn)
-	: StmtNode(p), myCond(condIn),
-	  myBodyTrue(bodyTrueIn), myBodyFalse(bodyFalseIn) { }
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual void to3AC(Procedure * prog) override;
-private:
-	ExpNode * myCond;
-	std::list<StmtNode *> * myBodyTrue;
-	std::list<StmtNode *> * myBodyFalse;
-};
-
-class WhileStmtNode : public StmtNode{
-public:
-	WhileStmtNode(const Position * p, ExpNode * condIn,
-	  std::list<StmtNode *> * bodyIn)
-	: StmtNode(p), myCond(condIn), myBody(bodyIn){ }
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual void to3AC(Procedure * prog) override;
-private:
-	ExpNode * myCond;
-	std::list<StmtNode *> * myBody;
-};
-
-class ReturnStmtNode : public StmtNode{
-public:
-	ReturnStmtNode(const Position * p, ExpNode * exp)
-	: StmtNode(p), myExp(exp){ }
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual void to3AC(Procedure * proc) override;
-private:
-	ExpNode * myExp;
-};
-
-class CallExpNode : public ExpNode{
-public:
-	CallExpNode(const Position * p, LocNode * inCallee,
-	  std::list<ExpNode *> * inArgs)
-	: ExpNode(p), myCallee(inCallee), myArgs(inArgs){ }
-	void unparse(std::ostream& out, int indent) override;
-	void unparseNested(std::ostream& out) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	void typeAnalysis(TypeAnalysis *) override;
-	DataType * getRetType();
-
-	virtual Opd * flatten(Procedure * proc) override;
-private:
-	LocNode * myCallee;
-	std::list<ExpNode *> * myArgs;
-};
-
-
-
-
-class MinusNode : public BinaryExpNode{
-public:
-	MinusNode(const Position * p, ExpNode * e1, ExpNode * e2)
-	: BinaryExpNode(p, e1, e2){ }
-	void unparse(std::ostream& out, int indent) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * prog) override;
-};
-
-
-class DivideNode : public BinaryExpNode{
-public:
-	DivideNode(const Position * p, ExpNode * e1, ExpNode * e2)
-	: BinaryExpNode(p, e1, e2){ }
-	void unparse(std::ostream& out, int indent) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * prog) override;
-};
-
-class AndNode : public BinaryExpNode{
-public:
-	AndNode(const Position * p, ExpNode * e1, ExpNode * e2)
-	: BinaryExpNode(p, e1, e2){ }
-	void unparse(std::ostream& out, int indent) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * prog) override;
-};
-
-class OrNode : public BinaryExpNode{
-public:
-	OrNode(const Position * p, ExpNode * e1, ExpNode * e2)
-	: BinaryExpNode(p, e1, e2){ }
-	void unparse(std::ostream& out, int indent) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * prog) override;
-};
-
-class EqualsNode : public BinaryExpNode{
-public:
-	EqualsNode(const Position * p, ExpNode * e1, ExpNode * e2)
-	: BinaryExpNode(p, e1, e2){ }
-	void unparse(std::ostream& out, int indent) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * prog) override;
-};
-
-class NotEqualsNode : public BinaryExpNode{
-public:
-	NotEqualsNode(const Position * p, ExpNode * e1, ExpNode * e2)
-	: BinaryExpNode(p, e1, e2){ }
-	void unparse(std::ostream& out, int indent) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * prog) override;
-};
-
-
-class GreaterNode : public BinaryExpNode{
-public:
-	GreaterNode(const Position * p, ExpNode * e1, ExpNode * e2)
-	: BinaryExpNode(p, e1, e2){ }
-	void unparse(std::ostream& out, int indent) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * proc) override;
-};
-
-class GreaterEqNode : public BinaryExpNode{
-public:
-	GreaterEqNode(const Position * p, ExpNode * e1, ExpNode * e2)
-	: BinaryExpNode(p, e1, e2){ }
-	void unparse(std::ostream& out, int indent) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * prog) override;
-};
-
-
-
-
-class NegNode : public UnaryExpNode{
-public:
-	NegNode(const Position * p, ExpNode * exp)
-	: UnaryExpNode(p, exp){ }
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * prog) override;
-};
-
-class NotNode : public UnaryExpNode{
-public:
-	NotNode(const Position * p, ExpNode * exp)
-	: UnaryExpNode(p, exp){ }
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * prog) override;
-};
-
-class VoidTypeNode : public TypeNode{
-public:
-	VoidTypeNode(const Position * p) : TypeNode(p){}
-	void unparse(std::ostream& out, int indent) override;
-	virtual const DataType * getType() const override {
-		return BasicType::VOID();
-	}
-};
-
-class ImmutableTypeNode : public TypeNode{
-public:
-	ImmutableTypeNode(const Position * p, TypeNode * inSub)
-	: TypeNode(p), mySub(inSub){}
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual const DataType * getType() const override {
-		return ImmutableType::produce(mySub->getType());
-	};
-private:
-	TypeNode * mySub;
-};
-
-
-
-class BoolTypeNode : public TypeNode{
-public:
-	BoolTypeNode(const Position * p): TypeNode(p) { }
-	void unparse(std::ostream& out, int indent) override;
-	virtual const DataType * getType() const override;
-};
-
-
-
-class StrLitNode : public ExpNode{
-public:
-	StrLitNode(const Position * p, const std::string strIn)
-	: ExpNode(p), myStr(strIn){ }
-	virtual void unparseNested(std::ostream& out) override{
-		unparse(out, 0);
-	}
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable *) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * proc) override;
-private:
-	 const std::string myStr;
-};
-
-class TrueNode : public ExpNode{
-public:
-	TrueNode(const Position * p): ExpNode(p){ }
-	virtual void unparseNested(std::ostream& out) override{
-		unparse(out, 0);
-	}
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * prog) override;
-};
-
-class FalseNode : public ExpNode{
-public:
-	FalseNode(const Position * p): ExpNode(p){ }
-	virtual void unparseNested(std::ostream& out) override{
-		unparse(out, 0);
-	}
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual Opd * flatten(Procedure * prog) override;
-};
-
-class EhNode : public ExpNode{
-public:
-	EhNode(const Position * p): ExpNode(p){ }
-	virtual void unparseNested(std::ostream& out) override{
-		unparse(out, 0);
-	}
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override {
-		return true;
-	};
-	virtual void typeAnalysis(TypeAnalysis * ta) override;
-	virtual Opd * flatten(Procedure * prog) override;
-};
-
-class CallStmtNode : public StmtNode{
-public:
-	CallStmtNode(const Position * p, CallExpNode * expIn)
-	: StmtNode(p), myCallExp(expIn){ }
-	void unparse(std::ostream& out, int indent) override;
-	bool nameAnalysis(SymbolTable * symTab) override;
-	virtual void typeAnalysis(TypeAnalysis *) override;
-	virtual void to3AC(Procedure * proc) override;
-private:
-	CallExpNode * myCallExp;
-};
-*/
 } 
 
 #endif

@@ -1,84 +1,6 @@
 #include "ast.hpp"
 
 
-/*
-    We offer these methods to collapse for loop into a structure
-    suitable for resource allocation. 
-*/
-int DTL::ForStmtNode::Collapse(ResourceAllocation* ralloc)
-{
-    int m = myCondExp->Collapse(ralloc);
-    int init = myInit->Collapse(ralloc);
-
-    RegMaxValue = m;
-    RegInitValue = init;
-    return 0;
-}
-
-
-int DTL::ConstDeclNode::Collapse(ResourceAllocation* ralloc)
-{
-    myID->Collapse(ralloc);
-    int val = myVal->Collapse(ralloc);
-    return val;
-}
-
-int DTL::IntLitNode::Collapse(ResourceAllocation* ralloc)
-{
-    return myNum;
-}
-
-
-int DTL::OutStmtNode::Collapse(ResourceAllocation* ralloc)
-{
-    assert(false); // should never hit
-    return 0;
-}
-
-
-int DTL::PlusNode::Collapse(ResourceAllocation* ralloc)
-{
-    assert(false); // should never hit
-    return 0;
-}
-
-
-int DTL::TimesNode::Collapse(ResourceAllocation* ralloc)
-{
-    assert(false); // should never hit
-    return 0;
-}
-
-int DTL::LessNode::Collapse(ResourceAllocation* ralloc)
-{
-    
-    return myExp2->Collapse(ralloc);
-}
-
-int DTL::LessEqNode::Collapse(ResourceAllocation* ralloc)
-{
-    assert(false); // possibly implement later
-    return 0;
-}
-
-int DTL::PostIncStmtNode::Collapse(ResourceAllocation* ralloc)
-{
-    assert(false); // should never hit
-    return 0;
-}
-
-int DTL::IDNode::Collapse(ResourceAllocation* ralloc)
-{
-    ralloc->MapForLoopReg(getName());
-    return 0;
-}
-
-int DTL::IntTypeNode::Collapse(ResourceAllocation* ralloc)
-{
-    assert(false); // should never hit
-    return 0;
-}
-
 
 void DTL::ProgramNode::PrintAST(const std::string &file)
 {
@@ -99,6 +21,7 @@ void DTL::ProgramNode::PrintAST(const std::string &file)
 
     outfile.close();
 }
+
 
 
 std::string DTL::ConstDeclNode::PrintAST(int &node_num, std::ofstream &outfile)

@@ -5,6 +5,7 @@
 #include "scanner.hpp"
 #include "frontend.hh"
 #include "name_analysis.hpp"
+#include "ast_transform_pass.hpp"
 #include "resource_analysis_pass.hpp"
 
 static void writeTokenStream(const char * inPath, const char * outPath){
@@ -72,6 +73,9 @@ int main()
 		auto ta = DTL::TypeAnalysis::build(na);
 		if (ta == nullptr)
 			return -1;
+
+		prog = static_cast<DTL::ProgramNode*>(DTL::ASTTransformPass::Transform(prog));
+
 		auto ra = DTL::ResourceAnalysis::build(prog);
 		std::cout << ra->toString() << "\n";
 		prog->PrintAST("./astDigraph.dot");

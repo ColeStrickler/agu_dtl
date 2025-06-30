@@ -63,7 +63,10 @@ void DTL::IntLitNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
 
 void DTL::PlusNode::resourceAnalysis(ResourceAnalysis* ra, int layer)
 {
-    ra->UseNewAddUnitLayer(layer);
+    if (isPassThrough())
+        ra->UseNewPassThroughLayer(layer);
+    else
+        ra->UseNewAddUnitLayer(layer);
 
 
     /*
