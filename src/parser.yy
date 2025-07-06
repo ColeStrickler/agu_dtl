@@ -114,6 +114,7 @@ constdecl: type loc ASSIGN intlit SEMICOL
             const Position * p = new Position($1->pos(), $5->pos());
             $$ = new ConstDeclNode(p, $1, $2, $4);
         }
+
 forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY forstatement RCURLY
         {
             const Position * p = new Position($1->pos(), $10->pos());

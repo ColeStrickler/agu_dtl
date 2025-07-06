@@ -135,14 +135,16 @@ struct DTLResources
     
 class ResourceAnalysis{
 public:
-	static DTLResources * build(ProgramNode * astIn){
+	static ResourceAnalysis * build(ProgramNode * astIn){
 		ResourceAnalysis * resourceAnalysis = new ResourceAnalysis;
 		if (!resourceAnalysis) return nullptr;
 		
 		astIn->resourceAnalysis(resourceAnalysis, 0);
+		resourceAnalysis->ast = astIn;
 
+		resourceAnalysis->GetResources()->GetLayersNeeded(); // must be computed
 		
-		return resourceAnalysis->GetResources();
+		return resourceAnalysis;
 
 	}
 
@@ -156,10 +158,10 @@ public:
 	/*
 		Returns -1 on failure;
 	*/
-	int GetConstRegMapping(ASTNode* node, ResourceAnalysis* ra)
+	int GetConstRegMapping(ASTNode* node)
 	{
-		auto it = ra->ConstRegMapping.find(node);
-		if (it != ra->ConstRegMapping.end())
+		auto it = ConstRegMapping.find(node);
+		if (it != ConstRegMapping.end())
 			return it->second;
 		return -1;
 	}

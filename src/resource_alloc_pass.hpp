@@ -9,8 +9,9 @@ namespace DTL
 class AGUHardwareStat
 {
 public:
-    AGUHardwareStat(int nAdd, int nMult, int nLayers, int nConst, int nForLoop, int nPassThrough) :\
-        nLayerAddUnits(nAdd), nLayerMultUnits(nMult), nConstRegisters(nConst), nForLoopRegisters(nForLoop), nLayers(nLayers), nLayerPassThrough(nPassThrough)
+    AGUHardwareStat(int nAdd, int nMult, int nLayers, int nConst, int nForLoop, int nPassThrough, int nOutStatements) :\
+        nLayerAddUnits(nAdd), nLayerMultUnits(nMult), nConstRegisters(nConst), nForLoopRegisters(nForLoop),\
+        nLayers(nLayers), nLayerPassThrough(nPassThrough), nOutStatements(nOutStatements)
     {
 
     }
@@ -22,9 +23,37 @@ public:
 
     bool CheckMeetHardwareConstaints(DTLResources* rsrc) const
     {
-        return (rsrc->nAddNeeded <= nLayerAddUnits) && (rsrc->nMultNeeded <= nLayerMultUnits) &&\
-            (rsrc->ForLoopsNeeded <= nForLoopRegisters) && (rsrc->nConstsNeeded <= nConstRegisters) && \
-            (rsrc->nLayersNeeded <= nLayers) && (rsrc->nPassThrough <= nLayerPassThrough); 
+        bool ret = (rsrc->nAddNeeded <= nLayerAddUnits);
+        if (!ret) {
+            std::cerr << "(rsrc->nAddNeeded <= nLayerAddUnits)\n"; goto end;
+        }
+        ret = (rsrc->nMultNeeded <= nLayerMultUnits);
+        if (!ret) {
+            std::cerr << "(rsrc->nMultNeeded <= nLayerMultUnits)\n"; goto end;
+        }
+        ret = (rsrc->ForLoopsNeeded <= nForLoopRegisters);
+        if (!ret) {
+            std::cerr << "(rsrc->ForLoopsNeeded <= nForLoopRegisters)\n"; goto end;
+        }
+        ret = (rsrc->nConstsNeeded <= nConstRegisters);
+        if (!ret) {
+            std::cerr << "(rsrc->nConstsNeeded <= nConstRegisters)\n"; goto end;
+        }
+        ret = (rsrc->nLayersNeeded <= nLayers);
+        if (!ret) {
+            printf("%d <= %d\n", rsrc->nLayersNeeded, nLayers);
+            std::cerr << "(rsrc->nLayersNeeded <= nLayers)\n"; goto end;
+        }
+        ret = (rsrc->nPassThrough <= nLayerPassThrough); 
+        if (!ret) {
+            std::cerr << "(rsrc->nPassThrough <= nLayerPassThrough)\n"; goto end;
+        }
+        ret = (rsrc->nOutStatements <= nOutStatements);
+        if (!ret) {
+            std::cerr << "(rsrc->nOutStatements <= nOutStatements)\n"; goto end;
+        }
+    end:
+        return ret;
     }
 
     int nLayerAddUnits;
@@ -33,6 +62,7 @@ public:
     int nConstRegisters;
     int nForLoopRegisters;
     int nLayerPassThrough;
+    int nOutStatements;
 
 };
 
@@ -131,7 +161,8 @@ public:
 class AGULayer
 {
 public:
-    AGULayer(int nAddUnits, int nMultUnits) : maxAddUnit(nAddUnits), maxMultUnit(nMultUnits), usedAddUnit(0), usedMultUnit(0)
+    AGULayer(int nAddUnits, int nMultUnits, int nPassThru) : maxAddUnit(nAddUnits), maxMultUnit(nMultUnits), maxPassThrough(nPassThru), \
+        usedPassThrough(0), usedAddUnit(0), usedMultUnit(0)
     {
 
     }
@@ -139,6 +170,16 @@ public:
     ~AGULayer()
     {
 
+    }
+
+
+    int MapPassThrough(PassThrough* unit)
+    {
+        int mapping = usedPassThrough;
+        usedPassThrough++;
+        assert(usedPassThrough <= maxPassThrough);
+        MapFuncUnit(unit);
+        return mapping;
     }
 
 
@@ -177,13 +218,19 @@ public:
         return usedMultUnit;
     }
 
+    int getNextPassThrough() const
+    {
+        return usedPassThrough;
+    }
+
     std::vector<FuncUnit*> inputRouting;
 private:
     int maxAddUnit;
     int maxMultUnit;
+    int maxPassThrough;
     int usedAddUnit;
     int usedMultUnit;
-
+    int usedPassThrough;
 };
 
 
@@ -195,10 +242,11 @@ private:
 class OutStmtRouting
 {
 public:
-    OutStmtRouting(int layerAddUnits, int layerMultUnits, int nLayers) : LayerAddUnitCount(layerAddUnits), LayerMultUnitCount(layerMultUnits)
+    OutStmtRouting(int layerAddUnits, int layerMultUnits, int nPassThru, int nLayers) : \
+        LayerAddUnitCount(layerAddUnits), LayerMultUnitCount(layerMultUnits), LayerPassThruCount(nPassThru)
     {
         for (int i = 0; i < nLayers; i++)
-            LayerRouting.push_back(new AGULayer(layerAddUnits, layerMultUnits));
+            LayerRouting.push_back(new AGULayer(layerAddUnits, layerMultUnits, nPassThru));
     }
 
     ~OutStmtRouting()
@@ -221,7 +269,18 @@ public:
         return routing->MapMultUnit(new MultUnit(routing->getNextMultUnit(), inputMapA, inputMapB));
     }
 
+    int RequestPassThrough(int layer, int inputMapA)
+    {
+        assert(layer >= 0 && layer < LayerRouting.size());
+        auto& routing = LayerRouting[layer];
+        return routing->MapPassThrough(new PassThrough(routing->getNextPassThrough(), inputMapA));
+    }
 
+
+    /*
+        We may want to do this in a slightly different way such that the indexes are contiguous,
+        rather than overlapping
+    */
     int GetNodeFuncUnitMapping(ASTNode* node)
     {
         if (OpFuncUnitMapping.find(node) != OpFuncUnitMapping.end())
@@ -239,16 +298,18 @@ private:
     std::vector<AGULayer*> LayerRouting;
     int LayerAddUnitCount;
     int LayerMultUnitCount;
-    
+    int LayerPassThruCount;
 };
 
 
 
 class ResourceAllocation{
 public:
-	static void* build(ResourceAnalysis* ra, AGUHardwareStat* hwStat){
+	static void* build(ResourceAnalysis* ra, AGUHardwareStat* hwStat)
+    {
 		ResourceAllocation * resourceAlloc = new ResourceAllocation;
 		if (!resourceAlloc) return nullptr;
+        resourceAlloc->hwStat = hwStat;
 
         if (!hwStat->CheckMeetHardwareConstaints(ra->GetResources()))
         {
@@ -271,6 +332,8 @@ public:
         */
 
         resourceAlloc->rsrcAnalysis = ra;
+
+        ra->ast->resourceAllocation(resourceAlloc, 0);
 		
 
         
@@ -294,21 +357,89 @@ public:
         idForLoopRegMap[idName] = loopRegisters.size();
     }
 
+    int ForLoopIDToMapping(std::string idName)
+    {
+        auto it = idForLoopRegMap.find(idName);
+
+        // should always be mapped
+        assert(it != idForLoopRegMap.end());
+
+        return it->second;
+    }
+
+
     OutStmtRouting* GetCurrentOutStatement() const
     {
         assert(OutStatementRouting.size());
         return OutStatementRouting[OutStatementRouting.size()-1];
     }
 
+    void NewOutStatement()
+    {
+        assert(hwStat->nOutStatements <= OutStatementRouting.size());
+        OutStatementRouting.push_back(new OutStmtRouting(hwStat->nLayerAddUnits, hwStat->nLayerMultUnits, hwStat->nLayerPassThrough, hwStat->nLayers));
+    }
+
+    
+    void MultUnit(int layer, ASTNode* multNode, ASTNode* fromA, ASTNode* fromB)
+    {
+        auto currentOut = GetCurrentOutStatement();
+
+        int a = currentOut->GetNodeFuncUnitMapping(fromA);
+        int b = currentOut->GetNodeFuncUnitMapping(fromB);
+
+        /*
+            This should never occur. All units should be mapped somewhere. 
+        */
+        assert(a != -1 && b != -1);
+        int unit = currentOut->RequestMultUnit(layer, a, b);
+        currentOut->MapNodeFuncUnit(multNode, unit);
+    }
+
+    void AddUnit(int layer, ASTNode* plusNode, ASTNode* fromA, ASTNode* fromB)
+    {
+        auto currentOut = GetCurrentOutStatement();
+
+        int a = currentOut->GetNodeFuncUnitMapping(fromA);
+        int b = currentOut->GetNodeFuncUnitMapping(fromB);
+
+        /*
+            This should never occur. All units should be mapped somewhere. 
+        */
+        assert(a != -1 && b != -1);
+        int unit = currentOut->RequestAddUnit(layer, a, b);
+        currentOut->MapNodeFuncUnit(plusNode, unit);
+    }
+
+    void PassThru(int layer, ASTNode* plusNode, ASTNode* fromA)
+    {
+        auto currentOut = GetCurrentOutStatement();
+        int a = currentOut->GetNodeFuncUnitMapping(fromA);
+
+        /*
+            This should never occur. All units should be mapped somewhere. 
+        */
+        assert(a != -1);
+        int unit = currentOut->RequestPassThrough(layer, a);
+        currentOut->MapNodeFuncUnit(plusNode, unit);
+    }
+
+    void SetAnswer(ASTNode* fromA)
+    {
+
+    }
+
+    AGUHardwareStat* hwStat;
+    ResourceAnalysis* rsrcAnalysis;
+
 private:
 
     // [OutStmtNode # -> [Layer # -> N]]
     std::vector<OutStmtRouting*> OutStatementRouting;
-
+    
 
     std::unordered_map<std::string, int> idForLoopRegMap;
     std::vector<LoopReg> loopRegisters;
-    ResourceAnalysis* rsrcAnalysis;
 	ResourceAllocation() 
 	{
 

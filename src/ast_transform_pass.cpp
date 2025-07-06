@@ -87,7 +87,10 @@ ASTNode *DTL::ConstDeclNode::TransformPass(int currDepth, int requiredDepth)
     return this;
 }
 
-
+std::string DTL::ConstDeclNode::GetIDString() const
+{
+    return myID->getName();
+}
 
 ASTNode *DTL::PostIncStmtNode::TransformPass()
 {

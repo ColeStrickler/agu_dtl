@@ -1074,7 +1074,7 @@ namespace DTL {
     break;
 
   case 6: // forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY forstatement RCURLY
-#line 118 "parser.yy"
+#line 119 "parser.yy"
         {
             const Position * p = new Position(yystack_[9].value.as < DTL::Token * > ()->pos(), yystack_[0].value.as < DTL::Token * > ()->pos());
             std::vector<StmtNode*> stmt_vec;
@@ -1086,7 +1086,7 @@ namespace DTL {
     break;
 
   case 7: // forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY outstatements RCURLY
-#line 126 "parser.yy"
+#line 127 "parser.yy"
         {
             const Position * p = new Position(yystack_[9].value.as < DTL::Token * > ()->pos(), yystack_[0].value.as < DTL::Token * > ()->pos());
             yylhs.value.as < DTL::ForStmtNode* > () = new ForStmtNode(p, yystack_[7].value.as < DTL::StmtNode* > (), yystack_[6].value.as < DTL::ExpNode* > (), yystack_[4].value.as < DTL::StmtNode* > (), yystack_[1].value.as < std::vector<DTL::StmtNode*> > ());
@@ -1095,7 +1095,7 @@ namespace DTL {
     break;
 
   case 8: // outstatements: outstatements outstatement
-#line 131 "parser.yy"
+#line 132 "parser.yy"
         {
             yystack_[1].value.as < std::vector<DTL::StmtNode*> > ().push_back(yystack_[0].value.as < DTL::StmtNode* > ());
             yylhs.value.as < std::vector<DTL::StmtNode*> > () = yystack_[1].value.as < std::vector<DTL::StmtNode*> > ();
@@ -1104,7 +1104,7 @@ namespace DTL {
     break;
 
   case 9: // outstatements: outstatement
-#line 136 "parser.yy"
+#line 137 "parser.yy"
         {
             std::vector<StmtNode*> stmt_vec;
             stmt_vec.push_back(yystack_[0].value.as < DTL::StmtNode* > ());
@@ -1114,7 +1114,7 @@ namespace DTL {
     break;
 
   case 10: // outstatement: OUT ASSIGN expr SEMICOL
-#line 142 "parser.yy"
+#line 143 "parser.yy"
             {
                 const Position * p = new Position(yystack_[3].value.as < DTL::Token * > ()->pos(), yystack_[0].value.as < DTL::Token * > ()->pos());
                 yylhs.value.as < DTL::StmtNode* > () = new OutStmtNode(p, yystack_[1].value.as < DTL::ExpNode* > ());
@@ -1123,7 +1123,7 @@ namespace DTL {
     break;
 
   case 11: // type: INT
-#line 148 "parser.yy"
+#line 149 "parser.yy"
     {
         yylhs.value.as < DTL::TypeNode* > () = new IntTypeNode(yystack_[0].value.as < DTL::Token * > ()->pos());
     }
@@ -1131,7 +1131,7 @@ namespace DTL {
     break;
 
   case 12: // expr: expr CROSS expr
-#line 152 "parser.yy"
+#line 153 "parser.yy"
     {
         const Position * p = new Position(yystack_[2].value.as < DTL::ExpNode* > ()->pos(), yystack_[0].value.as < DTL::ExpNode* > ()->pos());
         yylhs.value.as < DTL::ExpNode* > () = new PlusNode(p, yystack_[2].value.as < DTL::ExpNode* > (), yystack_[0].value.as < DTL::ExpNode* > ());
@@ -1140,7 +1140,7 @@ namespace DTL {
     break;
 
   case 13: // expr: expr LESS expr
-#line 157 "parser.yy"
+#line 158 "parser.yy"
     {
         const Position * p = new Position(yystack_[2].value.as < DTL::ExpNode* > ()->pos(), yystack_[0].value.as < DTL::ExpNode* > ()->pos());
         yylhs.value.as < DTL::ExpNode* > () = new LessNode(p, yystack_[2].value.as < DTL::ExpNode* > (), yystack_[0].value.as < DTL::ExpNode* > ());
@@ -1149,7 +1149,7 @@ namespace DTL {
     break;
 
   case 14: // expr: expr STAR expr
-#line 162 "parser.yy"
+#line 163 "parser.yy"
     {
         const Position * p = new Position(yystack_[2].value.as < DTL::ExpNode* > ()->pos(), yystack_[0].value.as < DTL::ExpNode* > ()->pos());
         yylhs.value.as < DTL::ExpNode* > () = new TimesNode(p, yystack_[2].value.as < DTL::ExpNode* > (), yystack_[0].value.as < DTL::ExpNode* > ());
@@ -1158,7 +1158,7 @@ namespace DTL {
     break;
 
   case 15: // expr: term
-#line 167 "parser.yy"
+#line 168 "parser.yy"
     {
         yylhs.value.as < DTL::ExpNode* > () = yystack_[0].value.as < DTL::ExpNode* > ();
     }
@@ -1166,7 +1166,7 @@ namespace DTL {
     break;
 
   case 16: // unarystmt: loc POSTINC
-#line 172 "parser.yy"
+#line 173 "parser.yy"
         {
             const Position* p = new Position(yystack_[1].value.as < DTL::IDNode* > ()->pos(), yystack_[0].value.as < DTL::Token * > ()->pos());
             yylhs.value.as < DTL::StmtNode* > () = new PostIncStmtNode(p, yystack_[1].value.as < DTL::IDNode* > ());
@@ -1175,7 +1175,7 @@ namespace DTL {
     break;
 
   case 17: // term: factor
-#line 180 "parser.yy"
+#line 181 "parser.yy"
     {
         yylhs.value.as < DTL::ExpNode* > () = yystack_[0].value.as < DTL::ExpNode* > ();
     }
@@ -1183,7 +1183,7 @@ namespace DTL {
     break;
 
   case 18: // term: LPAREN expr RPAREN
-#line 184 "parser.yy"
+#line 185 "parser.yy"
     {
         yylhs.value.as < DTL::ExpNode* > () = yystack_[1].value.as < DTL::ExpNode* > ();
     }
@@ -1191,7 +1191,7 @@ namespace DTL {
     break;
 
   case 19: // factor: intlit
-#line 188 "parser.yy"
+#line 189 "parser.yy"
     {
         yylhs.value.as < DTL::ExpNode* > () = yystack_[0].value.as < DTL::IntLitNode* > ();
     }
@@ -1199,7 +1199,7 @@ namespace DTL {
     break;
 
   case 20: // factor: loc
-#line 192 "parser.yy"
+#line 193 "parser.yy"
     {
         yylhs.value.as < DTL::ExpNode* > () = yystack_[0].value.as < DTL::IDNode* > ();
     }
@@ -1207,7 +1207,7 @@ namespace DTL {
     break;
 
   case 21: // intlit: INTLITERAL
-#line 196 "parser.yy"
+#line 197 "parser.yy"
     {
         yylhs.value.as < DTL::IntLitNode* > () = new IntLitNode(yystack_[0].value.as < DTL::IntLitToken * > ()->pos(), yystack_[0].value.as < DTL::IntLitToken * > ()->num());
     }
@@ -1215,7 +1215,7 @@ namespace DTL {
     break;
 
   case 22: // loc: ID
-#line 201 "parser.yy"
+#line 202 "parser.yy"
     {
         yylhs.value.as < DTL::IDNode* > () = new IDNode(yystack_[0].value.as < DTL::IDToken * > ()->pos(), yystack_[0].value.as < DTL::IDToken * > ()->value());
     }
@@ -1676,9 +1676,9 @@ namespace DTL {
   const unsigned char
   Parser::yyrline_[] =
   {
-       0,    96,    96,   102,   108,   112,   117,   125,   130,   135,
-     141,   147,   151,   156,   161,   166,   171,   179,   183,   187,
-     191,   195,   200
+       0,    96,    96,   102,   108,   112,   118,   126,   131,   136,
+     142,   148,   152,   157,   162,   167,   172,   180,   184,   188,
+     192,   196,   201
   };
 
   void
@@ -1761,7 +1761,7 @@ namespace DTL {
 } // DTL
 #line 1763 "parser.cc"
 
-#line 206 "parser.yy"
+#line 207 "parser.yy"
 
 
 

@@ -7,6 +7,7 @@
 #include "name_analysis.hpp"
 #include "ast_transform_pass.hpp"
 #include "resource_analysis_pass.hpp"
+#include "resource_alloc_pass.hpp"
 
 static void writeTokenStream(const char * inPath, const char * outPath){
 	std::ifstream inStream(inPath);
@@ -77,7 +78,20 @@ int main()
 		prog = static_cast<DTL::ProgramNode*>(DTL::ASTTransformPass::Transform(prog));
 
 		auto ra = DTL::ResourceAnalysis::build(prog);
-		std::cout << ra->toString() << "\n";
+		
+
+
+		/*
+			Would actually read hardware stats
+		*/
+		auto hwStat = new DTL::AGUHardwareStat(64, 64, 64, 64, 64, 64, 64);
+
+
+
+
+		auto ralloc = DTL::ResourceAllocation::build(ra, hwStat);
+
+		std::cout << ra->GetResources()->toString() << "\n";
 		prog->PrintAST("./astDigraph.dot");
     } catch (DTL::InternalError * e){
 		std::cerr << "InternalError: " << e->msg() << std::endl;

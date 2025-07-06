@@ -1,14 +1,13 @@
-int swagyolo = 40;
 
-for (int i = 0; i < 100; i++)
+int element_size = 4;
+int row_size = 256;
+
+
+for (int col = 0; col < 64; col++)
 {
-	for (int j = 0; j < 468; j++)
-	{
-		for (int k = 0; k < 200; k++)
-		{
-			out = i*j*k;
-			out = (i*j*k+109)*j+(36+swagyolo+j)*swagyolo+(430+k*swagyolo*i+j)*k;
-			out = i*(j+k+4)+j*(k*i+swagyolo);
-		}
+	for(int row = 0; row < 64 ; row++){
+		out = row*row_size + col*element_size; 
 	}
 }
+
+
