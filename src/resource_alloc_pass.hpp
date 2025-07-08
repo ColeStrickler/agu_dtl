@@ -97,10 +97,12 @@ public:
 
     }
 
-private:
+    virtual std::string toString(int layer) = 0;
     int RegAssignment;
     int InputA;
     int InputB;
+private:
+
 
 
 };
@@ -119,6 +121,9 @@ public:
     {
 
     }
+
+    virtual std::string toString(int layer) override;
+
 };
 
 
@@ -135,7 +140,7 @@ public:
         
     }
 
-
+    virtual std::string toString(int layer) override;
 private:
 
 };
@@ -153,6 +158,8 @@ public:
     {
         
     }
+
+    virtual std::string toString(int layer) override;
 };
 
 
@@ -164,7 +171,6 @@ public:
     AGULayer(int nAddUnits, int nMultUnits, int nPassThru) : maxAddUnit(nAddUnits), maxMultUnit(nMultUnits), maxPassThrough(nPassThru), \
         usedPassThrough(0), usedAddUnit(0), usedMultUnit(0)
     {
-
     }
 
     ~AGULayer()
@@ -179,7 +185,7 @@ public:
         usedPassThrough++;
         assert(usedPassThrough <= maxPassThrough);
         MapFuncUnit(unit);
-        return mapping;
+        return maxAddUnit + maxMultUnit + mapping;
     }
 
 
@@ -199,7 +205,7 @@ public:
         usedMultUnit++;
         assert(usedMultUnit <= maxMultUnit);
         MapFuncUnit(unit);
-        return mapping;
+        return maxAddUnit + mapping;
     }
 
     void MapFuncUnit(FuncUnit* unit)
@@ -215,15 +221,17 @@ public:
 
     int getNextMultUnit() const
     {
-        return usedMultUnit;
+        return maxAddUnit+ usedMultUnit;
     }
 
     int getNextPassThrough() const
     {
-        return usedPassThrough;
+        return maxAddUnit + maxMultUnit + usedPassThrough;
     }
 
     std::vector<FuncUnit*> inputRouting;
+
+    std::string PrintDigraph(int layer) const;
 private:
     int maxAddUnit;
     int maxMultUnit;
@@ -242,11 +250,10 @@ private:
 class OutStmtRouting
 {
 public:
-    OutStmtRouting(int layerAddUnits, int layerMultUnits, int nPassThru, int nLayers) : \
-        LayerAddUnitCount(layerAddUnits), LayerMultUnitCount(layerMultUnits), LayerPassThruCount(nPassThru)
+    OutStmtRouting(int layerAddUnits, int layerMultUnits, int nPassThru, int nLayers, AGUHardwareStat* hwStat) : \
+        LayerAddUnitCount(layerAddUnits), LayerMultUnitCount(layerMultUnits), LayerPassThruCount(nPassThru), LayerCount(nLayers), hwStat(hwStat)
     {
-        for (int i = 0; i < nLayers; i++)
-            LayerRouting.push_back(new AGULayer(layerAddUnits, layerMultUnits, nPassThru));
+        
     }
 
     ~OutStmtRouting()
@@ -254,24 +261,39 @@ public:
 
     }
 
+
+    bool PrintDigraph(const std::string& file);
+
+
+    
+    void CreateLayerIfNeeded(int layer)
+    {
+        auto it = LayerRouting.find(layer);
+        if (it == LayerRouting.end())
+            LayerRouting.insert(std::make_pair(layer, new AGULayer(LayerAddUnitCount, LayerMultUnitCount, LayerPassThruCount)));
+    }
+
+
     int RequestAddUnit(int layer, int inputMapA, int inputMapB)
     {
-        assert(layer >= 0 && layer < LayerRouting.size());
-
+        assert(layer >= 0 && layer < LayerCount);
+        CreateLayerIfNeeded(layer);
         auto& routing = LayerRouting[layer];
         return routing->MapAddUnit(new AddUnit(routing->getNextAddUnit(), inputMapA, inputMapB));
     }
 
     int RequestMultUnit(int layer,  int inputMapA, int inputMapB)
     {
-        assert(layer >= 0 && layer < LayerRouting.size());
+        assert(layer >= 0 && layer < LayerCount);
+        CreateLayerIfNeeded(layer);
         auto& routing = LayerRouting[layer];
         return routing->MapMultUnit(new MultUnit(routing->getNextMultUnit(), inputMapA, inputMapB));
     }
 
     int RequestPassThrough(int layer, int inputMapA)
     {
-        assert(layer >= 0 && layer < LayerRouting.size());
+        assert(layer >= 0 && layer < LayerCount);
+        CreateLayerIfNeeded(layer);
         auto& routing = LayerRouting[layer];
         return routing->MapPassThrough(new PassThrough(routing->getNextPassThrough(), inputMapA));
     }
@@ -284,28 +306,79 @@ public:
     int GetNodeFuncUnitMapping(ASTNode* node)
     {
         if (OpFuncUnitMapping.find(node) != OpFuncUnitMapping.end())
-            return OpFuncUnitMapping[node]; 
+            return OpFuncUnitMapping[node].first; 
         return -1;
     }
 
-    void MapNodeFuncUnit(ASTNode* node, int unit)
+    int GetNodeLayerMapping(ASTNode* node)
     {
-        OpFuncUnitMapping.insert(std::make_pair(node, unit));
+        if (OpFuncUnitMapping.find(node) != OpFuncUnitMapping.end())
+            return OpFuncUnitMapping[node].second; 
+        return -1;
+    }
+
+    void MapNodeFuncUnit(ASTNode* node, int unit, int layer)
+    {
+        OpFuncUnitMapping.insert(std::make_pair(node, std::make_pair(unit, layer)));
+    }
+
+
+    void SetAnswer(ASTNode* node)
+    {
+        auto it = OpFuncUnitMapping.find(node);
+        assert(it != OpFuncUnitMapping.end());
+        int unit = it->second.first;
+        int layer = it->second.second;
+        /*
+            The answer may or may not fit exactly onto the hardware. We may use less layers than there
+            actually are, and if this is the case we need to map the answer to pass throughs for the unused layers
+        */
+        int nLayers = LayerRouting.size();
+        std::map<int, AGULayer*> newLayerRouting;
+        int m = 0;
+        for (int i = nLayers-1; i >= 0; i--)
+        {
+            newLayerRouting[m] = LayerRouting[i];
+            m++;
+        }
+        LayerRouting = newLayerRouting;
+        while(m < LayerCount)
+        {
+            LayerRouting[m] = new AGULayer(LayerAddUnitCount, LayerMultUnitCount, LayerPassThruCount);
+            unit = RequestPassThrough(m, unit);
+            printf("m %d\n", m);
+            m++;
+        }
+        
+        //for (auto& e: LayerRouting)
+
+
+
+
+
     }
     
+    std::string PrintDigraph(const std::string& file) const;
+
+
 private:
-    std::unordered_map<ASTNode*, int> OpFuncUnitMapping;
-    std::vector<AGULayer*> LayerRouting;
+    std::unordered_map<ASTNode*, std::pair<int, int>> OpFuncUnitMapping;
+    AGUHardwareStat* hwStat;
+
+    // layer# -> AGULayer*
+    std::map<int, AGULayer*> LayerRouting;
+    //std::vector<AGULayer*> LayerRouting;
     int LayerAddUnitCount;
     int LayerMultUnitCount;
     int LayerPassThruCount;
+    int LayerCount;
 };
 
 
 
 class ResourceAllocation{
 public:
-	static void* build(ResourceAnalysis* ra, AGUHardwareStat* hwStat)
+	static ResourceAllocation* build(ResourceAnalysis* ra, AGUHardwareStat* hwStat)
     {
 		ResourceAllocation * resourceAlloc = new ResourceAllocation;
 		if (!resourceAlloc) return nullptr;
@@ -338,7 +411,7 @@ public:
 
         
         //ra->ast->resourceAllocation(resourceAlloc);
-        return nullptr;
+        return resourceAlloc;
 		//return resourceAnalysis->GetResources();
 	}
 
@@ -354,7 +427,8 @@ public:
     */
     void MapForLoopReg(std::string idName)
     {
-        idForLoopRegMap[idName] = loopRegisters.size();
+        idForLoopRegMap[idName] =  hwStat->nConstRegisters + loopRegisters.size();
+        ReverseidForLoopRegMap[hwStat->nConstRegisters + loopRegisters.size()] = idName;
     }
 
     int ForLoopIDToMapping(std::string idName)
@@ -362,7 +436,19 @@ public:
         auto it = idForLoopRegMap.find(idName);
 
         // should always be mapped
+
         assert(it != idForLoopRegMap.end());
+
+        return it->second;
+    }
+
+    std::string ReverseForLoopIDToMapping(int forLoopRegNum)
+    {
+        auto it = ReverseidForLoopRegMap.find(forLoopRegNum);
+
+        // should always be mapped
+
+        assert(it != ReverseidForLoopRegMap.end());
 
         return it->second;
     }
@@ -376,8 +462,8 @@ public:
 
     void NewOutStatement()
     {
-        assert(hwStat->nOutStatements <= OutStatementRouting.size());
-        OutStatementRouting.push_back(new OutStmtRouting(hwStat->nLayerAddUnits, hwStat->nLayerMultUnits, hwStat->nLayerPassThrough, hwStat->nLayers));
+        assert(OutStatementRouting.size() <= hwStat->nOutStatements);
+        OutStatementRouting.push_back(new OutStmtRouting(hwStat->nLayerAddUnits, hwStat->nLayerMultUnits, hwStat->nLayerPassThrough, hwStat->nLayers, hwStat));
     }
 
     
@@ -393,7 +479,7 @@ public:
         */
         assert(a != -1 && b != -1);
         int unit = currentOut->RequestMultUnit(layer, a, b);
-        currentOut->MapNodeFuncUnit(multNode, unit);
+        currentOut->MapNodeFuncUnit(multNode, unit, layer);
     }
 
     void AddUnit(int layer, ASTNode* plusNode, ASTNode* fromA, ASTNode* fromB)
@@ -402,13 +488,13 @@ public:
 
         int a = currentOut->GetNodeFuncUnitMapping(fromA);
         int b = currentOut->GetNodeFuncUnitMapping(fromB);
-
+        printf("a %d, b %d\n", a, b);
         /*
             This should never occur. All units should be mapped somewhere. 
         */
         assert(a != -1 && b != -1);
         int unit = currentOut->RequestAddUnit(layer, a, b);
-        currentOut->MapNodeFuncUnit(plusNode, unit);
+        currentOut->MapNodeFuncUnit(plusNode, unit, layer);
     }
 
     void PassThru(int layer, ASTNode* plusNode, ASTNode* fromA)
@@ -421,12 +507,19 @@ public:
         */
         assert(a != -1);
         int unit = currentOut->RequestPassThrough(layer, a);
-        currentOut->MapNodeFuncUnit(plusNode, unit);
+        currentOut->MapNodeFuncUnit(plusNode, unit, layer);
     }
 
     void SetAnswer(ASTNode* fromA)
     {
+        auto currentOut = GetCurrentOutStatement();
+        currentOut->SetAnswer(fromA);
+    }
 
+
+    void PrintDigraph(int outStatementNum, const std::string& file)
+    {
+        OutStatementRouting[outStatementNum]->PrintDigraph(file);
     }
 
     AGUHardwareStat* hwStat;
@@ -437,7 +530,7 @@ private:
     // [OutStmtNode # -> [Layer # -> N]]
     std::vector<OutStmtRouting*> OutStatementRouting;
     
-
+    std::unordered_map<int, std::string> ReverseidForLoopRegMap;
     std::unordered_map<std::string, int> idForLoopRegMap;
     std::vector<LoopReg> loopRegisters;
 	ResourceAllocation() 

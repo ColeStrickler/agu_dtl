@@ -33,6 +33,14 @@ PlusNode30 -> TimesNode31;
 PlusNode30 -> TimesNode34;
 OutStmtNode29 -> PlusNode30;
 ForStmtNode19 -> OutStmtNode29;
+TimesNode39 -> IDNode40_row;
+TimesNode39 -> IDNode41_element_size;
+PlusNode42 -> IntLitNode43_65;
+PlusNode42 -> IntLitNode44_0;
+TimesNode38 -> TimesNode39;
+TimesNode38 -> PlusNode42;
+OutStmtNode37 -> TimesNode38;
+ForStmtNode19 -> OutStmtNode37;
 ForStmtNode9 -> ForStmtNode19;
 ProgramNode -> ForStmtNode9;
 }

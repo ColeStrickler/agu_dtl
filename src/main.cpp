@@ -84,7 +84,7 @@ int main()
 		/*
 			Would actually read hardware stats
 		*/
-		auto hwStat = new DTL::AGUHardwareStat(64, 64, 64, 64, 64, 64, 64);
+		auto hwStat = new DTL::AGUHardwareStat(64, 64, 7, 64, 64, 64, 64);
 
 
 
@@ -93,6 +93,8 @@ int main()
 
 		std::cout << ra->GetResources()->toString() << "\n";
 		prog->PrintAST("./astDigraph.dot");
+
+		ralloc->PrintDigraph(1, "./outStatement0Digraph");
     } catch (DTL::InternalError * e){
 		std::cerr << "InternalError: " << e->msg() << std::endl;
 		return 1;

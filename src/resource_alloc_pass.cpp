@@ -53,7 +53,8 @@ void DTL::ForStmtNode::resourceAllocation(ResourceAllocation* ralloc, int depth)
 void DTL::OutStmtNode::resourceAllocation(ResourceAllocation* ralloc, int depth)
 {
     ralloc->NewOutStatement();
-    myExp->resourceAllocation(ralloc, true);
+    myExp->resourceAllocation(ralloc, 0);
+    ralloc->SetAnswer(myExp);
 }
 
 
@@ -69,21 +70,21 @@ void DTL::IDNode::resourceAllocation(ResourceAllocation* ralloc, int depth)
     auto out = ralloc->GetCurrentOutStatement();
     auto& ra = ralloc->rsrcAnalysis;
 
-    int id = ra->GetConstRegMapping(this);
+    int id = ra->GetConstRegMapping(getName());
 
     if (id == -1) // if a for loop register
-    {
-        int id = ralloc->ForLoopIDToMapping(getName());
+    {       
+        id = ralloc->ForLoopIDToMapping(getName());
     }
 
-    out->MapNodeFuncUnit(this, id); // we just shift the mapping over
+    out->MapNodeFuncUnit(this, id, depth); // we just shift the mapping over
 }
 
 void DTL::IntLitNode::resourceAllocation(ResourceAllocation* ralloc, int depth)
 {
     auto out = ralloc->GetCurrentOutStatement();
     auto& ra = ralloc->rsrcAnalysis;
-    out->MapNodeFuncUnit(this, ra->GetConstRegMapping(this)); // we just shift the mapping over
+    out->MapNodeFuncUnit(this, ra->GetConstRegMapping(std::to_string(myNum)), depth); // we just shift the mapping over
 }
 
 void DTL::PlusNode::resourceAllocation(ResourceAllocation* ralloc, int depth)
@@ -203,3 +204,80 @@ int DTL::IntTypeNode::Collapse(ResourceAllocation* ralloc)
     return 0;
 }
 
+bool DTL::OutStmtRouting::PrintDigraph(const std::string &file)
+{
+	std::ofstream outfile(file);  // open for writing
+	if (!outfile.is_open()) {
+		std::cerr << "Failed to open file.\n";
+		return false;
+	}
+
+	outfile << "digraph G {\n";
+    /*
+        We will map the constants in layer0
+    */
+    //for (int i = 0; i < LayerRouting.size(); i++)
+    //{
+    //    outfile << LayerRouting[i]->PrintDigraph(i);
+    //}
+
+    for (auto& e: LayerRouting)
+    {
+        int i = e.first;
+        printf("i %d\n", i);
+        outfile << e.second->PrintDigraph(i+1);
+    }
+
+
+	outfile << "}\n";
+
+    outfile.close();
+
+    return true;
+}
+std::string DTL::AGULayer::PrintDigraph(int layer) const
+{
+    std::string ret;
+    printf("inputRouting.size() %d\n", inputRouting.size());
+    for (auto& unit: inputRouting)
+        ret += unit->toString(layer);
+
+
+    return ret;
+}
+
+std::string DTL::MultUnit::toString(int layer)
+{
+    std::string node_name = "\"" + std::to_string(layer) + "_" + std::to_string(RegAssignment) + "\"";
+    std::string label = node_name + "[label=\"Mult_" +  std::to_string(layer) + "_" + std::to_string(RegAssignment)+ "\"];";
+
+
+    std::string inA = "\"" + std::to_string(layer-1) + "_" + std::to_string(InputA) + "\"" + " -> " + node_name + ";";
+    std::string inB = "\"" + std::to_string(layer-1) + "_" + std::to_string(InputB) + "\"" + " -> " + node_name + ";";
+
+    return label + "\n" + inA + "\n" + inB + "\n";
+}
+
+std::string DTL::PassThrough::toString(int layer)
+{
+    printf("pass thru\n");
+    std::string node_name = "\"" + std::to_string(layer) + "_" + std::to_string(RegAssignment) + "\"";
+    std::string label = node_name + "[label=\"PassThru" +  std::to_string(layer) + "_" + std::to_string(RegAssignment)+ "\"];";
+
+
+    std::string inA = "\"" + std::to_string(layer-1) + "_" + std::to_string(InputA) + "\"" + " -> " + node_name + ";";
+
+    return label + "\n" + inA + "\n";
+}
+
+std::string DTL::AddUnit::toString(int layer)
+{
+    std::string node_name = "\"" + std::to_string(layer) + "_" + std::to_string(RegAssignment) + "\"";
+    std::string label = node_name  + "[label=\"Plus" +  std::to_string(layer) + "_" + std::to_string(RegAssignment)+ "\"];";
+
+
+    std::string inA = "\"" + std::to_string(layer-1) + "_" + std::to_string(InputA) + "\"" + " -> " + node_name + ";";
+    std::string inB = "\"" + std::to_string(layer-1) + "_" + std::to_string(InputB) + "\"" + " -> " + node_name + ";";
+
+    return label + "\n" + inA + "\n" + inB + "\n";
+}
