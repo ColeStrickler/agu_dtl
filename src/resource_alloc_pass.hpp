@@ -2,8 +2,39 @@
 #define RSRC_ALLOC_PASS_HPP
 #include "resource_analysis_pass.hpp"
 #include <vector>
+#include <cmath>
 namespace DTL
 {
+
+#define WRITE_BOOL(addr, value)(*(bool*)(addr) = value)
+#define WRITE_UINT8(addr, value)(*(uint8_t*)(addr) = value)
+#define WRITE_UINT16(addr, value)(*(uint16_t*)(addr) = value)
+#define WRITE_UINT32(addr, value)(*(uint32_t*)(addr) = value)
+#define WRITE_UINT64(addr, value)(*(uint64_t*)(addr) = value)
+
+#define READ_BOOL(addr)(*(bool*)(addr))
+#define READ_UINT8(addr)(*(uint8_t*)(addr))
+#define READ_UINT16(addr)(*(uint16_t*)(addr))
+#define READ_UINT32(addr)(*(uint32_t*)(addr))
+#define READ_UINT64(addr)(*(uint64_t*)(addr))
+
+int log2ceil(int n) {
+    if (n <= 0) {
+        // Handle error or return a specific value for non-positive input
+        return 0; // Or throw an exception
+    }
+    return static_cast<int>(std::ceil(std::log2(static_cast<double>(n))));
+}
+
+template<typename T>
+T divceil(T a, T b) {
+    if (b == 0) throw std::invalid_argument("division by zero");
+
+    if ((a ^ b) > 0) // same sign
+        return (a + b - 1) / b;
+    else
+        return a / b;
+}
 
 
 class AGUHardwareStat
@@ -14,11 +45,47 @@ public:
         nLayers(nLayers), nLayerPassThrough(nPassThrough), nOutStatements(nOutStatements)
     {
 
+        /*
+            1 config per out statement,
+            1 routing config per layer,
+            nMult, nAdd, nPassThrough per layer
+
+
+            we will make each cell a byte wide
+        */
+
+        bytesCell = nAdd + nMult + nPassThrough
+        bytesLayer = bytesCell * (nAdd + nMult * nPassThrough);
+
+        bytesOutStatement = nLayers * byteslayer;
+        totalConfigRegionBits = nOutStatements * bytesOutStatement;
+
+
     }
 
     ~AGUHardwareStat()
     {
 
+    }
+
+    /*
+        [AddUnits, MultUnits, PassThru]
+    */
+    void WriteConfig(uint64_t baseAddress, int numOutStatement, int layer, int inRegNumber, int outRegNumber)
+    {
+        unsigned int layerByteOffset = layer * bytesLayer;
+        unsigned int cellByteOffset = inRegNumber * bytesCell;
+        unsigned int outStatementOffset = numOutStatement * bytesOutStatement;
+
+        assert(outRegNumber < __UINT8_MAX__);
+
+        /*
+            We call each in->out routing config a "Cell".
+
+            Each Cell is 1 byte
+        */
+
+        WRITE_UINT8(baseAddress + layerByteOffset + cellByteOffset + outStatementOffset, static_cast<unsigned char>(outRegNumber));
     }
 
     bool CheckMeetHardwareConstaints(DTLResources* rsrc) const
@@ -55,6 +122,11 @@ public:
     end:
         return ret;
     }
+    int bytesCell;
+    int bytesLayer;
+    int bytesOutStatement;
+    int totalConfigRegionBits;
+    int bits_outStatement;
 
     int nLayerAddUnits;
     int nLayerMultUnits;
@@ -228,7 +300,6 @@ public:
     {
         return maxAddUnit + maxMultUnit + usedPassThrough;
     }
-
     std::vector<FuncUnit*> inputRouting;
 
     std::string PrintDigraph(int layer) const;
@@ -346,7 +417,6 @@ public:
         {
             LayerRouting[m] = new AGULayer(LayerAddUnitCount, LayerMultUnitCount, LayerPassThruCount);
             unit = RequestPassThrough(m, unit);
-            printf("m %d\n", m);
             m++;
         }
         
