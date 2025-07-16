@@ -29,10 +29,10 @@ parser.o: parser.cc
 	$(CXX) $(CFLAGS) -Wno-sign-compare -Wno-sign-conversion -Wno-switch-default -g -std=c++14 -MMD -MP -c -o $@ $<
 
 %.o: %.cpp 
-	$(CXX) $(FLAGS) -g -std=c++14 -MMD -MP -c -o $@ $<
+	$(CXX) $(FLAGS) -g -std=c++17 -MMD -MP -c -o $@ $<
 # Compile the main program
 compiler: $(OBJ_SRCS)
-	$(CXX) $(FLAGS) -g -std=c++14 -o $@ $(OBJ_SRCS)
+	$(CXX) $(FLAGS) -g -std=c++17 -o $@ $(OBJ_SRCS)
 	chmod a+x compiler
 
 run: compiler

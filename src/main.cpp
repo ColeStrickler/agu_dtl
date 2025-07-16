@@ -63,7 +63,6 @@ int main()
         writeTokenStream("./test.dtl", "./dtltokens.out");
         auto prog = parse("./test.dtl");
 		assert(prog != nullptr);
-		std::cout << prog->Check();
 
 		auto na = DTL::NameAnalysis::build(prog);
 		if (na == nullptr)
@@ -84,15 +83,17 @@ int main()
 		/*
 			Would actually read hardware stats
 		*/
-		auto hwStat = new DTL::AGUHardwareStat(4, 4, 5, 8, 8, 8, 8);
+		auto hwStat = new DTL::AGUHardwareStat(4, 4, 6, 8, 8, 8, 8);
 
 
-
-
-		auto ralloc = DTL::ResourceAllocation::build(ra, hwStat);
 
 		std::cout << ra->GetResources()->toString() << "\n";
 		prog->PrintAST("./astDigraph.dot");
+		auto ralloc = DTL::ResourceAllocation::build(ra, hwStat);
+		ralloc->PrintControlWrites("./outcontrolseq", 0x3000000);
+
+
+		
 
 		ralloc->PrintDigraph(1, "./outStatement0Digraph");
     } catch (DTL::InternalError * e){

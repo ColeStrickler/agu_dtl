@@ -3,6 +3,8 @@
 #include "resource_analysis_pass.hpp"
 #include <vector>
 #include <cmath>
+#include <sstream>
+#include <iomanip>
 namespace DTL
 {
 
@@ -18,7 +20,7 @@ namespace DTL
 #define READ_UINT32(addr)(*(uint32_t*)(addr))
 #define READ_UINT64(addr)(*(uint64_t*)(addr))
 
-int log2ceil(int n) {
+inline int log2ceil(int n) {
     if (n <= 0) {
         // Handle error or return a specific value for non-positive input
         return 0; // Or throw an exception
@@ -35,7 +37,11 @@ T divceil(T a, T b) {
     else
         return a / b;
 }
-
+inline std::string to_hex(uint64_t val) {
+    std::stringstream ss;
+    ss << "0x" << std::hex << std::setw(16) << std::setfill('0') << val;
+    return ss.str();
+}
 
 class AGUHardwareStat
 {
@@ -57,7 +63,7 @@ public:
         bytesCell = 1;
         bytesLayer = bytesCell * (nAdd + nMult * nPassThrough);
 
-        bytesOutStatement = nLayers * byteslayer;
+        bytesOutStatement = nLayers * bytesLayer;
         totalConfigRegionBits = nOutStatements * bytesOutStatement;
 
 
@@ -89,7 +95,7 @@ public:
     }
 
 
-    std::string PrintConfig(uint64_t baseAddress, int numOutStatement, int layer, int inRegNumber, int outRegNumber)
+    std::string PrintControlWrite(uint64_t baseAddress, int numOutStatement, int layer, int inRegNumber, int outRegNumber)
     {
         unsigned int layerByteOffset = layer * bytesLayer;
         unsigned int cellByteOffset = inRegNumber * bytesCell;
@@ -97,7 +103,7 @@ public:
 
         assert(outRegNumber < __UINT8_MAX__);
 
-        std::string addr = std::to_string(baseAddress + layerByteOffset + cellByteOffset + outStatementOffset);
+        std::string addr = to_hex(baseAddress + layerByteOffset + cellByteOffset + outStatementOffset);
         std::string write_value = std::to_string(static_cast<unsigned char>(outRegNumber));
 
         return "WRITE_UINT8(" + addr + ", " + write_value + ");";  
@@ -121,9 +127,15 @@ public:
         if (!ret) {
             std::cerr << "(rsrc->nConstsNeeded <= nConstRegisters)\n"; goto end;
         }
-        ret = (rsrc->nLayersNeeded <= nLayers);
+
+        /*
+            Our current convention is to use the last layer to route PassThru0 to the output,
+            so we need an extra layer to do this successfully. We can probably do this in a better way
+            later on
+        */
+        ret = (rsrc->nLayersNeeded + 1 <= nLayers);
         if (!ret) {
-            printf("%d <= %d\n", rsrc->nLayersNeeded, nLayers);
+            printf("%d <= %d\n", rsrc->nLayersNeeded+1, nLayers);
             std::cerr << "(rsrc->nLayersNeeded <= nLayers)\n"; goto end;
         }
         ret = (rsrc->nPassThrough <= nLayerPassThrough); 
@@ -317,6 +329,8 @@ public:
     }
     std::vector<FuncUnit*> inputRouting;
 
+    std::string PrintControlWrites(uint64_t baseaddr, int numOutStmt, int layer, AGUHardwareStat* hwstat);
+
     std::string PrintDigraph(int layer) const;
 private:
     int maxAddUnit;
@@ -444,7 +458,7 @@ public:
     }
     
     std::string PrintDigraph(const std::string& file) const;
-
+    std::string PrintControlWrites(uint64_t baseaddr, int numoutstatement) const;
 
 private:
     std::unordered_map<ASTNode*, std::pair<int, int>> OpFuncUnitMapping;
@@ -606,6 +620,33 @@ public:
     {
         OutStatementRouting[outStatementNum]->PrintDigraph(file);
     }
+
+    void PrintControlWrites(const std::string& file, uint64_t baseaddr)
+    {
+        std::ofstream outfile(file);  // open for writing
+        if (!outfile.is_open()) {
+            std::cerr << "Failed to open file.\n";
+            return;
+        }
+
+        std::string out;
+        for (int i = 0; i < OutStatementRouting.size(); i++)
+        {
+            auto& outstmt = OutStatementRouting[i];
+            printf("here\n");
+            out += outstmt->PrintControlWrites(baseaddr, i);
+        }
+
+        outfile << out;
+        outfile.close();
+
+
+        /*
+            We still need to set up a way to write for loop and constant registers
+        */
+    }
+
+
 
     AGUHardwareStat* hwStat;
     ResourceAnalysis* rsrcAnalysis;

@@ -235,6 +235,36 @@ bool DTL::OutStmtRouting::PrintDigraph(const std::string &file)
 
     return true;
 }
+
+std::string DTL::OutStmtRouting::PrintControlWrites(uint64_t baseaddr, int numoutstatement) const
+{
+    std::string ret;
+    printf("outstmt num %d\n", numoutstatement);
+    for (auto& e: LayerRouting)
+    {
+         int i = e.first;
+         ret += e.second->PrintControlWrites(baseaddr, numoutstatement, i, hwStat);
+         
+    }
+    return ret;
+}
+
+std::string DTL::AGULayer::PrintControlWrites(uint64_t baseaddr, int numOutStmt, int layer, AGUHardwareStat *hwstat)
+{
+    std::string ret;
+    for (auto& unit : inputRouting)
+    {
+        /*
+            I think this is correct, we map inputs to the units assignment, but I am not completely sure this will map correctly
+
+            We will want to check and confirm here first when we debugs
+        */
+        ret += hwstat->PrintControlWrite(baseaddr, numOutStmt, layer, unit->InputA, unit->RegAssignment) + "\n";
+        ret += hwstat->PrintControlWrite(baseaddr, numOutStmt, layer, unit->InputB, unit->RegAssignment) + "\n";
+    }
+    return ret;
+}
+
 std::string DTL::AGULayer::PrintDigraph(int layer) const
 {
     std::string ret;

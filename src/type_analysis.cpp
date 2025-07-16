@@ -24,7 +24,6 @@ TypeAnalysis * TypeAnalysis::build(NameAnalysis * nameAnalysis){
 
 void DTL::ProgramNode::typeAnalysis(TypeAnalysis *ta)
 {
-	printf("here\n");
     for (auto& stmt: myStatements)
         stmt->typeAnalysis(ta);
 }
