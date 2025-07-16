@@ -54,7 +54,7 @@ public:
             we will make each cell a byte wide
         */
 
-        bytesCell = nAdd + nMult + nPassThrough
+        bytesCell = 1;
         bytesLayer = bytesCell * (nAdd + nMult * nPassThrough);
 
         bytesOutStatement = nLayers * byteslayer;
@@ -86,6 +86,21 @@ public:
         */
 
         WRITE_UINT8(baseAddress + layerByteOffset + cellByteOffset + outStatementOffset, static_cast<unsigned char>(outRegNumber));
+    }
+
+
+    std::string PrintConfig(uint64_t baseAddress, int numOutStatement, int layer, int inRegNumber, int outRegNumber)
+    {
+        unsigned int layerByteOffset = layer * bytesLayer;
+        unsigned int cellByteOffset = inRegNumber * bytesCell;
+        unsigned int outStatementOffset = numOutStatement * bytesOutStatement;
+
+        assert(outRegNumber < __UINT8_MAX__);
+
+        std::string addr = std::to_string(baseAddress + layerByteOffset + cellByteOffset + outStatementOffset);
+        std::string write_value = std::to_string(static_cast<unsigned char>(outRegNumber));
+
+        return "WRITE_UINT8(" + addr + ", " + write_value + ");";  
     }
 
     bool CheckMeetHardwareConstaints(DTLResources* rsrc) const
