@@ -148,11 +148,12 @@ public:
 
 	}
 
-	static void RegMapConst(std::string node_name, ResourceAnalysis* ra)
+	static void RegMapConst(std::string node_name, ResourceAnalysis* ra, int value)
 	{
 		static int constReg = 0;
 		ra->ConstRegMapping.insert(std::make_pair(node_name,constReg));
 		ra->ReverseConstRegMapping.insert(std::make_pair(constReg, node_name));
+		ra->ConstValueMap.insert(std::make_pair(constReg, value));
 		constReg++;
 	}
 
@@ -178,6 +179,7 @@ public:
 
 	std::unordered_map<int, std::string> ReverseConstRegMapping; // Register assignments for Constants
 	std::unordered_map<std::string, int> ConstRegMapping; // Register assignments for Constants
+	std::unordered_map<int, int> ConstValueMap;
 	ProgramNode * ast;
 	void UseForLoopRegister() 	{ResourcesNeeded->ForLoopsNeeded++;}
 	void UseNewConst() 			{ResourcesNeeded->nConstsNeeded++;}

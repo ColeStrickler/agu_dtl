@@ -42,6 +42,14 @@ inline std::string to_hex(uint64_t val) {
     ss << "0x" << std::hex << std::setw(16) << std::setfill('0') << val;
     return ss.str();
 }
+struct LoopReg
+{
+    int init_value;
+    int increment_condition;
+    int reg_num;
+};
+
+
 
 class AGUHardwareStat
 {
@@ -93,6 +101,62 @@ public:
 
         WRITE_UINT8(baseAddress + layerByteOffset + cellByteOffset + outStatementOffset, static_cast<unsigned char>(outRegNumber));
     }
+
+
+    inline uint64_t GetLoopRegsOffset() const
+    {
+        return nOutStatements*nLayers*(nLayerPassThrough+nLayerMultUnits+nLayerAddUnits);
+    }
+
+    inline uint64_t GetLoopIncRegsOffset(uint32_t byteWidth) const
+    {
+        return GetLoopRegsOffset() + (nForLoopRegisters*byteWidth);
+    }
+
+    inline uint64_t GetConstantRegsOffset(uint32_t byteWidth) const
+    {
+        return GetLoopIncRegsOffset(byteWidth) + (nForLoopRegisters*byteWidth);
+    }
+
+    /*
+        We will return both the inc register write and the for loop write
+    */
+    std::string PrintForLoopWrite(uint64_t baseAddress, LoopReg& reg, uint32_t byte_width)
+    {
+        uint64_t addr_ = baseAddress + GetLoopRegsOffset() + reg.reg_num*byte_width;
+        std::string addr = to_hex(addr_);
+
+
+
+        uint64_t write_value_ = reg.init_value;
+        std::string write_value = to_hex(write_value_);
+
+        // ret to loop register
+        std::string ret = "\nWRITE_UINT32(" + addr + "," + write_value + ");";
+
+
+        addr_ = baseAddress + GetLoopIncRegsOffset(byte_width) + reg.reg_num*byte_width; // these should align
+        addr = to_hex(addr_);
+        write_value = to_hex(static_cast<uint64_t>(reg.increment_condition));
+        ret += "\nWRITE_UINT32(" + addr + "," + write_value + ");";
+        return ret;
+    }
+
+    std::string PrintConstRegWrite(uint64_t baseAddress, int constRegNum, int constRegvalue, uint32_t byte_width)
+    {
+        uint64_t addr_ = baseAddress + GetConstantRegsOffset(byte_width) +constRegNum*byte_width;
+        std::string addr = to_hex(addr_);
+
+
+
+        uint64_t write_value_ = constRegvalue;
+        std::string write_value = to_hex(write_value_);
+
+        // ret to loop register
+        std::string ret = "WRITE_UINT32(" + addr + "," + write_value + ");";
+        return ret;
+    }
+
 
 
     std::string PrintControlWrite(uint64_t baseAddress, int numOutStatement, int layer, int inRegNumber, int outRegNumber)
@@ -149,6 +213,9 @@ public:
     end:
         return ret;
     }
+
+    
+
     int bytesCell;
     int bytesLayer;
     int bytesOutStatement;
@@ -166,11 +233,6 @@ public:
 };
 
 
-struct LoopReg
-{
-    int init_value;
-    int increment_condition;
-};
 
 
 
@@ -517,12 +579,15 @@ public:
 
 	void AllocLoopRegister(int initVal, int maxVal)
     {
-        loopRegisters.push_back({initVal, maxVal});
+        loopRegisters.push_back({initVal, maxVal, (int)loopRegisters.size()});
     }
 
 
     /*
         We now know which for loop register is mapped to this ID
+
+
+        may need to check the routing of these
     */
     void MapForLoopReg(std::string idName)
     {
@@ -620,6 +685,10 @@ public:
     {
         OutStatementRouting[outStatementNum]->PrintDigraph(file);
     }
+
+
+    void PrintInitStateRegisters(const std::string& file, uint64_t baseaddr);
+
 
     void PrintControlWrites(const std::string& file, uint64_t baseaddr)
     {

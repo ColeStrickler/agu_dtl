@@ -311,3 +311,29 @@ std::string DTL::AddUnit::toString(int layer)
 
     return label + "\n" + inA + "\n" + inB + "\n";
 }
+
+void DTL::ResourceAllocation::PrintInitStateRegisters(const std::string &file, uint64_t baseaddr)
+{
+        std::ofstream outfile(file, std::ios::app);  // open for writing
+        if (!outfile.is_open()) {
+            std::cerr << "Failed to open file.\n";
+            return;
+        }
+
+        std::string write;
+        for (auto& f : loopRegisters)
+        {
+            write += hwStat->PrintForLoopWrite(baseaddr, f, 4);
+            // We will place the for loop registers immediately after the routing registers
+        }
+
+
+        for (auto& c : rsrcAnalysis->ConstValueMap)
+        {
+            write += hwStat->PrintConstRegWrite(baseaddr, c.first, c.second, 4);
+        }
+
+        
+        outfile << write;
+        outfile.close();
+    }

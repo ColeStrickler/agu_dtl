@@ -362,6 +362,7 @@ namespace DTL
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
 		virtual int GetMaxDepth();
+		int GetVal() const {return myNum;}
 		// virtual Opd * flatten(Procedure * prog) override;
 	private:
 		const int myNum;

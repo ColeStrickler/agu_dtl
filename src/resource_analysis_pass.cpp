@@ -20,7 +20,7 @@ void DTL::ProgramNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
 void DTL::ConstDeclNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
 {
     ra->UseNewConst();
-    ra->RegMapConst(myID->getName(), ra); // assign constants a register number
+    ra->RegMapConst(myID->getName(), ra, myVal->GetVal()); // assign constants a register number
 }
 
 
@@ -58,7 +58,7 @@ void DTL::OutStmtNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
 void DTL::IntLitNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
 {
     ra->UseNewConst();
-    ra->RegMapConst(std::to_string(myNum), ra); // assign constants a register number
+    ra->RegMapConst(std::to_string(myNum), ra, myNum); // assign constants a register number
 }
 
 void DTL::PlusNode::resourceAnalysis(ResourceAnalysis* ra, int layer)
