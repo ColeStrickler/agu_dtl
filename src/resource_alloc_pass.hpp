@@ -20,6 +20,10 @@ namespace DTL
 #define READ_UINT32(addr)(*(uint32_t*)(addr))
 #define READ_UINT64(addr)(*(uint64_t*)(addr))
 
+
+#define USED_OUTSTMT_REG 0xf01
+
+
 inline int log2ceil(int n) {
     if (n <= 0) {
         // Handle error or return a specific value for non-positive input
@@ -65,10 +69,10 @@ public:
             nMult, nAdd, nPassThrough per layer
 
 
-            we will make each cell a byte wide
+            we will make each cell have 4 valid outs a byte wide
         */
 
-        bytesCell = 1;
+        bytesCell = 4;
         bytesLayer = bytesCell * (nAdd + nMult * nPassThrough);
 
         bytesOutStatement = nLayers * bytesLayer;
@@ -105,7 +109,7 @@ public:
 
     inline uint64_t GetLoopRegsOffset() const
     {
-        return nOutStatements*nLayers*(nLayerPassThrough+nLayerMultUnits+nLayerAddUnits);
+        return nOutStatements*nLayers*(nLayerPassThrough+nLayerMultUnits+nLayerAddUnits)*bytesCell;
     }
 
     inline uint64_t GetLoopIncRegsOffset(uint32_t byteWidth) const
@@ -166,12 +170,28 @@ public:
         unsigned int outStatementOffset = numOutStatement * bytesOutStatement;
 
         assert(outRegNumber < __UINT8_MAX__);
+        auto hash_str = std::to_string(baseAddress) + "_" +
+           std::to_string(layerByteOffset) + "_" +
+           std::to_string(cellByteOffset) + "_" +
+           std::to_string(outStatementOffset);
 
-        std::string addr = to_hex(baseAddress + layerByteOffset + cellByteOffset + outStatementOffset);
+
+        int cell_index = VarOutMap[hash_str];
+        std::string addr = to_hex(baseAddress + layerByteOffset + cellByteOffset + outStatementOffset + cell_index);
+        VarOutMap[hash_str]++;
+        assert(VarOutMap[hash_str] <= bytesCell); // this maps to maxVarOut
+
+
+
+        printf("0x%x nOut %d, layer %d, inReg %d, outReg %d\n", baseAddress, numOutStatement, layer, inRegNumber, outRegNumber);
         std::string write_value = std::to_string(static_cast<unsigned char>(outRegNumber));
 
         return "WRITE_UINT8(" + addr + ", " + write_value + ");";  
     }
+
+    std::unordered_map<std::string, int> VarOutMap;
+
+
 
     bool CheckMeetHardwareConstaints(DTLResources* rsrc) const
     {
@@ -579,6 +599,7 @@ public:
 
 	void AllocLoopRegister(int initVal, int maxVal)
     {
+        // we map backwards
         loopRegisters.push_back({initVal, maxVal, (int)loopRegisters.size()});
     }
 

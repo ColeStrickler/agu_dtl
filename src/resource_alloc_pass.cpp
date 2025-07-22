@@ -42,12 +42,17 @@ void DTL::ForStmtNode::resourceAllocation(ResourceAllocation* ralloc, int depth)
         exit(-1);
     }
 
-    ralloc->AllocLoopRegister(RegInitValue, RegMaxValue);
-    ralloc->MapForLoopReg(GetInitVar());
+    
 
     for (auto& stmt: myStatements)
         stmt->resourceAllocation(ralloc, false);
 
+    /*
+        Must do this here to successfully map onto loop register indexing scheme
+    */
+    ralloc->AllocLoopRegister(RegInitValue, RegMaxValue);
+    ralloc->MapForLoopReg(GetInitVar());
+    
 }
 
 void DTL::OutStmtNode::resourceAllocation(ResourceAllocation* ralloc, int depth)
@@ -332,6 +337,10 @@ void DTL::ResourceAllocation::PrintInitStateRegisters(const std::string &file, u
         {
             write += hwStat->PrintConstRegWrite(baseaddr, c.first, c.second, 4);
         }
+
+
+        write += "\nWRITE_UINT8(" + to_hex(baseaddr+USED_OUTSTMT_REG) + "," + to_hex(static_cast<uint8_t>(OutStatementRouting.size())) +   ");\n";
+
 
         
         outfile << write;

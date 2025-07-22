@@ -83,7 +83,7 @@ int main()
 		/*
 			Would actually read hardware stats
 		*/
-		auto hwStat = new DTL::AGUHardwareStat(4, 4, 6, 8, 8, 8, 8);
+		auto hwStat = new DTL::AGUHardwareStat(4, 4, 5, 6, 6, 4, 8);
 
 
 
