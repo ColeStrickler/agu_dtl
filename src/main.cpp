@@ -90,8 +90,8 @@ int main()
 		std::cout << ra->GetResources()->toString() << "\n";
 		prog->PrintAST("./astDigraph.dot");
 		auto ralloc = DTL::ResourceAllocation::build(ra, hwStat);
-		ralloc->PrintControlWrites("./outcontrolseq", 0x0000000);
-		ralloc->PrintInitStateRegisters("./outcontrolseq", 0x0000000);
+		ralloc->PrintControlWrites("./outcontrolseq", 0x4000000);
+		ralloc->PrintInitStateRegisters("./outcontrolseq", 0x4000000);
 
 		printf("here\n");
 		
