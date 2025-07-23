@@ -6,7 +6,7 @@ int row_size = 256;
 for (int col = 0; col < 64; col++)
 {
 	for(int row = 0; row < 1 ; row++){
-		out = element_size*element_size + element_size*element_size;
+		out = row_size*element_size;
 	}
 }
 

@@ -73,9 +73,9 @@ public:
         */
 
         bytesCell = 4;
-        bytesLayer = bytesCell * (nAdd + nMult * nPassThrough);
+        bytesLayer = bytesCell * (nAdd + nMult + nPassThrough);
 
-        bytesOutStatement = nLayers * bytesLayer;
+        bytesOutStatement = (nLayers+1) * bytesLayer; // layer at beginning at at the end
         totalConfigRegionBits = nOutStatements * bytesOutStatement;
 
 
@@ -109,7 +109,7 @@ public:
 
     inline uint64_t GetLoopRegsOffset() const
     {
-        return nOutStatements*nLayers*(nLayerPassThrough+nLayerMultUnits+nLayerAddUnits)*bytesCell;
+        return nOutStatements*(nLayers+1)*(nLayerPassThrough+nLayerMultUnits+nLayerAddUnits)*bytesCell;
     }
 
     inline uint64_t GetLoopIncRegsOffset(uint32_t byteWidth) const
@@ -165,6 +165,10 @@ public:
 
     std::string PrintControlWrite(uint64_t baseAddress, int numOutStatement, int layer, int inRegNumber, int outRegNumber)
     {
+        if (outRegNumber == 255)
+            return "";
+        
+
         unsigned int layerByteOffset = layer * bytesLayer;
         unsigned int cellByteOffset = inRegNumber * bytesCell;
         unsigned int outStatementOffset = numOutStatement * bytesOutStatement;
@@ -177,13 +181,14 @@ public:
 
 
         int cell_index = VarOutMap[hash_str];
-        std::string addr = to_hex(baseAddress + layerByteOffset + cellByteOffset + outStatementOffset + cell_index);
+        uint64_t offset = layerByteOffset + cellByteOffset + outStatementOffset + cell_index;
+        std::string addr = to_hex(baseAddress + offset);
         VarOutMap[hash_str]++;
         assert(VarOutMap[hash_str] <= bytesCell); // this maps to maxVarOut
 
 
-
-        printf("0x%x nOut %d, layer %d, inReg %d, outReg %d\n", baseAddress, numOutStatement, layer, inRegNumber, outRegNumber);
+        printf("0x%x, 0x%x, 0x%x, 0x%x\n", layerByteOffset, cellByteOffset, outStatementOffset, cell_index);
+        printf("0x%x nOut %d, layer %d, inReg %d, outReg %d 0x%x\n", baseAddress, numOutStatement, layer, inRegNumber, outRegNumber, offset);
         std::string write_value = std::to_string(static_cast<unsigned char>(outRegNumber));
 
         return "WRITE_UINT8(" + addr + ", " + write_value + ");";  
@@ -263,7 +268,7 @@ public:
     /*
         Used for passthrough
     */
-    FuncUnit(int regAssignment, int inputA) : RegAssignment(regAssignment), InputA(inputA)
+    FuncUnit(int regAssignment, int inputA) : RegAssignment(regAssignment), InputA(inputA), InputB(255)
     {
 
     }
@@ -474,7 +479,7 @@ public:
 
     int RequestPassThrough(int layer, int inputMapA)
     {
-        assert(layer >= 0 && layer < LayerCount);
+        assert(layer >= 0 && layer < LayerCount+1);
         CreateLayerIfNeeded(layer);
         auto& routing = LayerRouting[layer];
         return routing->MapPassThrough(new PassThrough(routing->getNextPassThrough(), inputMapA));
@@ -524,7 +529,7 @@ public:
             m++;
         }
         LayerRouting = newLayerRouting;
-        while(m < LayerCount)
+        while(m < LayerCount+1)
         {
             LayerRouting[m] = new AGULayer(LayerAddUnitCount, LayerMultUnitCount, LayerPassThruCount);
             unit = RequestPassThrough(m, unit);
