@@ -1,6 +1,7 @@
 
 #include <fstream>
 #include <string.h>
+#include <chrono>
 #include "errors.hpp"
 #include "scanner.hpp"
 #include "frontend.hh"
@@ -61,6 +62,8 @@ int main()
 {
     try {
         writeTokenStream("./test.dtl", "./dtltokens.out");
+		auto hwStat = new DTL::AGUHardwareStat(4, 4, 5, 6, 6, 4, 8);
+		auto start = std::chrono::high_resolution_clock::now();
         auto prog = parse("./test.dtl");
 		assert(prog != nullptr);
 
@@ -77,19 +80,25 @@ int main()
 		prog = static_cast<DTL::ProgramNode*>(DTL::ASTTransformPass::Transform(prog));
 
 		auto ra = DTL::ResourceAnalysis::build(prog);
-		
+		auto ralloc = DTL::ResourceAllocation::build(ra, hwStat);
+		auto end = std::chrono::high_resolution_clock::now();
 
 
 		/*
 			Would actually read hardware stats
 		*/
-		auto hwStat = new DTL::AGUHardwareStat(4, 4, 5, 6, 6, 4, 8);
+		
+		
+		std::chrono::duration<double, std::milli> elapsed = end - start;
 
+		std::cout << "Time taken: " << elapsed.count() << " ms\n";
 
 
 		std::cout << ra->GetResources()->toString() << "\n";
 		prog->PrintAST("./astDigraph.dot");
-		auto ralloc = DTL::ResourceAllocation::build(ra, hwStat);
+		
+
+
 		ralloc->PrintControlWrites("./outcontrolseq", 0x4000000);
 		ralloc->PrintInitStateRegisters("./outcontrolseq", 0x4000000);
 

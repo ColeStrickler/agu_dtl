@@ -10,7 +10,7 @@ YACC_C = parser.cc
 YACC_H = frontend.hh
 
 CXX = g++
-CFLAGS = -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Wuninitialized -Winit-self -Wmissing-declarations -Wmissing-include-dirs -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wsign-conversion -Wsign-promo -Wstrict-overflow=5 -Wundef -Werror -Wno-unused -Wno-unused-parameter
+CFLAGS = -O2 -march=native -flto -fno-math-errno -fstrict-aliasing #-DNDEBUG -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Wuninitialized -Winit-self -Wmissing-declarations -Wmissing-include-dirs -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wsign-conversion -Wsign-promo -Wstrict-overflow=5 -Wundef -Werror -Wno-unused -Wno-unused-parameter
 CPP_SRCS := $(wildcard *.cpp) 
 OBJ_SRCS := parser.o lexer.o $(CPP_SRCS:.cpp=.o)
 
@@ -29,10 +29,10 @@ parser.o: parser.cc
 	$(CXX) $(CFLAGS) -Wno-sign-compare -Wno-sign-conversion -Wno-switch-default -g -std=c++14 -MMD -MP -c -o $@ $<
 
 %.o: %.cpp 
-	$(CXX) $(FLAGS) -g -std=c++17 -MMD -MP -c -o $@ $<
+	$(CXX) $(CFLAGS) -g -std=c++17 -MMD -MP -c -o $@ $<
 # Compile the main program
 compiler: $(OBJ_SRCS)
-	$(CXX) $(FLAGS) -g -std=c++17 -o $@ $(OBJ_SRCS)
+	$(CXX) $(CFLAGS) -g -std=c++17 -o $@ $(OBJ_SRCS)
 	chmod a+x compiler
 
 run: compiler

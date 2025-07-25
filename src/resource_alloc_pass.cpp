@@ -42,16 +42,17 @@ void DTL::ForStmtNode::resourceAllocation(ResourceAllocation* ralloc, int depth)
         exit(-1);
     }
 
+    /*
+        Must do this here to successfully map onto loop register indexing scheme
+    */
+    ralloc->MapForLoopReg(GetInitVar());
+    ralloc->AllocLoopRegister(RegInitValue, RegMaxValue);
     
 
     for (auto& stmt: myStatements)
         stmt->resourceAllocation(ralloc, false);
 
-    /*
-        Must do this here to successfully map onto loop register indexing scheme
-    */
-    ralloc->AllocLoopRegister(RegInitValue, RegMaxValue);
-    ralloc->MapForLoopReg(GetInitVar());
+    
     
 }
 
@@ -199,7 +200,7 @@ int DTL::PostIncStmtNode::Collapse(ResourceAllocation* ralloc)
 
 int DTL::IDNode::Collapse(ResourceAllocation* ralloc)
 {
-    ralloc->MapForLoopReg(getName());
+    //ralloc->MapForLoopReg(getName());
     return 0;
 }
 

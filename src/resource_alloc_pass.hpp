@@ -605,7 +605,7 @@ public:
 	void AllocLoopRegister(int initVal, int maxVal)
     {
         // we map backwards
-        loopRegisters.push_back({initVal, maxVal, (int)loopRegisters.size()});
+        loopRegisters.push_back({initVal, maxVal, (rsrcAnalysis->GetResources()->ForLoopsNeeded - 1 - (int)loopRegisters.size())});
     }
 
 
@@ -617,8 +617,10 @@ public:
     */
     void MapForLoopReg(std::string idName)
     {
-        idForLoopRegMap[idName] =  hwStat->nConstRegisters + loopRegisters.size();
-        ReverseidForLoopRegMap[hwStat->nConstRegisters + loopRegisters.size()] = idName;
+        auto forloopsneeded = rsrcAnalysis->GetResources()->ForLoopsNeeded;
+        idForLoopRegMap[idName] =  hwStat->nConstRegisters + (forloopsneeded - loopRegisters.size()-1);
+        ReverseidForLoopRegMap[hwStat->nConstRegisters + (forloopsneeded - loopRegisters.size()-1)] = idName;
+        printf("For Loop reg %s --> %d\n", idName.c_str(), (forloopsneeded - loopRegisters.size()-1));
     }
 
     int ForLoopIDToMapping(std::string idName)
