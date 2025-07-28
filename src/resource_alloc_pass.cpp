@@ -255,6 +255,15 @@ std::string DTL::OutStmtRouting::PrintControlWrites(uint64_t baseaddr, int numou
     return ret;
 }
 
+void DTL::OutStmtRouting::DoControlWrites(uint64_t baseaddr, int numoutstatement) const
+{
+    for (auto& e: LayerRouting)
+    {
+         int i = e.first;
+         e.second->DoControlWrites(baseaddr, numoutstatement, i, hwStat);     
+    }
+}
+
 std::string DTL::AGULayer::PrintControlWrites(uint64_t baseaddr, int numOutStmt, int layer, AGUHardwareStat *hwstat)
 {
     std::string ret;
@@ -269,6 +278,20 @@ std::string DTL::AGULayer::PrintControlWrites(uint64_t baseaddr, int numOutStmt,
         ret += hwstat->PrintControlWrite(baseaddr, numOutStmt, layer, unit->InputB, unit->RegAssignment) + "\n";
     }
     return ret;
+}
+
+void DTL::AGULayer::DoControlWrites(uint64_t baseaddr, int numOutStmt, int layer, AGUHardwareStat *hwstat)
+{
+    for (auto& unit : inputRouting)
+    {
+        /*
+            I think this is correct, we map inputs to the units assignment, but I am not completely sure this will map correctly
+
+            We will want to check and confirm here first when we debugs
+        */
+        hwstat->DoControlWrite(baseaddr, numOutStmt, layer, unit->InputA, unit->RegAssignment);
+        hwstat->DoControlWrite(baseaddr, numOutStmt, layer, unit->InputB, unit->RegAssignment);
+    }
 }
 
 std::string DTL::AGULayer::PrintDigraph(int layer) const
@@ -346,4 +369,17 @@ void DTL::ResourceAllocation::PrintInitStateRegisters(const std::string &file, u
         
         outfile << write;
         outfile.close();
+}
+
+void DTL::ResourceAllocation::DoInitStateRegisters(uint64_t baseAddr)
+{
+    for (auto& f : loopRegisters)
+    {
+        hwStat->DoForLoopWrite(baseAddr, f, 4);
+        // We will place the for loop registers immediately after the routing registers
     }
+    for (auto& c : rsrcAnalysis->ConstValueMap)
+    {
+       hwStat->DoConstRegWrite(baseAddr, c.first, c.second, 4);
+    }
+}

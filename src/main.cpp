@@ -81,10 +81,10 @@ int main()
 		
 		auto ra = DTL::ResourceAnalysis::build(prog);
 		std::cout << ra->GetResources()->toString() << "\n";
-		ra->GetResources()->GetAddUnitsNeeded();
-		ra->GetResources()->GetPassThroughNeeded();
-		ra->GetResources()->GetLayersNeeded();
-		ra->GetResources()->GetMultUnitsNeeded();
+		
+		
+		
+		
 
 		auto ralloc = DTL::ResourceAllocation::build(ra, hwStat);
 		auto end = std::chrono::high_resolution_clock::now();

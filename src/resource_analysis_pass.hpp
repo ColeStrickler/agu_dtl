@@ -26,6 +26,14 @@ struct DTLResources
 
 	}
 
+	void GetNeededResourceStats()
+	{
+		GetAddUnitsNeeded();
+		GetPassThroughNeeded();
+		GetLayersNeeded();
+		GetMultUnitsNeeded();
+	}
+
 	int GetPassThroughNeeded()
 	{
 		int pass_needed = 0;
@@ -195,6 +203,7 @@ public:
 	void UseNewPassThroughLayer(int layer) {
 		ResourcesNeeded->LayerFuncUnitAllocations[ResourcesNeeded->CurrentOutStatement()][layer].nPassThrough++;
 	}
+
 
 	DTLResources* GetResources() const {return ResourcesNeeded;}
 private:

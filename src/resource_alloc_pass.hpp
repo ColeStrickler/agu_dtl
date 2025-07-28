@@ -122,6 +122,20 @@ public:
         return GetLoopIncRegsOffset(byteWidth) + (nForLoopRegisters*byteWidth);
     }
 
+
+
+    void DoForLoopWrite(uint64_t baseAddress, LoopReg& reg, uint32_t byte_width)
+    {
+        uint64_t addr = baseAddress + GetLoopRegsOffset() + reg.reg_num*byte_width;
+        uint32_t write_value_ = static_cast<uint32_t>(reg.init_value);
+        WRITE_UINT32(addr, write_value_);
+
+        addr = baseAddress + GetLoopIncRegsOffset(byte_width) + reg.reg_num*byte_width; // these should align
+        write_value_ = static_cast<uint32_t>(reg.increment_condition);
+        WRITE_UINT32(addr, write_value_);
+    }
+
+
     /*
         We will return both the inc register write and the for loop write
     */
@@ -146,6 +160,13 @@ public:
         return ret;
     }
 
+    void DoConstRegWrite(uint64_t baseAddress, int constRegNum, int constRegvalue, uint32_t byte_width)
+    {
+        uint64_t addr_ = baseAddress + GetConstantRegsOffset(byte_width) + constRegNum*byte_width;
+        assert(byte_width == 4);
+        WRITE_UINT32(addr_, constRegvalue);
+    }
+
     std::string PrintConstRegWrite(uint64_t baseAddress, int constRegNum, int constRegvalue, uint32_t byte_width)
     {
         uint64_t addr_ = baseAddress + GetConstantRegsOffset(byte_width) +constRegNum*byte_width;
@@ -162,6 +183,28 @@ public:
     }
 
 
+    void DoControlWrite(uint64_t baseAddress, int numOutStatement, int layer, int inRegNumber, int outRegNumber)
+    {
+        if (outRegNumber == 255)
+            return;
+        assert(outRegNumber < __UINT8_MAX__);
+
+        unsigned int layerByteOffset = layer * bytesLayer;
+        unsigned int cellByteOffset = inRegNumber * bytesCell;
+        unsigned int outStatementOffset = numOutStatement * bytesOutStatement;
+
+         auto hash_str = std::to_string(baseAddress) + "_" +
+           std::to_string(layerByteOffset) + "_" +
+           std::to_string(cellByteOffset) + "_" +
+           std::to_string(outStatementOffset);
+
+
+        int cell_index = VarOutMap[hash_str];
+        uint64_t offset = layerByteOffset + cellByteOffset + outStatementOffset + cell_index;
+        VarOutMap[hash_str]++;
+        assert(VarOutMap[hash_str] <= bytesCell); // this maps to maxVarOut
+        WRITE_UINT8(baseAddress+offset, static_cast<unsigned char>(outRegNumber));
+    }
 
     std::string PrintControlWrite(uint64_t baseAddress, int numOutStatement, int layer, int inRegNumber, int outRegNumber)
     {
@@ -423,6 +466,7 @@ public:
     std::vector<FuncUnit*> inputRouting;
 
     std::string PrintControlWrites(uint64_t baseaddr, int numOutStmt, int layer, AGUHardwareStat* hwstat);
+    void DoControlWrites(uint64_t baseaddr, int numOutStmt, int layer, AGUHardwareStat* hwstat);
 
     std::string PrintDigraph(int layer) const;
 private:
@@ -552,6 +596,7 @@ public:
     
     std::string PrintDigraph(const std::string& file) const;
     std::string PrintControlWrites(uint64_t baseaddr, int numoutstatement) const;
+    void DoControlWrites(uint64_t baseaddr, int numoutstatement) const;
 
 private:
     std::unordered_map<ASTNode*, std::pair<int, int>> OpFuncUnitMapping;
@@ -722,7 +767,17 @@ public:
 
 
     void PrintInitStateRegisters(const std::string& file, uint64_t baseaddr);
+    void DoInitStateRegisters(uint64_t baseAddr);
 
+
+    void DoControlWrites(uint64_t baseaddr)
+    {
+        for (int i = 0; i < OutStatementRouting.size(); i++)
+        {
+            auto& outstmt = OutStatementRouting[i];
+            outstmt->DoControlWrites(baseaddr, i);
+        }
+    }
 
     void PrintControlWrites(const std::string& file, uint64_t baseaddr)
     {
@@ -747,6 +802,12 @@ public:
         /*
             We still need to set up a way to write for loop and constant registers
         */
+    }
+
+
+    void DoControlWrites(uint64_t baseAddr)
+    {
+
     }
 
 
