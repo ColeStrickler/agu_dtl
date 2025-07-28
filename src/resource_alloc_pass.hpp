@@ -805,11 +805,6 @@ public:
     }
 
 
-    void DoControlWrites(uint64_t baseAddr)
-    {
-
-    }
-
 
 
     AGUHardwareStat* hwStat;

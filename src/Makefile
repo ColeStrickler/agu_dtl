@@ -14,7 +14,13 @@ CFLAGS = -O2 -march=native -flto -fno-math-errno -fstrict-aliasing #-DNDEBUG -pe
 CPP_SRCS := $(wildcard *.cpp) 
 OBJ_SRCS := parser.o lexer.o $(CPP_SRCS:.cpp=.o)
 
-all: compiler
+LIB_NAME = libdtl.a
+
+all: $(LIB_NAME)
+
+$(LIB_NAME): $(OBJ_SRCS)
+	ar rcs $@ $^
+
 
 parser.cc: parser.yy
 	bison -Werror -Wcounterexamples --graph=parser.dot --defines=frontend.hh -v $<
