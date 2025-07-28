@@ -1,23 +1,16 @@
+int W = 5;
+int element_size = 4; 
+    
 
-int col1_offset = 16;
-int col2_offset = 20;
-int col3_offset = 44;
-int row_size = 64;
+int out_h = 1078;
+int out_w = 1918;
 
-for (int row = 0; row < 43690; row++)
-{
-	for (int x = 0; x < 44; x++)
-	{
-		for (int y = 0; y < 2; y++)
-		{
-			for (int z = 0; z < 4; z++)
-			{
-				out = (x*y*z) + (z*col1_offset+row_size);
-				out = (44*y*z) + (z*col2_offset+row_size);
-				out = (row_size*row)*(row_size*y*y*y);
-				out = (row_size*row)*(row_size*y*y*y);
-				out = (row_size*row)*(row_size*y*y*y);
-			}
-		}
-	}
+for (int oh = 0; oh < 1078; oh++) {
+    for (int ow = 0; ow < 1918; ow++) {
+        for (int kh = 0; kh < 3; kh++) {
+            for (int kw = 0; kw < 3; kw++) {
+                out = ((oh + kh) * W + (ow + kw)) * element_size;
+            }
+        }
+    }
 }

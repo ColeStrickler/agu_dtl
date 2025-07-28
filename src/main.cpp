@@ -78,8 +78,14 @@ int main()
 			return -1;
 
 		prog = static_cast<DTL::ProgramNode*>(DTL::ASTTransformPass::Transform(prog));
-
+		
 		auto ra = DTL::ResourceAnalysis::build(prog);
+		std::cout << ra->GetResources()->toString() << "\n";
+		ra->GetResources()->GetAddUnitsNeeded();
+		ra->GetResources()->GetPassThroughNeeded();
+		ra->GetResources()->GetLayersNeeded();
+		ra->GetResources()->GetMultUnitsNeeded();
+
 		auto ralloc = DTL::ResourceAllocation::build(ra, hwStat);
 		auto end = std::chrono::high_resolution_clock::now();
 
@@ -94,7 +100,7 @@ int main()
 		std::cout << "Time taken: " << elapsed.count() << " ms\n";
 
 
-		std::cout << ra->GetResources()->toString() << "\n";
+		
 		prog->PrintAST("./astDigraph.dot");
 		
 

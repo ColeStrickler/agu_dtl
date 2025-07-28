@@ -202,18 +202,22 @@ public:
     {
         bool ret = (rsrc->nAddNeeded <= nLayerAddUnits);
         if (!ret) {
+            printf("%d <= %d\n", rsrc->nAddNeeded, nLayerAddUnits);
             std::cerr << "(rsrc->nAddNeeded <= nLayerAddUnits)\n"; goto end;
         }
         ret = (rsrc->nMultNeeded <= nLayerMultUnits);
         if (!ret) {
+            printf("%d <= %d\n", rsrc->nMultNeeded, nLayerMultUnits);
             std::cerr << "(rsrc->nMultNeeded <= nLayerMultUnits)\n"; goto end;
         }
         ret = (rsrc->ForLoopsNeeded <= nForLoopRegisters);
         if (!ret) {
+            printf("%d <= %d\n", rsrc->ForLoopsNeeded, nForLoopRegisters);
             std::cerr << "(rsrc->ForLoopsNeeded <= nForLoopRegisters)\n"; goto end;
         }
         ret = (rsrc->nConstsNeeded <= nConstRegisters);
         if (!ret) {
+            printf("%d <= %d\n", rsrc->nConstsNeeded, nConstRegisters);
             std::cerr << "(rsrc->nConstsNeeded <= nConstRegisters)\n"; goto end;
         }
 
@@ -229,10 +233,12 @@ public:
         }
         ret = (rsrc->nPassThrough <= nLayerPassThrough); 
         if (!ret) {
+            printf("%d <= %d\n", rsrc->nPassThrough, nLayerPassThrough);
             std::cerr << "(rsrc->nPassThrough <= nLayerPassThrough)\n"; goto end;
         }
         ret = (rsrc->nOutStatements <= nOutStatements);
         if (!ret) {
+            printf("%d <= %d\n", rsrc->nOutStatements, nOutStatements);
             std::cerr << "(rsrc->nOutStatements <= nOutStatements)\n"; goto end;
         }
     end:
