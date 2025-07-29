@@ -19,6 +19,7 @@ public:
     API(); // if we allow automatically reading 
     API(AGUHardwareStat* hwStat); // if we want to manually configure
     ~API();
+    void SetBaseAddr(uint64_t newBaseAddr);
     void ReadHardwareInfo();
     bool CompileAndProgramHardware(const std::string& dtlProgram);
     bool Compile(const std::string& dtlProgram);

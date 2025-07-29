@@ -126,12 +126,15 @@ public:
 
     void DoForLoopWrite(uint64_t baseAddress, LoopReg& reg, uint32_t byte_width)
     {
+        
         uint64_t addr = baseAddress + GetLoopRegsOffset() + reg.reg_num*byte_width;
+        printf("DoForLoopWrite()1 0x%x, 0x%x\n", baseAddress, GetLoopRegsOffset() + reg.reg_num*byte_width);
         uint32_t write_value_ = static_cast<uint32_t>(reg.init_value);
         WRITE_UINT32(addr, write_value_);
 
         addr = baseAddress + GetLoopIncRegsOffset(byte_width) + reg.reg_num*byte_width; // these should align
         write_value_ = static_cast<uint32_t>(reg.increment_condition);
+         printf("DoForLoopWrite()1 0x%x, 0x%x\n", baseAddress, GetLoopIncRegsOffset(byte_width) + reg.reg_num*byte_width);
         WRITE_UINT32(addr, write_value_);
     }
 
@@ -162,7 +165,9 @@ public:
 
     void DoConstRegWrite(uint64_t baseAddress, int constRegNum, int constRegvalue, uint32_t byte_width)
     {
+       
         uint64_t addr_ = baseAddress + GetConstantRegsOffset(byte_width) + constRegNum*byte_width;
+         printf("DoConstRegWrite() 0x%x\n", addr_);
         assert(byte_width == 4);
         WRITE_UINT32(addr_, constRegvalue);
     }
@@ -185,6 +190,7 @@ public:
 
     void DoControlWrite(uint64_t baseAddress, int numOutStatement, int layer, int inRegNumber, int outRegNumber)
     {
+        
         if (outRegNumber == 255)
             return;
         assert(outRegNumber < __UINT8_MAX__);
@@ -201,6 +207,7 @@ public:
 
         int cell_index = VarOutMap[hash_str];
         uint64_t offset = layerByteOffset + cellByteOffset + outStatementOffset + cell_index;
+        printf("DoControlWrite() 0x%x +0x%x\n", baseAddress, offset);
         VarOutMap[hash_str]++;
         assert(VarOutMap[hash_str] <= bytesCell); // this maps to maxVarOut
         WRITE_UINT8(baseAddress+offset, static_cast<unsigned char>(outRegNumber));

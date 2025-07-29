@@ -2,7 +2,7 @@
 #define __DREWNO_MARS_SCANNER_HPP__ 1
 
 #if ! defined(yyFlexLexerOnce)
-#include <FlexLexer.h>
+#include "FlexLexer.h"
 #endif
 
 #include "frontend.hh"

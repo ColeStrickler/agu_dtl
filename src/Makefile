@@ -1,56 +1,90 @@
-# Names of your source files
+# Tools
 LEX = flex
 YACC = bison
 
+# Source files
 LEX_FILE = lexer.l
 YACC_FILE = parser.yy
 
-LEX_C = scanner.cc
+# Generated files
+LEX_C = lexer.yy.cc
 YACC_C = parser.cc
 YACC_H = frontend.hh
 
-CXX = g++
-CFLAGS = -O2 -march=native -flto -fno-math-errno -fstrict-aliasing #-DNDEBUG -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Wuninitialized -Winit-self -Wmissing-declarations -Wmissing-include-dirs -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wsign-conversion -Wsign-promo -Wstrict-overflow=5 -Wundef -Werror -Wno-unused -Wno-unused-parameter
-CPP_SRCS := $(wildcard *.cpp) 
-OBJ_SRCS := parser.o lexer.o $(CPP_SRCS:.cpp=.o)
+# Compilers
+CXX_RISCV = riscv64-unknown-linux-gnu-g++
+CXX_X86   = g++
 
+CFLAGS_COMMON = -O2 -fno-math-errno -fstrict-aliasing -g -std=c++17 -I./
+CFLAGS_RISCV  = $(CFLAGS_COMMON)
+CFLAGS_X86    = $(CFLAGS_COMMON)
+
+# All C++ source files in current directory (excluding main.cpp)
+CPP_SRCS := $(filter-out main.cpp, $(wildcard *.cpp))
+
+# Object files for each build
+OBJ_RISCV = parser.o lexer.o $(CPP_SRCS:.cpp=.o)
+OBJ_X86   = parser.x86.o lexer.x86.o $(CPP_SRCS:.cpp=.x86.o) main.x86.o
+
+# Outputs
 LIB_NAME = libdtl.a
+DTL_COMPILER = dtlcompiler
 
-all: $(LIB_NAME)
+# Default target: build both
+all: lib dtlcompiler
 
-$(LIB_NAME): $(OBJ_SRCS)
+# ============================================================
+# === RISC-V library build (via "make lib") ==================
+# ============================================================
+lib: $(LIB_NAME)
+
+$(LIB_NAME): $(OBJ_RISCV)
 	ar rcs $@ $^
 
-
-parser.cc: parser.yy
-	bison -Werror -Wcounterexamples --graph=parser.dot --defines=frontend.hh -v $<
-
-
-lexer.yy.cc: lexer.l
-	flex --outfile=lexer.yy.cc $<
+parser.o: parser.cc frontend.hh
+	$(CXX_RISCV) $(CFLAGS_RISCV) -MMD -MP -c $< -o $@
 
 lexer.o: lexer.yy.cc
-	$(CXX) $(CFLAGS) -Wno-sign-compare -Wno-sign-conversion -Wno-old-style-cast -Wno-switch-default -Wno-strict-overflow -g -std=c++14 -c lexer.yy.cc -o lexer.o
-parser.o: parser.cc
-	$(CXX) $(CFLAGS) -Wno-sign-compare -Wno-sign-conversion -Wno-switch-default -g -std=c++14 -MMD -MP -c -o $@ $<
+	$(CXX_RISCV) $(CFLAGS_RISCV) -Wno-sign-compare -Wno-sign-conversion \
+	    -Wno-old-style-cast -Wno-switch-default -Wno-strict-overflow \
+	    -c $< -o $@
 
-%.o: %.cpp 
-	$(CXX) $(CFLAGS) -g -std=c++17 -MMD -MP -c -o $@ $<
-# Compile the main program
-compiler: $(OBJ_SRCS)
-	$(CXX) $(CFLAGS) -g -std=c++17 -o $@ $(OBJ_SRCS)
-	chmod a+x compiler
+%.o: %.cpp
+	$(CXX_RISCV) $(CFLAGS_RISCV) -MMD -MP -c $< -o $@
 
-run: compiler
-	./compiler
+# ============================================================
+# === x86 dtlcompiler build (via "make dtlcompiler") =========
+# ============================================================
+dtlcompiler: $(OBJ_X86)
+	$(CXX_X86) $(CFLAGS_X86) -o $@ $(OBJ_X86)
 
-graph: run
-	dot -Tpng astDigraph.dot -o graph.png
-	open graph.png
+parser.x86.o: parser.cc frontend.hh
+	$(CXX_X86) $(CFLAGS_X86) -MMD -MP -c $< -o $@
 
-out: run
-	dot -Tpng outStatement0Digraph -o graph.png
-	open graph.png
+lexer.x86.o: lexer.yy.cc
+	$(CXX_X86) $(CFLAGS_X86) -Wno-sign-compare -Wno-sign-conversion \
+	    -Wno-old-style-cast -Wno-switch-default -Wno-strict-overflow \
+	    -c $< -o $@
 
+%.x86.o: %.cpp
+	$(CXX_X86) $(CFLAGS_X86) -MMD -MP -c $< -o $@
+
+main.x86.o: main.cpp
+	$(CXX_X86) $(CFLAGS_X86) -c $< -o $@
+
+# ============================================================
+# === Lex & Yacc rules =======================================
+# ============================================================
+parser.cc frontend.hh: parser.yy
+	$(YACC) -Werror -Wcounterexamples --graph=parser.dot \
+	        --defines=frontend.hh -v $<
+
+lexer.yy.cc: lexer.l
+	$(LEX) --outfile=lexer.yy.cc $<
+
+# ============================================================
+# === Clean ==================================================
+# ============================================================
 clean:
-	rm -rf *.output *.o *.cc *.hh ac parser.dot parser.png
+	rm -rf *.o *.x86.o *.d *.output *.cc *.hh parser.dot parser.png \
+	       $(LIB_NAME) $(DTL_COMPILER) lexer.yy.cc frontend.hh
