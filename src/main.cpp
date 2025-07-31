@@ -80,7 +80,7 @@ int main()
 		prog = static_cast<DTL::ProgramNode*>(DTL::ASTTransformPass::Transform(prog));
 		
 		auto ra = DTL::ResourceAnalysis::build(prog);
-		std::cout << ra->GetResources()->toString() << "\n";
+		//std::cout << ra->GetResources()->toString() << "\n";
 		
 		
 		

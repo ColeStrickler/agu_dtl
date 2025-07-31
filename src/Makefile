@@ -33,6 +33,11 @@ DTL_COMPILER = dtlcompiler
 # Default target: build both
 all: lib dtlcompiler
 
+
+run: dtlcompiler
+	chmod +x ./dtlcompiler
+	./dtlcompiler
+
 # ============================================================
 # === RISC-V library build (via "make lib") ==================
 # ============================================================

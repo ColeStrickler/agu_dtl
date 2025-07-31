@@ -3,7 +3,7 @@
 
 void DTL::ProgramNode::resourceAllocation(ResourceAllocation *ralloc, int depth)
 {
-    printf("ProgramNode::resourceAllocation()\n");
+    //printf("ProgramNode::resourceAllocation()\n");
     for (auto& stmt: myStatements)
         stmt->resourceAllocation(ralloc, false);
 }

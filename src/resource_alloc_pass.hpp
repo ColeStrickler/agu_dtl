@@ -5,6 +5,9 @@
 #include <cmath>
 #include <sstream>
 #include <iomanip>
+#include "util.hpp"
+
+
 namespace DTL
 {
 
@@ -51,6 +54,7 @@ struct LoopReg
     int init_value;
     int increment_condition;
     int reg_num;
+    Magic hwDivMagic;
 };
 
 
@@ -651,13 +655,41 @@ public:
         resourceAlloc->rsrcAnalysis = ra;
 
         ra->ast->resourceAllocation(resourceAlloc, 0);
-		
+		resourceAlloc->CalculateForLoopMagicValues();
 
         
         //ra->ast->resourceAllocation(resourceAlloc);
         return resourceAlloc;
 		//return resourceAnalysis->GetResources();
 	}
+
+
+    void CalculateForLoopMagicValues()
+    {
+        /*
+            We traverse backwards, as the inner loops are placed at the end of this
+        */
+
+        uint32_t d = rsrcAnalysis->GetResources()->nOutStatements; // the first divisor is # of outstatements
+        
+        for (int i = loopRegisters.size()-1; i >= 0; i--)
+        {
+            auto loopReg = loopRegisters[i];
+            auto magicnums = magicu(d);
+            loopReg.hwDivMagic.add_indicator = magicnums.add_indicator;
+            loopReg.hwDivMagic.M = magicnums.M;
+            loopReg.hwDivMagic.s = magicnums.s;
+
+
+            /*
+                This is equivalent to computing the stride for each loop counter
+                as seen in the dtu_stateless_algo
+            */
+            d *= loopReg.increment_condition;
+        }
+
+
+    }
 
 
 	void AllocLoopRegister(int initVal, int maxVal)
@@ -678,7 +710,7 @@ public:
         auto forloopsneeded = rsrcAnalysis->GetResources()->ForLoopsNeeded;
         idForLoopRegMap[idName] =  hwStat->nConstRegisters + (forloopsneeded - loopRegisters.size()-1);
         ReverseidForLoopRegMap[hwStat->nConstRegisters + (forloopsneeded - loopRegisters.size()-1)] = idName;
-        printf("For Loop reg %s --> %d\n", idName.c_str(), (forloopsneeded - loopRegisters.size()-1));
+        //printf("For Loop reg %s --> %d\n", idName.c_str(), (forloopsneeded - loopRegisters.size()-1));
     }
 
     int ForLoopIDToMapping(std::string idName)
@@ -738,7 +770,7 @@ public:
 
         int a = currentOut->GetNodeFuncUnitMapping(fromA);
         int b = currentOut->GetNodeFuncUnitMapping(fromB);
-        printf("a %d, b %d\n", a, b);
+        //printf("a %d, b %d\n", a, b);
         /*
             This should never occur. All units should be mapped somewhere. 
         */

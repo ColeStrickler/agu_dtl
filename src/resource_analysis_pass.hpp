@@ -193,7 +193,6 @@ public:
 	void UseNewConst() 			{ResourcesNeeded->nConstsNeeded++;}
 	void UseNewOutStatement()	{ResourcesNeeded->nOutStatements++;}
 	void UseNewAddUnitLayer(int layer) {
-		printf("total add unit ++\n");
 		ResourcesNeeded->LayerFuncUnitAllocations[ResourcesNeeded->CurrentOutStatement()][layer].nAddUnits++;
 	}
 	void UseNewMultUnitLayer(int layer) {
