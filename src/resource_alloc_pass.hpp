@@ -647,12 +647,12 @@ public:
         
         for (int i = loopRegisters.size()-1; i >= 0; i--)
         {
-            auto loopReg = loopRegisters[i];
+            auto& loopReg = loopRegisters[i];
             auto magicnums = magicu(d);
             loopReg.hwDivMagic.add_indicator = magicnums.add_indicator;
             loopReg.hwDivMagic.M = magicnums.M;
             loopReg.hwDivMagic.s = magicnums.s;
-
+            printf("M %lu, S %lu, add_indicator %d inc_condition %d stride %lu\n", magicnums.M, magicnums.s, magicnums.add_indicator, loopReg.increment_condition, d);
 
             /*
                 This is equivalent to computing the stride for each loop counter

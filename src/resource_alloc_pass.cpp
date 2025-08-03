@@ -471,10 +471,14 @@ std::string DTL::AGUHardwareStat::PrintForLoopWrite(uint64_t baseAddress,
   addr = to_hex(addr_);
   write_value = to_hex(static_cast<uint64_t>(reg.hwDivMagic.M));
   ret += "\nWRITE_UINT32(" + addr + "," + write_value + ");\n";
+
   addr_ += 0x4;
+  addr = to_hex(addr_);
   write_value = to_hex(static_cast<uint64_t>(reg.hwDivMagic.s));
   ret += "\nWRITE_UINT32(" + addr + "," + write_value + ");\n";
+  
   addr_ += 0x4;
+  addr = to_hex(addr_);
   uint8_t write_val8 = static_cast<uint8_t>(
       reg.hwDivMagic.add_indicator); // this will be interpreted as boolean
                                      // value in hardware
