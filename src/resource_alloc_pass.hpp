@@ -25,6 +25,7 @@ namespace DTL
 
 
 #define USED_OUTSTMT_REG 0xf01
+#define USED_FORLOOP_REG 0xf02
 
 
 inline int log2ceil(int n) {
@@ -75,14 +76,12 @@ public:
 
             we will make each cell have 4 valid outs a byte wide
         */
-
+        bytesMagic = 12;
         bytesCell = 4;
         bytesLayer = bytesCell * (nAdd + nMult + nPassThrough);
 
         bytesOutStatement = (nLayers+1) * bytesLayer; // layer at beginning at at the end
         totalConfigRegionBits = nOutStatements * bytesOutStatement;
-
-
     }
 
     ~AGUHardwareStat()
@@ -126,47 +125,21 @@ public:
         return GetLoopIncRegsOffset(byteWidth) + (nForLoopRegisters*byteWidth);
     }
 
-
-
-    void DoForLoopWrite(uint64_t baseAddress, LoopReg& reg, uint32_t byte_width)
+    inline uint64_t GetMagicRegsOffset(uint32_t byteWidth) const
     {
-        
-        uint64_t addr = baseAddress + GetLoopRegsOffset() + reg.reg_num*byte_width;
-        printf("DoForLoopWrite()1 0x%x, 0x%x\n", baseAddress, GetLoopRegsOffset() + reg.reg_num*byte_width);
-        uint32_t write_value_ = static_cast<uint32_t>(reg.init_value);
-        WRITE_UINT32(addr, write_value_);
-
-        addr = baseAddress + GetLoopIncRegsOffset(byte_width) + reg.reg_num*byte_width; // these should align
-        write_value_ = static_cast<uint32_t>(reg.increment_condition);
-         printf("DoForLoopWrite()1 0x%x, 0x%x\n", baseAddress, GetLoopIncRegsOffset(byte_width) + reg.reg_num*byte_width);
-        WRITE_UINT32(addr, write_value_);
+        return GetConstantRegsOffset(byteWidth) + (nConstRegisters*byteWidth);
     }
+
+
+    void DoForLoopWrite(uint64_t baseAddress, LoopReg& reg, uint32_t byte_width);
+    
 
 
     /*
         We will return both the inc register write and the for loop write
     */
-    std::string PrintForLoopWrite(uint64_t baseAddress, LoopReg& reg, uint32_t byte_width)
-    {
-        uint64_t addr_ = baseAddress + GetLoopRegsOffset() + reg.reg_num*byte_width;
-        std::string addr = to_hex(addr_);
-
-
-
-        uint64_t write_value_ = reg.init_value;
-        std::string write_value = to_hex(write_value_);
-
-        // ret to loop register
-        std::string ret = "\nWRITE_UINT32(" + addr + "," + write_value + ");";
-
-
-        addr_ = baseAddress + GetLoopIncRegsOffset(byte_width) + reg.reg_num*byte_width; // these should align
-        addr = to_hex(addr_);
-        write_value = to_hex(static_cast<uint64_t>(reg.increment_condition));
-        ret += "\nWRITE_UINT32(" + addr + "," + write_value + ");";
-        return ret;
-    }
-
+    std::string PrintForLoopWrite(uint64_t baseAddress, LoopReg& reg, uint32_t byte_width);
+    
     void DoConstRegWrite(uint64_t baseAddress, int constRegNum, int constRegvalue, uint32_t byte_width)
     {
        
@@ -245,7 +218,7 @@ public:
         printf("0x%x nOut %d, layer %d, inReg %d, outReg %d 0x%x\n", baseAddress, numOutStatement, layer, inRegNumber, outRegNumber, offset);
         std::string write_value = std::to_string(static_cast<unsigned char>(outRegNumber));
 
-        return "WRITE_UINT8(" + addr + ", " + write_value + ");";  
+        return "WRITE_UINT8(" + addr + ", " + write_value + ");\n";  
     }
 
     std::unordered_map<std::string, int> VarOutMap;
@@ -300,7 +273,7 @@ public:
     }
 
     
-
+    int bytesMagic;
     int bytesCell;
     int bytesLayer;
     int bytesOutStatement;
@@ -807,41 +780,9 @@ public:
 
     void PrintInitStateRegisters(const std::string& file, uint64_t baseaddr);
     void DoInitStateRegisters(uint64_t baseAddr);
-
-
-    void DoControlWrites(uint64_t baseaddr)
-    {
-        for (int i = 0; i < OutStatementRouting.size(); i++)
-        {
-            auto& outstmt = OutStatementRouting[i];
-            outstmt->DoControlWrites(baseaddr, i);
-        }
-    }
-
-    void PrintControlWrites(const std::string& file, uint64_t baseaddr)
-    {
-        std::ofstream outfile(file);  // open for writing
-        if (!outfile.is_open()) {
-            std::cerr << "Failed to open file.\n";
-            return;
-        }
-
-        std::string out;
-        for (int i = 0; i < OutStatementRouting.size(); i++)
-        {
-            auto& outstmt = OutStatementRouting[i];
-            printf("here\n");
-            out += outstmt->PrintControlWrites(baseaddr, i);
-        }
-
-        outfile << out;
-        outfile.close();
-
-
-        /*
-            We still need to set up a way to write for loop and constant registers
-        */
-    }
+    void DoControlWrites(uint64_t baseaddr);
+    void PrintControlWrites(const std::string& file, uint64_t baseaddr);
+    
 
 
 

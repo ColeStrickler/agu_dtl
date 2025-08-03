@@ -274,8 +274,8 @@ std::string DTL::AGULayer::PrintControlWrites(uint64_t baseaddr, int numOutStmt,
 
             We will want to check and confirm here first when we debugs
         */
-        ret += hwstat->PrintControlWrite(baseaddr, numOutStmt, layer, unit->InputA, unit->RegAssignment) + "\n";
-        ret += hwstat->PrintControlWrite(baseaddr, numOutStmt, layer, unit->InputB, unit->RegAssignment) + "\n";
+        ret += hwstat->PrintControlWrite(baseaddr, numOutStmt, layer, unit->InputA, unit->RegAssignment);
+        ret += hwstat->PrintControlWrite(baseaddr, numOutStmt, layer, unit->InputB, unit->RegAssignment);
     }
     return ret;
 }
@@ -364,7 +364,7 @@ void DTL::ResourceAllocation::PrintInitStateRegisters(const std::string &file, u
 
 
         write += "\nWRITE_UINT8(" + to_hex(baseaddr+USED_OUTSTMT_REG) + "," + to_hex(static_cast<uint8_t>(OutStatementRouting.size())) +   ");\n";
-
+        write += "\nWRITE_UINT8(" + to_hex(baseaddr+USED_FORLOOP_REG) + "," + to_hex(static_cast<uint8_t>(loopRegisters.size())) +   ");\n";
 
         
         outfile << write;
@@ -382,4 +382,103 @@ void DTL::ResourceAllocation::DoInitStateRegisters(uint64_t baseAddr)
     {
        hwStat->DoConstRegWrite(baseAddr, c.first, c.second, 4);
     }
+
+    WRITE_UINT8(baseAddr+USED_OUTSTMT_REG, static_cast<uint8_t>(OutStatementRouting.size()));
+    WRITE_UINT8(baseAddr+USED_FORLOOP_REG, static_cast<uint8_t>(loopRegisters.size()));
+}
+
+void DTL::ResourceAllocation::DoControlWrites(uint64_t baseaddr)
+{
+    for (int i = 0; i < OutStatementRouting.size(); i++)
+    {
+        auto& outstmt = OutStatementRouting[i];
+        outstmt->DoControlWrites(baseaddr, i);
+    }
+}
+
+void DTL::ResourceAllocation::PrintControlWrites(const std::string &file,uint64_t baseaddr)
+{
+    std::ofstream outfile(file);  // open for writing
+    if (!outfile.is_open()) {
+        std::cerr << "Failed to open file.\n";
+        return;
+    }
+    std::string out;
+    for (int i = 0; i < OutStatementRouting.size(); i++)
+    {
+        auto& outstmt = OutStatementRouting[i];
+        printf("here\n");
+        out += outstmt->PrintControlWrites(baseaddr, i);
+    }
+    outfile << out;
+    outfile.close();
+    /*
+        We still need to set up a way to write for loop and constant registers
+    */
+}
+
+void DTL::AGUHardwareStat::DoForLoopWrite(uint64_t baseAddress, LoopReg &reg, uint32_t byte_width) 
+{
+    uint64_t addr = baseAddress + GetLoopRegsOffset() + reg.reg_num*byte_width;
+    printf("DoForLoopWrite()1 0x%x, 0x%x\n", baseAddress, GetLoopRegsOffset() + reg.reg_num*byte_width);
+    uint32_t write_value_ = static_cast<uint32_t>(reg.init_value);
+    WRITE_UINT32(addr, write_value_);
+
+    addr = baseAddress + GetLoopIncRegsOffset(byte_width) + reg.reg_num*byte_width; // these should align
+    write_value_ = static_cast<uint32_t>(reg.increment_condition);
+     printf("DoForLoopWrite()1 0x%x, 0x%x\n", baseAddress, GetLoopIncRegsOffset(byte_width) + reg.reg_num*byte_width);
+    WRITE_UINT32(addr, write_value_);
+
+    /*
+        We now can write the magic values
+        These are implemented backwards in the hardware to facilitate the unroll unit
+    */
+    addr = baseAddress + GetMagicRegsOffset(byte_width) + ((nForLoopRegisters-1-reg.reg_num)*bytesMagic);
+    write_value_ = static_cast<uint32_t>(reg.hwDivMagic.M);
+    WRITE_UINT32(addr, write_value_);
+    addr += 0x4;
+    write_value_ = static_cast<uint32_t>(reg.hwDivMagic.s);
+    WRITE_UINT32(addr, write_value_);
+    addr += 0x4;
+    uint8_t write_val8 = static_cast<uint8_t>(reg.hwDivMagic.add_indicator); // this will be interpreted as boolean value in hardware
+    WRITE_UINT8(addr, write_val8);
+}
+
+
+std::string DTL::AGUHardwareStat::PrintForLoopWrite(uint64_t baseAddress,
+                                                    LoopReg &reg,
+                                                    uint32_t byte_width) {
+  uint64_t addr_ = baseAddress + GetLoopRegsOffset() + reg.reg_num * byte_width;
+  std::string addr = to_hex(addr_);
+  uint64_t write_value_ = reg.init_value;
+  std::string write_value = to_hex(write_value_);
+
+  // ret to loop register
+  std::string ret = "\nWRITE_UINT32(" + addr + "," + write_value + ");\n";
+  addr_ = baseAddress + GetLoopIncRegsOffset(byte_width) +
+          reg.reg_num * byte_width; // these should align
+  addr = to_hex(addr_);
+  write_value = to_hex(static_cast<uint64_t>(reg.increment_condition));
+  ret += "\nWRITE_UINT32(" + addr + "," + write_value + ");\n";
+
+  /*
+      We now can write the magic values
+      These are implemented backwards in the hardware to facilitate the unroll
+     unit
+  */
+  addr_ = baseAddress + GetMagicRegsOffset(byte_width) +
+          ((nForLoopRegisters - 1 - reg.reg_num) * bytesMagic);
+  addr = to_hex(addr_);
+  write_value = to_hex(static_cast<uint64_t>(reg.hwDivMagic.M));
+  ret += "\nWRITE_UINT32(" + addr + "," + write_value + ");\n";
+  addr_ += 0x4;
+  write_value = to_hex(static_cast<uint64_t>(reg.hwDivMagic.s));
+  ret += "\nWRITE_UINT32(" + addr + "," + write_value + ");\n";
+  addr_ += 0x4;
+  uint8_t write_val8 = static_cast<uint8_t>(
+      reg.hwDivMagic.add_indicator); // this will be interpreted as boolean
+                                     // value in hardware
+  write_value = to_hex(write_val8);
+  ret += "\nWRITE_UINT8(" + addr + "," + write_value + ");\n";
+  return ret;
 }
