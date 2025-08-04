@@ -76,7 +76,7 @@ public:
 
             we will make each cell have 4 valid outs a byte wide
         */
-        bytesMagic = 12;
+        bytesMagic = 16;
         bytesCell = 4;
         bytesLayer = bytesCell * (nAdd + nMult + nPassThrough);
 
@@ -644,7 +644,7 @@ public:
         */
 
         uint32_t d = rsrcAnalysis->GetResources()->nOutStatements; // the first divisor is # of outstatements
-        
+        printf("wtf bro d: %lu\n", d);
         for (int i = loopRegisters.size()-1; i >= 0; i--)
         {
             auto& loopReg = loopRegisters[i];

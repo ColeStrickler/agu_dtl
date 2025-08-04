@@ -434,9 +434,9 @@ void DTL::AGUHardwareStat::DoForLoopWrite(uint64_t baseAddress, LoopReg &reg, ui
         These are implemented backwards in the hardware to facilitate the unroll unit
     */
     addr = baseAddress + GetMagicRegsOffset(byte_width) + ((nForLoopRegisters-1-reg.reg_num)*bytesMagic);
-    write_value_ = static_cast<uint32_t>(reg.hwDivMagic.M);
-    WRITE_UINT32(addr, write_value_);
-    addr += 0x4;
+    auto write_value64 = static_cast<uint64_t>(reg.hwDivMagic.M);
+    WRITE_UINT64(addr, write_value64);
+    addr += 0x8;
     write_value_ = static_cast<uint32_t>(reg.hwDivMagic.s);
     WRITE_UINT32(addr, write_value_);
     addr += 0x4;
@@ -470,13 +470,13 @@ std::string DTL::AGUHardwareStat::PrintForLoopWrite(uint64_t baseAddress,
           ((nForLoopRegisters - 1 - reg.reg_num) * bytesMagic);
   addr = to_hex(addr_);
   write_value = to_hex(static_cast<uint64_t>(reg.hwDivMagic.M));
-  ret += "\nWRITE_UINT32(" + addr + "," + write_value + ");\n";
+  ret += "\nWRITE_UINT64(" + addr + "," + write_value + ");\n";
 
-  addr_ += 0x4;
+  addr_ += 0x8;
   addr = to_hex(addr_);
   write_value = to_hex(static_cast<uint64_t>(reg.hwDivMagic.s));
   ret += "\nWRITE_UINT32(" + addr + "," + write_value + ");\n";
-  
+
   addr_ += 0x4;
   addr = to_hex(addr_);
   uint8_t write_val8 = static_cast<uint8_t>(

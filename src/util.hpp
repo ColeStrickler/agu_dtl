@@ -4,8 +4,8 @@
 #include <stdio.h>
 #include <stdint.h>
 typedef struct {
-    uint32_t M;
-    int32_t s;
+    uint64_t M;
+    uint32_t s;
     int32_t add_indicator;
 } Magic;
 

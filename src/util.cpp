@@ -5,6 +5,14 @@
 
 Magic magicu(uint32_t d) {
     Magic mag;
+    if (d == 1) {
+        mag.M = 0x100000000ULL; // requires 64-bit type to hold 2^32
+        mag.s = 0;
+        mag.add_indicator = 0;
+        return mag;
+    }
+
+
     uint32_t p;
     uint32_t anc, delta, q1, r1, q2, r2, t;
     const uint32_t two31 = 0x80000000;
