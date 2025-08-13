@@ -644,7 +644,7 @@ public:
         */
 
         uint32_t d = rsrcAnalysis->GetResources()->nOutStatements; // the first divisor is # of outstatements
-        printf("wtf bro d: %lu\n", d);
+        //printf("wtf bro d: %lu\n", d);
         for (int i = loopRegisters.size()-1; i >= 0; i--)
         {
             auto& loopReg = loopRegisters[i];

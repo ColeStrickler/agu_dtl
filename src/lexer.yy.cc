@@ -1,6 +1,6 @@
-#line 2 "lexer.yy.cc"
+#line 1 "lexer.yy.cc"
 
-#line 4 "lexer.yy.cc"
+#line 3 "lexer.yy.cc"
 
 #define  YY_INT_ALIGNED short int
 
@@ -443,11 +443,11 @@ using TokenKind = DTL::Parser::token;
 using TokenKind = DTL::Parser::token;
 #define EXIT_ON_ERR 0
 
-#line 447 "lexer.yy.cc"
+#line 446 "lexer.yy.cc"
 /*%option debug*/
 #line 35 "lexer.l"
  /* */ 
-#line 451 "lexer.yy.cc"
+#line 450 "lexer.yy.cc"
 
 #define INITIAL 0
 
@@ -584,7 +584,7 @@ YY_DECL
 
 	this->yylval = lval;
 
-#line 588 "lexer.yy.cc"
+#line 587 "lexer.yy.cc"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -779,7 +779,7 @@ YY_RULE_SETUP
 #line 110 "lexer.l"
 YY_FATAL_ERROR( "flex scanner jammed" );
 	YY_BREAK
-#line 783 "lexer.yy.cc"
+#line 782 "lexer.yy.cc"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 

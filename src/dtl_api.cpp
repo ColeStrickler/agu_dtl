@@ -68,7 +68,7 @@ bool DTL::API::Compile(const std::string &dtlProgram)
     DTL::ProgramNode * root = nullptr;
     DTL::Scanner scanner(&input);
 	DTL::Parser parser(scanner, &root);
-    parser.set_debug_level(1);  // Turn on debugging
+    //parser.set_debug_level(1);  // Turn on debugging
     int err = parser.parse();
 	if (err != 0){ printf("parse() errCode: %d\n", err); return false; }
 
