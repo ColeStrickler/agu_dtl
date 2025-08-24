@@ -116,6 +116,21 @@ void DTL::PostIncStmtNode::typeAnalysis(TypeAnalysis *ta)
 }
 
 
+
+void DTL::ConstArrayDeclNode::typeAnalysis(TypeAnalysis * ta)
+{
+		
+	/*
+		Maybe add some more to this later
+	*/
+	ta->nodeType(this, BasicType::INTARRAY());
+
+	
+	return;	
+}
+
+
+
 void DTL::ConstDeclNode::typeAnalysis(TypeAnalysis* ta)
 {
 	
@@ -282,6 +297,29 @@ void DTL::IDNode::typeAnalysis(TypeAnalysis* ta)
 	assert(getSymbol() != nullptr);
 	const DataType * type = getSymbol()->getDataType();
 	ta->nodeType(this, type);
+}
+
+void DTL::ArrayIndexNode::typeAnalysis(TypeAnalysis *ta)
+{
+	assert(myID->getSymbol() != nullptr);
+	assert(myIndexVar->getSymbol() != nullptr);
+	auto idType = myID->getSymbol()->getDataType();
+	auto indexType = myIndexVar->getSymbol()->getDataType();
+	if (!idType->isIntArray())
+	{
+		ta->errArrIndex(myID->pos());
+		ta->nodeType(this, ErrorType::produce());
+	}
+	else if (!indexType->isInt())
+	{
+		ta->errArrIndex(myIndexVar->pos());
+		ta->nodeType(this, ErrorType::produce());
+	}
+	else
+	{
+		// this will be interpreted as an
+		ta->nodeType(this, BasicType::produce(BaseType::INT));
+	}
 }
 
 

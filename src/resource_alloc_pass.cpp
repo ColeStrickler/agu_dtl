@@ -1,6 +1,8 @@
 #include "resource_alloc_pass.hpp"
 #include "ast.hpp"
 
+
+
 void DTL::ProgramNode::resourceAllocation(ResourceAllocation *ralloc, int depth)
 {
     //printf("ProgramNode::resourceAllocation()\n");
@@ -18,11 +20,37 @@ void DTL::ConstDeclNode::resourceAllocation(ResourceAllocation* ralloc, int dept
         in ResourceAnalysis
     */
 
+   
+
+
 
     return; 
 
 }
 
+
+
+
+void DTL::ConstArrayDeclNode::resourceAllocation(ResourceAllocation* ralloc, int depth)
+{
+
+    /*
+        We have already mapped the ID of the ConstArray declared here to a register
+        in ResourceAnalysis
+    */
+
+    std::vector<uint32_t> values;
+
+    for (auto& val: myVals)
+    {
+        values->push_back(static_cast<uint32_t>(val->GetVal()));
+    }
+
+    ralloc->AllocConstArray(ralloc->rsrcAnalysis->GetConstArrayRegMapping(myID->getName()), values);
+
+    return; 
+
+}
 
 
 void DTL::PostIncStmtNode::resourceAllocation(ResourceAllocation* ralloc, int depth)
@@ -68,6 +96,31 @@ void DTL::IntTypeNode::resourceAllocation(ResourceAllocation *ralloc, int depth)
 {
     return;
 }
+
+
+void DTL::ArrayIndexNode::resourceAllocation(ResourceAllocation *ralloc, int depth)
+{
+    auto out = ralloc->GetCurrentOutStatement();
+    auto& ra = ralloc->rsrcAnalysis;
+
+    //int index_id = ra->GetConstRegMapping(myIndexVar->getName());
+    //assert(index_id == -1); // We should never be indexing with a non loop
+    index_id = ralloc->ForLoopIDToMapping(myIndexVar->getName());
+    assert(index_id != -1);
+
+    int array_id = ra->GetConstArrayRegMapping(myID->getName());
+    assert(array_id != -1);
+
+
+    // Ensure we do not already have a binding
+    assert(ralloc->BindArrayIndex(array_id, index_id));
+
+
+    out->MapNodeFuncUnit(this, array_id, depth);
+
+
+}
+
 
 
 
@@ -155,6 +208,14 @@ int DTL::ConstDeclNode::Collapse(ResourceAllocation* ralloc)
     return val;
 }
 
+int DTL::ConstArrayDeclNode::Collapse(ResourceAllocation *ralloc)
+{
+    assert(false); // should never hit
+    return 0;
+}
+
+
+
 int DTL::IntLitNode::Collapse(ResourceAllocation* ralloc)
 {
     return myNum;
@@ -179,6 +240,15 @@ int DTL::TimesNode::Collapse(ResourceAllocation* ralloc)
     assert(false); // should never hit
     return 0;
 }
+
+
+int DTL::ArrayIndexNode::Collapse(ResourceAllocation *ralloc)
+{
+    assert(false);
+    return 0;
+}
+
+
 
 int DTL::LessNode::Collapse(ResourceAllocation* ralloc)
 {

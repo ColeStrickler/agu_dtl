@@ -28,6 +28,12 @@ int DTL::IDNode::GetMaxDepth()
     return 0;
 }
 
+int DTL::ArrayIndexNode::GetMaxDepth()
+{
+    return 0;
+}
+
+
 int DTL::IntLitNode::GetMaxDepth()
 {
     return 0;
@@ -83,6 +89,17 @@ ASTNode *DTL::ConstDeclNode::TransformPass()
 
 
 ASTNode *DTL::ConstDeclNode::TransformPass(int currDepth, int requiredDepth)
+{
+    return this;
+}
+
+
+ASTNode *DTL::ConstArrayDeclNode::TransformPass()
+{
+    return this;
+}
+
+ASTNode *DTL::ConstArrayDeclNode::TransformPass(int currDepth, int requiredDepth)
 {
     return this;
 }
@@ -161,7 +178,28 @@ ASTNode *DTL::IDNode::TransformPass()
 }
 
 
-ASTNode* DTL::IDNode::TransformPass(int currDepth, int requiredDepth)
+ASTNode *DTL::ArrayIndexNode::TransformPass()
+{
+    return this;
+}
+
+ASTNode *DTL::ArrayIndexNode::TransformPass(int currDepth, int requiredDepth)
+{
+    if (currDepth == requiredDepth)
+    {
+        return this;
+    }
+    else
+    {
+        auto ilnode = new IntLitNode(pos(), 0);
+        auto dummyAdd = new PlusNode(pos(), this, ilnode);
+        dummyAdd->setPassThrough();
+        dummyAdd = static_cast<PlusNode*>(dummyAdd->TransformPass(currDepth, requiredDepth));
+        return dummyAdd;
+    }
+}
+
+ASTNode *DTL::IDNode::TransformPass(int currDepth, int requiredDepth)
 {
 
     if (currDepth == requiredDepth)

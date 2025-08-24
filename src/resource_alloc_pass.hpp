@@ -58,16 +58,23 @@ struct LoopReg
     Magic hwDivMagic;
 };
 
+struct ConstArray
+{
+    std::vector<uint32_t> values; 
+    int reg_num;
+}
+
 
 
 class AGUHardwareStat
 {
 public:
-    AGUHardwareStat(int nAdd, int nMult, int nLayers, int nConst, int nForLoop, int nPassThrough, int nOutStatements) :\
+    AGUHardwareStat(int nAdd, int nMult, int nLayers, int nConst, int nForLoop, int nPassThrough, int nOutStatements, int nConstArray) :\
         nLayerAddUnits(nAdd), nLayerMultUnits(nMult), nConstRegisters(nConst), nForLoopRegisters(nForLoop),\
-        nLayers(nLayers), nLayerPassThrough(nPassThrough), nOutStatements(nOutStatements)
+        nLayers(nLayers), nLayerPassThrough(nPassThrough), nOutStatements(nOutStatements), nConstArray(nConstArray),\
+        nConstArraySize(32)
     {
-
+        
         /*
             1 config per out statement,
             1 routing config per layer,
@@ -268,6 +275,19 @@ public:
             printf("%d <= %d\n", rsrc->nOutStatements, nOutStatements);
             std::cerr << "(rsrc->nOutStatements <= nOutStatements)\n"; goto end;
         }
+        
+        ret = (rsrc->nConstArrayNeeded <= nConstArray);
+        if (!ret) {
+            printf("%d <= %d\n", rsrc->nConstArrayNeeded, nConstArray);
+            std::cerr << "(rsrc->nConstArrayNeeded <= nConstArrays)\n"; goto end;
+        }
+
+        ret = (rsrc->nConstArraySizeNeeded <= nConstArraySize);
+        if (!ret) {
+            printf("%d <= %d\n", rsrc->nConstArraySizeNeeded , nConstArraySize);
+            std::cerr << "(rsrc->nConstArraySizeNeeded  <= nConstArraySize)\n"; goto end;
+        }
+
     end:
         return ret;
     }
@@ -284,6 +304,8 @@ public:
     int nLayerMultUnits;
     int nLayers;
     int nConstRegisters;
+    int nConstArray;
+    int nConstArraySize;
     int nForLoopRegisters;
     int nLayerPassThrough;
     int nOutStatements;
@@ -671,6 +693,21 @@ public:
         loopRegisters.push_back({initVal, maxVal, (rsrcAnalysis->GetResources()->ForLoopsNeeded - 1 - (int)loopRegisters.size())});
     }
 
+    void AllocConstArray(int constArrayNum, std::vector<uint32_t> values)
+    {
+        constArrayRegisters.push_back({constArrayNum, values});
+    }
+
+
+    int GetForLoopRegOffset() const
+    {
+        return hwStat->nConstRegisters + hwStat->nConstArray; // each const array can give 1 input at a time
+    }
+
+    int GetConstArrayRegOffset() const
+    {
+        return hwStat->nConstRegisters;
+    }
 
     /*
         We now know which for loop register is mapped to this ID
@@ -681,8 +718,8 @@ public:
     void MapForLoopReg(std::string idName)
     {
         auto forloopsneeded = rsrcAnalysis->GetResources()->ForLoopsNeeded;
-        idForLoopRegMap[idName] =  hwStat->nConstRegisters + (forloopsneeded - loopRegisters.size()-1);
-        ReverseidForLoopRegMap[hwStat->nConstRegisters + (forloopsneeded - loopRegisters.size()-1)] = idName;
+        idForLoopRegMap[idName] =  GetForLoopRegOffset() + (forloopsneeded - loopRegisters.size()-1);
+        ReverseidForLoopRegMap[GetForLoopRegOffset() + (forloopsneeded - loopRegisters.size()-1)] = idName;
         //printf("For Loop reg %s --> %d\n", idName.c_str(), (forloopsneeded - loopRegisters.size()-1));
     }
 
@@ -784,6 +821,18 @@ public:
     void PrintControlWrites(const std::string& file, uint64_t baseaddr);
     
 
+    bool BindArrayIndex(int arrayReg, int ForLoopReg)
+    {
+        auto it = ArrayIndexBinding.find(arrayReg);
+        if (it != ArrayIndexBinding.end())
+        {
+            printf("Error. Array is already bound to index.\n")
+            return false;
+        }
+
+        ArrayIndexBinding[arrayReg] = ForLoopReg;
+        return true;
+    }
 
 
 
@@ -794,7 +843,8 @@ private:
 
     // [OutStmtNode # -> [Layer # -> N]]
     std::vector<OutStmtRouting*> OutStatementRouting;
-    
+    std::unordered_map<int, int> ArrayIndexBinding;
+    std::vector<ConstArray> constArrayRegisters;
     std::unordered_map<int, std::string> ReverseidForLoopRegMap;
     std::unordered_map<std::string, int> idForLoopRegMap;
     std::vector<LoopReg> loopRegisters;

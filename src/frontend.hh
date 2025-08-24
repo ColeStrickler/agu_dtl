@@ -407,7 +407,7 @@ namespace DTL {
       // forstatement
       char dummy2[sizeof (DTL::ForStmtNode*)];
 
-      // loc
+      // id
       char dummy3[sizeof (DTL::IDNode*)];
 
       // ID
@@ -419,13 +419,16 @@ namespace DTL {
       // INTLITERAL
       char dummy6[sizeof (DTL::IntLitToken *)];
 
+      // loc
+      char dummy7[sizeof (DTL::LocNode*)];
+
       // program
-      char dummy7[sizeof (DTL::ProgramNode*)];
+      char dummy8[sizeof (DTL::ProgramNode*)];
 
       // constdecl
       // outstatement
       // unarystmt
-      char dummy8[sizeof (DTL::StmtNode*)];
+      char dummy9[sizeof (DTL::StmtNode*)];
 
       // ASSIGN
       // INT
@@ -440,14 +443,20 @@ namespace DTL {
       // STAR
       // FOR
       // OUT
-      char dummy9[sizeof (DTL::Token *)];
+      // COMMA
+      // LBRACKET
+      // RBRACKET
+      char dummy10[sizeof (DTL::Token *)];
 
       // type
-      char dummy10[sizeof (DTL::TypeNode*)];
+      char dummy11[sizeof (DTL::TypeNode*)];
 
       // constdecls
       // outstatements
-      char dummy11[sizeof (std::vector<DTL::StmtNode*>)];
+      char dummy12[sizeof (std::vector<DTL::StmtNode*>)];
+
+      // intlist
+      char dummy13[sizeof (std::vector<IntLitNode*>)];
     };
 
     /// The size of the largest semantic type.
@@ -505,7 +514,10 @@ namespace DTL {
     SEMICOL = 269,                 // SEMICOL
     STAR = 270,                    // STAR
     FOR = 271,                     // FOR
-    OUT = 272                      // OUT
+    OUT = 272,                     // OUT
+    COMMA = 273,                   // COMMA
+    LBRACKET = 274,                // LBRACKET
+    RBRACKET = 275                 // RBRACKET
       };
       /// Backward compatibility alias (Bison 3.6).
       typedef token_kind_type yytokentype;
@@ -522,7 +534,7 @@ namespace DTL {
     {
       enum symbol_kind_type
       {
-        YYNTOKENS = 18, ///< Number of tokens.
+        YYNTOKENS = 21, ///< Number of tokens.
         S_YYEMPTY = -2,
         S_YYEOF = 0,                             // "end file"
         S_YYerror = 1,                           // error
@@ -542,20 +554,25 @@ namespace DTL {
         S_STAR = 15,                             // STAR
         S_FOR = 16,                              // FOR
         S_OUT = 17,                              // OUT
-        S_YYACCEPT = 18,                         // $accept
-        S_program = 19,                          // program
-        S_constdecls = 20,                       // constdecls
-        S_constdecl = 21,                        // constdecl
-        S_forstatement = 22,                     // forstatement
-        S_outstatements = 23,                    // outstatements
-        S_outstatement = 24,                     // outstatement
-        S_type = 25,                             // type
-        S_expr = 26,                             // expr
-        S_unarystmt = 27,                        // unarystmt
-        S_term = 28,                             // term
-        S_factor = 29,                           // factor
-        S_intlit = 30,                           // intlit
-        S_loc = 31                               // loc
+        S_COMMA = 18,                            // COMMA
+        S_LBRACKET = 19,                         // LBRACKET
+        S_RBRACKET = 20,                         // RBRACKET
+        S_YYACCEPT = 21,                         // $accept
+        S_program = 22,                          // program
+        S_constdecls = 23,                       // constdecls
+        S_constdecl = 24,                        // constdecl
+        S_intlist = 25,                          // intlist
+        S_forstatement = 26,                     // forstatement
+        S_outstatements = 27,                    // outstatements
+        S_outstatement = 28,                     // outstatement
+        S_type = 29,                             // type
+        S_expr = 30,                             // expr
+        S_unarystmt = 31,                        // unarystmt
+        S_term = 32,                             // term
+        S_factor = 33,                           // factor
+        S_intlit = 34,                           // intlit
+        S_loc = 35,                              // loc
+        S_id = 36                                // id
       };
     };
 
@@ -600,7 +617,7 @@ namespace DTL {
         value.move< DTL::ForStmtNode* > (std::move (that.value));
         break;
 
-      case symbol_kind::S_loc: // loc
+      case symbol_kind::S_id: // id
         value.move< DTL::IDNode* > (std::move (that.value));
         break;
 
@@ -614,6 +631,10 @@ namespace DTL {
 
       case symbol_kind::S_INTLITERAL: // INTLITERAL
         value.move< DTL::IntLitToken * > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_loc: // loc
+        value.move< DTL::LocNode* > (std::move (that.value));
         break;
 
       case symbol_kind::S_program: // program
@@ -639,6 +660,9 @@ namespace DTL {
       case symbol_kind::S_STAR: // STAR
       case symbol_kind::S_FOR: // FOR
       case symbol_kind::S_OUT: // OUT
+      case symbol_kind::S_COMMA: // COMMA
+      case symbol_kind::S_LBRACKET: // LBRACKET
+      case symbol_kind::S_RBRACKET: // RBRACKET
         value.move< DTL::Token * > (std::move (that.value));
         break;
 
@@ -649,6 +673,10 @@ namespace DTL {
       case symbol_kind::S_constdecls: // constdecls
       case symbol_kind::S_outstatements: // outstatements
         value.move< std::vector<DTL::StmtNode*> > (std::move (that.value));
+        break;
+
+      case symbol_kind::S_intlist: // intlist
+        value.move< std::vector<IntLitNode*> > (std::move (that.value));
         break;
 
       default:
@@ -745,6 +773,18 @@ namespace DTL {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, DTL::LocNode*&& v)
+        : Base (t)
+        , value (std::move (v))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const DTL::LocNode*& v)
+        : Base (t)
+        , value (v)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
       basic_symbol (typename Base::kind_type t, DTL::ProgramNode*&& v)
         : Base (t)
         , value (std::move (v))
@@ -804,6 +844,18 @@ namespace DTL {
       {}
 #endif
 
+#if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, std::vector<IntLitNode*>&& v)
+        : Base (t)
+        , value (std::move (v))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const std::vector<IntLitNode*>& v)
+        : Base (t)
+        , value (v)
+      {}
+#endif
+
       /// Destroy the symbol.
       ~basic_symbol ()
       {
@@ -838,7 +890,7 @@ switch (yykind)
         value.template destroy< DTL::ForStmtNode* > ();
         break;
 
-      case symbol_kind::S_loc: // loc
+      case symbol_kind::S_id: // id
         value.template destroy< DTL::IDNode* > ();
         break;
 
@@ -852,6 +904,10 @@ switch (yykind)
 
       case symbol_kind::S_INTLITERAL: // INTLITERAL
         value.template destroy< DTL::IntLitToken * > ();
+        break;
+
+      case symbol_kind::S_loc: // loc
+        value.template destroy< DTL::LocNode* > ();
         break;
 
       case symbol_kind::S_program: // program
@@ -877,6 +933,9 @@ switch (yykind)
       case symbol_kind::S_STAR: // STAR
       case symbol_kind::S_FOR: // FOR
       case symbol_kind::S_OUT: // OUT
+      case symbol_kind::S_COMMA: // COMMA
+      case symbol_kind::S_LBRACKET: // LBRACKET
+      case symbol_kind::S_RBRACKET: // RBRACKET
         value.template destroy< DTL::Token * > ();
         break;
 
@@ -887,6 +946,10 @@ switch (yykind)
       case symbol_kind::S_constdecls: // constdecls
       case symbol_kind::S_outstatements: // outstatements
         value.template destroy< std::vector<DTL::StmtNode*> > ();
+        break;
+
+      case symbol_kind::S_intlist: // intlist
+        value.template destroy< std::vector<IntLitNode*> > ();
         break;
 
       default:
@@ -1323,6 +1386,51 @@ switch (yykind)
         return symbol_type (token::OUT, v);
       }
 #endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
+      make_COMMA (DTL::Token * v)
+      {
+        return symbol_type (token::COMMA, std::move (v));
+      }
+#else
+      static
+      symbol_type
+      make_COMMA (const DTL::Token *& v)
+      {
+        return symbol_type (token::COMMA, v);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
+      make_LBRACKET (DTL::Token * v)
+      {
+        return symbol_type (token::LBRACKET, std::move (v));
+      }
+#else
+      static
+      symbol_type
+      make_LBRACKET (const DTL::Token *& v)
+      {
+        return symbol_type (token::LBRACKET, v);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
+      make_RBRACKET (DTL::Token * v)
+      {
+        return symbol_type (token::RBRACKET, std::move (v));
+      }
+#else
+      static
+      symbol_type
+      make_RBRACKET (const DTL::Token *& v)
+      {
+        return symbol_type (token::RBRACKET, v);
+      }
+#endif
 
 
     class context
@@ -1651,8 +1759,8 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 47,     ///< Last index in yytable_.
-      yynnts_ = 14,  ///< Number of nonterminal symbols.
+      yylast_ = 61,     ///< Last index in yytable_.
+      yynnts_ = 16,  ///< Number of nonterminal symbols.
       yyfinal_ = 3 ///< Termination state number.
     };
 
@@ -1666,7 +1774,7 @@ switch (yykind)
 
 #line 5 "parser.yy"
 } // DTL
-#line 1670 "frontend.hh"
+#line 1778 "frontend.hh"
 
 
 

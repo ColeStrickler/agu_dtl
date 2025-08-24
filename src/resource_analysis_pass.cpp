@@ -23,6 +23,26 @@ void DTL::ConstDeclNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
     ra->RegMapConst(myID->getName(), ra, myVal->GetVal()); // assign constants a register number
 }
 
+void DTL::ConstArrayDeclNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
+{
+    ra->UseNewConstArray(myVals.size());
+    ra->RegMapConstArray(myID->getName(), ra);
+
+    /*
+        We will bind the index when it is used
+
+        If it is never used, then we do not worry about it.
+        This is just programmer inefficiency
+    */
+    
+}
+
+void DTL::ArrayIndexNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
+{
+    // this actually needs to be bound to a for loop register
+   //ra->BindConstArrayIndex(myID->getName(), myIndexVar->getName(), ra);
+    return;
+}
 
 
 void DTL::PostIncStmtNode::resourceAnalysis(ResourceAnalysis *ra, int layer)

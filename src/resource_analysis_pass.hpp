@@ -21,7 +21,7 @@ struct DTLUnitAllocation
 
 struct DTLResources
 {
-	DTLResources() : ForLoopsNeeded(0), nConstsNeeded(0), nOutStatements(0), nPassThrough(0)
+	DTLResources() : ForLoopsNeeded(0), nConstsNeeded(0), nOutStatements(0), nPassThrough(0), nConstArrayNeeded(0), nConstArraySizeNeeded(0)
 	{
 
 	}
@@ -103,7 +103,10 @@ struct DTLResources
 		ret += "ForLoopsNeeded: " + std::to_string(ForLoopsNeeded) + ", ";
 		ret += "Layers Needed: " + std::to_string(GetLayersNeeded()) + ", ";
 		ret += "nConstsNeeded: " + std::to_string(nConstsNeeded) + ", ";
+		ret += "nConstArrayNeeded: " + std::to_string(nConstArrayNeeded) + ", ";
+		ret += "nConstArraySizeNeeded: " + std::to_string(nConstArraySizeNeeded) + ", ";
 		ret += "nOutStatements: " + std::to_string(nOutStatements) + ", ";
+		
 
 		for (auto& e: LayerFuncUnitAllocations)
 		{
@@ -137,6 +140,8 @@ struct DTLResources
 	int nMultNeeded;
 	int nAddNeeded;
 	int nPassThrough;
+	int nConstArrayNeeded;
+	int nConstArraySizeNeeded;
 	std::map<int, std::map<int, DTLUnitAllocation>> LayerFuncUnitAllocations;
 };
 
@@ -165,6 +170,27 @@ public:
 		constReg++;
 	}
 
+	static void RegMapConstArray(std::string node_name, ResourceAnalysis* ra)
+	{
+		static int constRegArray = 0;
+
+		ra->ConstArrayRegMapping.insert(std::make_pair(node_name, constRegArray));
+		ra->ReverseConstArrayRegMapping.insert(std::make_pair(constRegArray, node_name));
+		//ra->ConstValueMap.insert(std::make_pair(constReg, value));
+		constRegArray++;
+	}
+
+
+	int GetConstArrayRegMapping(std::string node_name)
+	{
+		auto it = ConstArrayRegMapping.find(node_name);
+		if (it != ConstArrayRegMapping.end())
+			return it->second;
+		return -1;
+	}
+
+
+
 	/*
 		Returns -1 on failure;
 	*/
@@ -188,6 +214,14 @@ public:
 	std::unordered_map<int, std::string> ReverseConstRegMapping; // Register assignments for Constants
 	std::unordered_map<std::string, int> ConstRegMapping; // Register assignments for Constants
 	std::unordered_map<int, int> ConstValueMap;
+
+	std::unordered_map<int, std::string> ReverseConstArrayRegMapping; // Register assignments for ConstArray
+	std::unordered_map<std::string, int> ConstArrayRegMapping; // Register assignments for ConstArray
+	//std::unordered_map<int, int> ConstValueMap;
+	std::unordered_map<int, int> ConstArrayRegIndexBinding;
+
+
+
 	ProgramNode * ast;
 	void UseForLoopRegister() 	{ResourcesNeeded->ForLoopsNeeded++;}
 	void UseNewConst() 			{ResourcesNeeded->nConstsNeeded++;}
@@ -203,6 +237,11 @@ public:
 		ResourcesNeeded->LayerFuncUnitAllocations[ResourcesNeeded->CurrentOutStatement()][layer].nPassThrough++;
 	}
 
+	void UseNewConstArray(int size)
+	{
+		ResourcesNeeded->nConstArrayNeeded++;
+		ResourcesNeeded->nConstArraySizeNeeded = std::max(size, ResourcesNeeded->nConstArraySizeNeeded);
+	}
 
 	DTLResources* GetResources() const {return ResourcesNeeded;}
 private:

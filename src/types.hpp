@@ -11,7 +11,7 @@ class BasicType;
 class ErrorType;
 
 enum BaseType {
-    INT, BOOL, VOID
+    INT, BOOL, VOID, INTARRAY
 };
 
 
@@ -25,6 +25,7 @@ public:
 	virtual bool isVoid() const { return false; }
 	virtual bool isInt() const { return false; }
 	virtual bool isBool() const { return false; }
+	virtual bool isIntArray() const { return false; }
 	//virtual bool isString() const { return false; }
 	//virtual bool isClass() const { return false; }
 	//virtual bool isImmutable() const { return false; }
@@ -73,6 +74,10 @@ public:
 	static BasicType * INT(){
 		return produce(BaseType::INT);
 	}
+
+	static BasicType * INTARRAY(){
+		return produce(BaseType::INTARRAY);
+	}
 	//static BasicType * STRING(){
 	//	return produce(BaseType::STRING);
 	//}
@@ -87,7 +92,9 @@ public:
 	// the flyweights list. That type is then re-used anywhere
 	// it's needed.
 
-	//Note the use of the static function declaration, which
+	//Note the use of the static function declarationbool isBool() const override {
+	//	return myBaseType == BaseType::BOOL;
+	//}, which
 	// means that no instance of BasicType is needed to call
 	// the function.
 	static BasicType * produce(BaseType base){
@@ -112,12 +119,18 @@ public:
 	BasicType * asBasic(){
 		return this;
 	}
+
+
 	bool isInt() const override {
 		return myBaseType == BaseType::INT;
 	}
 	bool isBool() const override {
 		return myBaseType == BaseType::BOOL;
 	}
+	bool isIntArray() const override {
+		return myBaseType == BaseType::INTARRAY;
+	}
+
 	virtual bool isVoid() const override {
 		return myBaseType == BaseType::VOID;
 	}

@@ -135,6 +135,21 @@ public:
 			"Arithmetic operator applied"
 			" to invalid operand");
 	}
+
+	void errArrIndex(const Position* pos)
+	{
+		hasError = true;
+		Report::fatal(pos,
+			"Tried to index a non-array");
+	}
+
+	void errArrIndexVar(const Position* pos)
+	{
+		hasError = true;
+		Report::fatal(pos,
+			"Tried to index an array with a non-Int");
+	}
+
 	void errRelOpd(const Position * pos){
 		hasError = true;
 		Report::fatal(pos,

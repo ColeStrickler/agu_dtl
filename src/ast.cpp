@@ -38,6 +38,20 @@ std::string DTL::ConstDeclNode::PrintAST(int &node_num, std::ofstream &outfile)
 }
 
 
+std::string DTL::ConstArrayDeclNode::PrintAST(int &node_num, std::ofstream &outfile)
+{
+	node_num++;
+	std::string name = "ConstArrayDeclNode" + std::to_string(node_num);
+	auto type = myType->PrintAST(node_num, outfile);
+	auto id = myID->PrintAST(node_num, outfile);
+
+	outfile << name << " -> " << type << ";\n";
+	outfile << name << " -> " << id << ";\n";
+    return name;
+}
+
+
+
 std::string DTL::PostIncStmtNode::PrintAST(int &node_num, std::ofstream &outfile)
 {
 	node_num++;
@@ -46,6 +60,19 @@ std::string DTL::PostIncStmtNode::PrintAST(int &node_num, std::ofstream &outfile
 	outfile << name << " -> " << locNodeString << ";\n";
 	return name;
 }
+
+std::string DTL::ArrayIndexNode::PrintAST(int &node_num, std::ofstream &outfile)
+{
+    node_num++;
+	std::string name = "ArrayIndexNode" + std::to_string(node_num);
+	auto id = myID->PrintAST(node_num, outfile);
+	auto index_id = myIndexVar->PrintAST(node_num, outfile);
+	outfile << name << " -> " << id << ";\n";
+	outfile << name << " -> " << index_id << ";\n";
+
+	return name;
+}
+
 
 std::string DTL::ForStmtNode::PrintAST(int &node_num, std::ofstream &outfile)
 {

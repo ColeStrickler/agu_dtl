@@ -71,6 +71,9 @@
 %token	<DTL::Token *>       STAR
 %token  <DTL::Token *>       FOR
 %token  <DTL::Token *>       OUT
+%token  <DTL::Token *>       COMMA
+%token  <DTL::Token *>       LBRACKET
+%token  <DTL::Token *>       RBRACKET
 
 %left LESS
 %left CROSS
@@ -82,13 +85,15 @@
 %type <DTL::ExpNode*> expr
 %type <DTL::StmtNode*> unarystmt
 %type <DTL::StmtNode*> constdecl
+%type <std::vector<IntLitNode*>> intlist 
 %type <DTL::ForStmtNode*> forstatement
 %type <std::vector<DTL::StmtNode*>> constdecls
 %type <std::vector<DTL::StmtNode*>> outstatements
 %type <DTL::StmtNode*> outstatement
-%type <DTL::IDNode*> loc
+%type <DTL::LocNode*> loc
 %type <DTL::TypeNode*> type
 %type <DTL::IntLitNode*> intlit
+%type <DTL::IDNode*> id
 
 
 
@@ -103,17 +108,35 @@ constdecls: constdecls constdecl
         {
             $1.push_back($2);
             $$ = $1;
-        }
+        } 
         | /* empty */ 
         {
             auto ret = std::vector<DTL::StmtNode*>();
             $$ = ret;
         }
-constdecl: type loc ASSIGN intlit SEMICOL
+constdecl: type id ASSIGN intlit SEMICOL
         {
             const Position * p = new Position($1->pos(), $5->pos());
             $$ = new ConstDeclNode(p, $1, $2, $4);
         }
+        | type id ASSIGN LPAREN intlist RPAREN
+        {
+            $$ = nullptr;
+        }
+
+
+intlist: intlit COMMA intlist
+        {
+            $3.push_back($1);
+            $$ = $3;
+
+        }
+        | /* empty */ 
+        {
+            $$ = std::vector<DTL::IntLitNode*>();
+        }
+
+
 
 forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY forstatement RCURLY
         {
@@ -198,10 +221,21 @@ intlit : INTLITERAL
         $$ = new IntLitNode($1->pos(), $1->num());
     }
 
-loc : ID 
+loc : id
+    {
+        $$ = $1;
+    }
+    | id LBRACKET id RBRACKET
+    {
+        $$ = new ArrayIndexNode($1->pos(), $1, $3);
+    }
+
+id : ID
     {
         $$ = new IDNode($1->pos(), $1->value());
     }
+
+
 
 
 %%

@@ -48,6 +48,8 @@ namespace DTL
 		INTLITNODE,
 		INTTYPENODE,
 		OUTSTMTNODE,
+		CONSTARRAYDECLNODE,
+		ARRAYINDEXNODE
 	};
 
 	class ASTNode
@@ -197,6 +199,31 @@ namespace DTL
 	};
 
 
+	class ConstArrayDeclNode : public DeclNode
+	{
+	public:
+		ConstArrayDeclNode(const Position *p, TypeNode *type, IDNode *id, std::vector<IntLitNode*> assignVals) : DeclNode(p), myType(type), myID(id), myVals(assignVals)
+		{
+			myTag = NODETAG::CONSTARRAYDECLNODE;
+		}
+		// void unparse(std::ostream& out, int indent) override;
+		virtual void typeAnalysis(TypeAnalysis *) override;
+		virtual bool nameAnalysis(SymbolTable *symTab) override;
+		virtual void resourceAnalysis(ResourceAnalysis *ra, int layer);
+		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
+		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
+		virtual int Collapse(ResourceAllocation *ralloc) override;
+		virtual ASTNode *TransformPass() override;
+		virtual ASTNode *TransformPass(int currDepth, int requiredDepth);
+		std::string GetIDString() const;
+	private:
+		TypeNode *myType;
+		IDNode *myID;
+		std::vector<IntLitNode*> myVals;
+	};
+
+
+
 	class PostIncStmtNode : public StmtNode
 	{
 	public:
@@ -300,6 +327,32 @@ namespace DTL
 
 		// virtual const DataType * getType() const override;
 	};
+
+
+	class ArrayIndexNode : public LocNode
+	{
+	public:
+		ArrayIndexNode(const Position *p, IDNode* id, IDNode* index_id)
+			: myID(id), myIndexVar(index_id), LocNode(p) { myTag = NODETAG::ARRAYINDEXNODE; }
+		//std::string getName() { return name; }
+		// void unparse(std::ostream& out, int indent) override;
+		// void unparseNested(std::ostream& out) override;
+		bool nameAnalysis(SymbolTable *symTab) override;
+		virtual void typeAnalysis(TypeAnalysis *ta) override;
+		virtual void resourceAnalysis(ResourceAnalysis *ra, int layer);
+		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
+		virtual int Collapse(ResourceAllocation *ralloc) override;
+		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
+		virtual ASTNode *TransformPass() override;
+		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual int GetMaxDepth();
+		// virtual Opd * flatten(Procedure * proc) override;
+	private:
+		IDNode* myID;
+		IDNode* myIndexVar;
+	};
+
+	
 
 	class IDNode : public LocNode
 	{
