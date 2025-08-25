@@ -54,3 +54,8 @@ Magic magicu(uint32_t d) {
     mag.s = p - 32;
     return mag;
 }
+
+uint64_t alignTo8(uint64_t addr)
+{
+    return ((addr + 7) / 8) * 8;
+}

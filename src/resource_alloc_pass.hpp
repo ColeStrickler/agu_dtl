@@ -62,7 +62,8 @@ struct ConstArray
 {
     std::vector<uint32_t> values; 
     int reg_num;
-}
+    int index_reg_num;
+};
 
 
 
@@ -132,10 +133,19 @@ public:
         return GetLoopIncRegsOffset(byteWidth) + (nForLoopRegisters*byteWidth);
     }
 
-    inline uint64_t GetMagicRegsOffset(uint32_t byteWidth) const
+
+    inline uint64_t GetConstArrayOffset(uint32_t byteWidth) const 
     {
         return GetConstantRegsOffset(byteWidth) + (nConstRegisters*byteWidth);
     }
+
+    inline uint64_t GetMagicRegsOffset(uint32_t byteWidth) const
+    {
+                                            // we do +8 because we need to align on 64bit words the 64bit magic register that comes next
+        return alignTo8(GetConstArrayOffset(byteWidth) + (nConstArray*nConstArraySize*byteWidth + 8));
+    }
+    
+   
 
 
     void DoForLoopWrite(uint64_t baseAddress, LoopReg& reg, uint32_t byte_width);
@@ -170,6 +180,52 @@ public:
         std::string ret = "WRITE_UINT32(" + addr + "," + write_value + ");";
         return ret;
     }
+
+
+    std::string PrintConstArrayWrite(uint64_t baseAddress, ConstArray& constArray, uint32_t byte_width)
+    {
+        printf("here\n");
+        uint64_t baddr = baseAddress + GetConstArrayOffset(byte_width) + constArray.reg_num*(nConstArraySize*byte_width + 8);
+
+        std::string ret;
+        for (int i = 0; i < constArray.values.size(); i++)
+        {
+            auto& cval = constArray.values[i];
+            assert(i < nConstArraySize);
+            uint64_t write_value_ = cval;
+            std::string write_value = to_hex(write_value_);
+            std::string addr = to_hex(baddr + i*byte_width);
+            ret += "WRITE_UINT32(" + addr + "," + write_value + ");\n";
+        }
+
+
+        // we need the index reg number
+        std::string write_value = to_hex(constArray.index_reg_num);
+        std::string addr = to_hex(baddr + byte_width*nConstArraySize);
+        ret += "WRITE_UINT8(" + addr + "," + write_value + ");";
+        return ret;
+    }
+
+    void DoConstArrayWrite(uint64_t baseAddress, ConstArray& constArray, uint32_t byte_width)
+    {
+        uint64_t baddr = baseAddress + GetConstArrayOffset(byte_width) + constArray.reg_num*(nConstArraySize*byte_width + 8);
+
+        std::string ret;
+        for (int i = 0; i < constArray.values.size(); i++)
+        {
+            auto& cval = constArray.values[i];
+            assert(i < nConstArraySize);
+            uint64_t write_value_ = cval;
+            uint64_t addr = baddr + i*byte_width;
+            WRITE_UINT32(addr, write_value_);
+        }
+
+
+        // we need the index reg number
+        uint64_t addr = baddr + byte_width*nConstArraySize;
+        WRITE_UINT8(addr, static_cast<uint8_t>(constArray.index_reg_num));
+    }
+
 
 
     void DoControlWrite(uint64_t baseAddress, int numOutStatement, int layer, int inRegNumber, int outRegNumber)
@@ -695,7 +751,7 @@ public:
 
     void AllocConstArray(int constArrayNum, std::vector<uint32_t> values)
     {
-        constArrayRegisters.push_back({constArrayNum, values});
+        constArrayRegisters.push_back({values, constArrayNum, 0});
     }
 
 
@@ -826,8 +882,17 @@ public:
         auto it = ArrayIndexBinding.find(arrayReg);
         if (it != ArrayIndexBinding.end())
         {
-            printf("Error. Array is already bound to index.\n")
+            printf("Error. Array is already bound to index.\n");
             return false;
+        }
+
+
+        // we set the value here. We should be fine with for loop here
+        // as the number of constArrayRegisters will be 1-2
+        for (auto& constArray: constArrayRegisters)
+        {
+            if (constArray.reg_num == arrayReg)
+                constArray.index_reg_num = ForLoopReg;
         }
 
         ArrayIndexBinding[arrayReg] = ForLoopReg;

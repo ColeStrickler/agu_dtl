@@ -1150,34 +1150,44 @@ namespace DTL {
 #line 1151 "parser.cc"
     break;
 
-  case 6: // constdecl: type id ASSIGN LPAREN intlist RPAREN
+  case 6: // constdecl: type id ASSIGN LCURLY intlist RCURLY SEMICOL
 #line 123 "parser.yy"
         {
-            yylhs.value.as < DTL::StmtNode* > () = nullptr;
+             const Position * p = new Position(yystack_[6].value.as < DTL::TypeNode* > ()->pos(), yystack_[1].value.as < DTL::Token * > ()->pos());
+            yylhs.value.as < DTL::StmtNode* > () = new ConstArrayDeclNode(yystack_[6].value.as < DTL::TypeNode* > ()->pos(), yystack_[6].value.as < DTL::TypeNode* > (), yystack_[5].value.as < DTL::IDNode* > (), yystack_[2].value.as < std::vector<IntLitNode*> > ());
         }
-#line 1159 "parser.cc"
+#line 1160 "parser.cc"
     break;
 
   case 7: // intlist: intlit COMMA intlist
-#line 129 "parser.yy"
+#line 130 "parser.yy"
         {
-            yystack_[0].value.as < std::vector<IntLitNode*> > ().push_back(yystack_[2].value.as < DTL::IntLitNode* > ());
-            yylhs.value.as < std::vector<IntLitNode*> > () = yystack_[0].value.as < std::vector<IntLitNode*> > ();
-
+            yylhs.value.as < std::vector<IntLitNode*> > () = std::vector<DTL::IntLitNode*>();
+            yylhs.value.as < std::vector<IntLitNode*> > ().push_back(yystack_[2].value.as < DTL::IntLitNode* > ());
+            yylhs.value.as < std::vector<IntLitNode*> > ().insert(yylhs.value.as < std::vector<IntLitNode*> > ().end(), yystack_[0].value.as < std::vector<IntLitNode*> > ().begin(), yystack_[0].value.as < std::vector<IntLitNode*> > ().end());
         }
-#line 1169 "parser.cc"
+#line 1170 "parser.cc"
     break;
 
-  case 8: // intlist: %empty
-#line 135 "parser.yy"
+  case 8: // intlist: intlit
+#line 136 "parser.yy"
+        {
+            yylhs.value.as < std::vector<IntLitNode*> > () = std::vector<DTL::IntLitNode*>();
+            yylhs.value.as < std::vector<IntLitNode*> > ().push_back(yystack_[0].value.as < DTL::IntLitNode* > ());
+        }
+#line 1179 "parser.cc"
+    break;
+
+  case 9: // intlist: %empty
+#line 141 "parser.yy"
         {
             yylhs.value.as < std::vector<IntLitNode*> > () = std::vector<DTL::IntLitNode*>();
         }
-#line 1177 "parser.cc"
+#line 1187 "parser.cc"
     break;
 
-  case 9: // forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY forstatement RCURLY
-#line 142 "parser.yy"
+  case 10: // forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY forstatement RCURLY
+#line 148 "parser.yy"
         {
             const Position * p = new Position(yystack_[9].value.as < DTL::Token * > ()->pos(), yystack_[0].value.as < DTL::Token * > ()->pos());
             std::vector<StmtNode*> stmt_vec;
@@ -1185,164 +1195,164 @@ namespace DTL {
             yylhs.value.as < DTL::ForStmtNode* > () = new ForStmtNode(p, yystack_[7].value.as < DTL::StmtNode* > (), yystack_[6].value.as < DTL::ExpNode* > (), yystack_[4].value.as < DTL::StmtNode* > (), stmt_vec);
 
         }
-#line 1189 "parser.cc"
+#line 1199 "parser.cc"
     break;
 
-  case 10: // forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY outstatements RCURLY
-#line 150 "parser.yy"
+  case 11: // forstatement: FOR LPAREN constdecl expr SEMICOL unarystmt RPAREN LCURLY outstatements RCURLY
+#line 156 "parser.yy"
         {
             const Position * p = new Position(yystack_[9].value.as < DTL::Token * > ()->pos(), yystack_[0].value.as < DTL::Token * > ()->pos());
             yylhs.value.as < DTL::ForStmtNode* > () = new ForStmtNode(p, yystack_[7].value.as < DTL::StmtNode* > (), yystack_[6].value.as < DTL::ExpNode* > (), yystack_[4].value.as < DTL::StmtNode* > (), yystack_[1].value.as < std::vector<DTL::StmtNode*> > ());
         }
-#line 1198 "parser.cc"
+#line 1208 "parser.cc"
     break;
 
-  case 11: // outstatements: outstatements outstatement
-#line 155 "parser.yy"
+  case 12: // outstatements: outstatements outstatement
+#line 161 "parser.yy"
         {
             yystack_[1].value.as < std::vector<DTL::StmtNode*> > ().push_back(yystack_[0].value.as < DTL::StmtNode* > ());
             yylhs.value.as < std::vector<DTL::StmtNode*> > () = yystack_[1].value.as < std::vector<DTL::StmtNode*> > ();
         }
-#line 1207 "parser.cc"
+#line 1217 "parser.cc"
     break;
 
-  case 12: // outstatements: outstatement
-#line 160 "parser.yy"
+  case 13: // outstatements: outstatement
+#line 166 "parser.yy"
         {
             std::vector<StmtNode*> stmt_vec;
             stmt_vec.push_back(yystack_[0].value.as < DTL::StmtNode* > ());
             yylhs.value.as < std::vector<DTL::StmtNode*> > () = stmt_vec;
         }
-#line 1217 "parser.cc"
+#line 1227 "parser.cc"
     break;
 
-  case 13: // outstatement: OUT ASSIGN expr SEMICOL
-#line 166 "parser.yy"
+  case 14: // outstatement: OUT ASSIGN expr SEMICOL
+#line 172 "parser.yy"
             {
                 const Position * p = new Position(yystack_[3].value.as < DTL::Token * > ()->pos(), yystack_[0].value.as < DTL::Token * > ()->pos());
                 yylhs.value.as < DTL::StmtNode* > () = new OutStmtNode(p, yystack_[1].value.as < DTL::ExpNode* > ());
             }
-#line 1226 "parser.cc"
+#line 1236 "parser.cc"
     break;
 
-  case 14: // type: INT
-#line 172 "parser.yy"
+  case 15: // type: INT
+#line 178 "parser.yy"
     {
         yylhs.value.as < DTL::TypeNode* > () = new IntTypeNode(yystack_[0].value.as < DTL::Token * > ()->pos());
     }
-#line 1234 "parser.cc"
+#line 1244 "parser.cc"
     break;
 
-  case 15: // expr: expr CROSS expr
-#line 176 "parser.yy"
+  case 16: // expr: expr CROSS expr
+#line 182 "parser.yy"
     {
         const Position * p = new Position(yystack_[2].value.as < DTL::ExpNode* > ()->pos(), yystack_[0].value.as < DTL::ExpNode* > ()->pos());
         yylhs.value.as < DTL::ExpNode* > () = new PlusNode(p, yystack_[2].value.as < DTL::ExpNode* > (), yystack_[0].value.as < DTL::ExpNode* > ());
     }
-#line 1243 "parser.cc"
+#line 1253 "parser.cc"
     break;
 
-  case 16: // expr: expr LESS expr
-#line 181 "parser.yy"
+  case 17: // expr: expr LESS expr
+#line 187 "parser.yy"
     {
         const Position * p = new Position(yystack_[2].value.as < DTL::ExpNode* > ()->pos(), yystack_[0].value.as < DTL::ExpNode* > ()->pos());
         yylhs.value.as < DTL::ExpNode* > () = new LessNode(p, yystack_[2].value.as < DTL::ExpNode* > (), yystack_[0].value.as < DTL::ExpNode* > ());
     }
-#line 1252 "parser.cc"
+#line 1262 "parser.cc"
     break;
 
-  case 17: // expr: expr STAR expr
-#line 186 "parser.yy"
+  case 18: // expr: expr STAR expr
+#line 192 "parser.yy"
     {
         const Position * p = new Position(yystack_[2].value.as < DTL::ExpNode* > ()->pos(), yystack_[0].value.as < DTL::ExpNode* > ()->pos());
         yylhs.value.as < DTL::ExpNode* > () = new TimesNode(p, yystack_[2].value.as < DTL::ExpNode* > (), yystack_[0].value.as < DTL::ExpNode* > ());
     }
-#line 1261 "parser.cc"
+#line 1271 "parser.cc"
     break;
 
-  case 18: // expr: term
-#line 191 "parser.yy"
+  case 19: // expr: term
+#line 197 "parser.yy"
     {
         yylhs.value.as < DTL::ExpNode* > () = yystack_[0].value.as < DTL::ExpNode* > ();
     }
-#line 1269 "parser.cc"
+#line 1279 "parser.cc"
     break;
 
-  case 19: // unarystmt: loc POSTINC
-#line 196 "parser.yy"
+  case 20: // unarystmt: loc POSTINC
+#line 202 "parser.yy"
         {
             const Position* p = new Position(yystack_[1].value.as < DTL::LocNode* > ()->pos(), yystack_[0].value.as < DTL::Token * > ()->pos());
             yylhs.value.as < DTL::StmtNode* > () = new PostIncStmtNode(p, yystack_[1].value.as < DTL::LocNode* > ());
         }
-#line 1278 "parser.cc"
+#line 1288 "parser.cc"
     break;
 
-  case 20: // term: factor
-#line 204 "parser.yy"
+  case 21: // term: factor
+#line 210 "parser.yy"
     {
         yylhs.value.as < DTL::ExpNode* > () = yystack_[0].value.as < DTL::ExpNode* > ();
     }
-#line 1286 "parser.cc"
+#line 1296 "parser.cc"
     break;
 
-  case 21: // term: LPAREN expr RPAREN
-#line 208 "parser.yy"
+  case 22: // term: LPAREN expr RPAREN
+#line 214 "parser.yy"
     {
         yylhs.value.as < DTL::ExpNode* > () = yystack_[1].value.as < DTL::ExpNode* > ();
     }
-#line 1294 "parser.cc"
+#line 1304 "parser.cc"
     break;
 
-  case 22: // factor: intlit
-#line 212 "parser.yy"
+  case 23: // factor: intlit
+#line 218 "parser.yy"
     {
         yylhs.value.as < DTL::ExpNode* > () = yystack_[0].value.as < DTL::IntLitNode* > ();
     }
-#line 1302 "parser.cc"
+#line 1312 "parser.cc"
     break;
 
-  case 23: // factor: loc
-#line 216 "parser.yy"
+  case 24: // factor: loc
+#line 222 "parser.yy"
     {
         yylhs.value.as < DTL::ExpNode* > () = yystack_[0].value.as < DTL::LocNode* > ();
     }
-#line 1310 "parser.cc"
+#line 1320 "parser.cc"
     break;
 
-  case 24: // intlit: INTLITERAL
-#line 220 "parser.yy"
+  case 25: // intlit: INTLITERAL
+#line 226 "parser.yy"
     {
         yylhs.value.as < DTL::IntLitNode* > () = new IntLitNode(yystack_[0].value.as < DTL::IntLitToken * > ()->pos(), yystack_[0].value.as < DTL::IntLitToken * > ()->num());
     }
-#line 1318 "parser.cc"
+#line 1328 "parser.cc"
     break;
 
-  case 25: // loc: id
-#line 225 "parser.yy"
+  case 26: // loc: id
+#line 231 "parser.yy"
     {
         yylhs.value.as < DTL::LocNode* > () = yystack_[0].value.as < DTL::IDNode* > ();
     }
-#line 1326 "parser.cc"
+#line 1336 "parser.cc"
     break;
 
-  case 26: // loc: id LBRACKET id RBRACKET
-#line 229 "parser.yy"
+  case 27: // loc: id LBRACKET id RBRACKET
+#line 235 "parser.yy"
     {
         yylhs.value.as < DTL::LocNode* > () = new ArrayIndexNode(yystack_[3].value.as < DTL::IDNode* > ()->pos(), yystack_[3].value.as < DTL::IDNode* > (), yystack_[1].value.as < DTL::IDNode* > ());
     }
-#line 1334 "parser.cc"
+#line 1344 "parser.cc"
     break;
 
-  case 27: // id: ID
-#line 234 "parser.yy"
+  case 28: // id: ID
+#line 240 "parser.yy"
     {
         yylhs.value.as < DTL::IDNode* > () = new IDNode(yystack_[0].value.as < DTL::IDToken * > ()->pos(), yystack_[0].value.as < DTL::IDToken * > ()->value());
     }
-#line 1342 "parser.cc"
+#line 1352 "parser.cc"
     break;
 
 
-#line 1346 "parser.cc"
+#line 1356 "parser.cc"
 
             default:
               break;
@@ -1697,61 +1707,61 @@ namespace DTL {
   const signed char
   Parser::yypact_[] =
   {
-     -16,     5,    -1,   -16,   -16,    17,   -16,   -16,     4,    27,
-     -16,    35,    31,     0,   -16,    31,     6,   -16,   -16,   -16,
-     -16,    20,    36,    29,    15,    31,    31,     4,    31,     4,
-      28,    26,   -16,   -16,    -8,    30,    33,    37,   -16,    32,
-     -16,    36,    40,   -16,   -16,   -16,     1,    46,    38,     7,
-     -16,    31,   -16,   -16,   -16,    19,   -16
+     -16,    17,    -1,   -16,   -16,     9,   -16,   -16,    22,    27,
+     -16,    36,    32,     2,   -16,    32,     6,   -16,   -16,   -16,
+     -16,    16,    34,    28,    15,    32,    32,    22,    32,    22,
+      31,    26,   -16,   -16,    -8,    30,    33,    37,   -16,    29,
+      38,    34,    40,   -16,   -16,   -16,   -16,   -11,    47,    39,
+       7,   -16,    32,   -16,   -16,   -16,    19,   -16
   };
 
   const signed char
   Parser::yydefact_[] =
   {
-       4,     0,     0,     1,    14,     0,     3,     2,     0,     0,
-      27,     0,     0,     0,    24,     0,     0,    18,    20,    22,
-      23,    25,     8,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     5,    21,    16,    15,     0,     0,    17,     0,
-       6,     8,     0,    19,    26,     7,     0,     0,     0,     0,
-      12,     0,     9,    10,    11,     0,    13
+       4,     0,     0,     1,    15,     0,     3,     2,     0,     0,
+      28,     0,     0,     0,    25,     0,     0,    19,    21,    23,
+      24,    26,     9,     0,     0,     0,     0,     0,     0,     0,
+       0,     8,     5,    22,    17,    16,     0,     0,    18,     0,
+       0,     9,     0,    20,    27,     6,     7,     0,     0,     0,
+       0,    13,     0,    10,    11,    12,     0,    14
   };
 
   const signed char
   Parser::yypgoto_[] =
   {
-     -16,   -16,   -16,    42,    12,     8,   -16,     9,   -16,   -15,
-     -16,   -16,   -16,   -10,    34,    -7
+     -16,   -16,   -16,    44,    13,     8,   -16,    10,   -16,   -15,
+     -16,   -16,   -16,   -10,    35,    -7
   };
 
   const signed char
   Parser::yydefgoto_[] =
   {
-       0,     1,     2,     6,    30,     7,    49,    50,     8,    16,
+       0,     1,     2,     6,    30,     7,    50,    51,     8,    16,
       36,    17,    18,    19,    20,    21
   };
 
   const signed char
   Parser::yytable_[] =
   {
-      24,    11,    26,    23,     4,     3,    14,    28,    10,    22,
-      34,    35,    31,    38,    25,     5,    26,     5,    47,    53,
-      27,    28,    39,    25,    47,    26,     9,    25,    33,    26,
-      28,    31,     4,    56,    28,    10,    55,    14,    13,    29,
-      15,    40,    14,    32,    41,    28,    42,    46,    43,    51,
-      52,    12,    44,    45,    48,     0,     0,     0,    54,     0,
-       0,    37
+      24,    11,    26,    23,     4,     5,    48,    28,    14,    22,
+      34,    35,    31,    38,    25,     5,    26,     3,     9,    54,
+      27,    28,    39,    25,    48,    26,    10,    25,    33,    26,
+      28,    31,     4,    57,    28,    29,    10,    56,    14,    13,
+      14,    15,    32,    40,    41,    28,    42,    47,    43,    44,
+      52,    53,    45,    12,    46,    49,     0,     0,     0,     0,
+      55,     0,    37
   };
 
   const signed char
   Parser::yycheck_[] =
   {
-      15,     8,    10,    13,     5,     0,     6,    15,     4,     9,
-      25,    26,    22,    28,     8,    16,    10,    16,    17,    12,
-      14,    15,    29,     8,    17,    10,     9,     8,    13,    10,
-      15,    41,     5,    14,    15,     4,    51,     6,     3,    19,
-       9,    13,     6,    14,    18,    15,    13,     7,    11,     3,
-      12,     9,    20,    41,    46,    -1,    -1,    -1,    49,    -1,
-      -1,    27
+      15,     8,    10,    13,     5,    16,    17,    15,     6,     7,
+      25,    26,    22,    28,     8,    16,    10,     0,     9,    12,
+      14,    15,    29,     8,    17,    10,     4,     8,    13,    10,
+      15,    41,     5,    14,    15,    19,     4,    52,     6,     3,
+       6,     9,    14,    12,    18,    15,    13,     7,    11,    20,
+       3,    12,    14,     9,    41,    47,    -1,    -1,    -1,    -1,
+      50,    -1,    27
   };
 
   const signed char
@@ -1759,26 +1769,26 @@ namespace DTL {
   {
        0,    22,    23,     0,     5,    16,    24,    26,    29,     9,
        4,    36,    24,     3,     6,     9,    30,    32,    33,    34,
-      35,    36,     9,    34,    30,     8,    10,    14,    15,    19,
+      35,    36,     7,    34,    30,     8,    10,    14,    15,    19,
       25,    34,    14,    13,    30,    30,    31,    35,    30,    36,
-      13,    18,    13,    11,    20,    25,     7,    17,    26,    27,
-      28,     3,    12,    12,    28,    30,    14
+      12,    18,    13,    11,    20,    14,    25,     7,    17,    26,
+      27,    28,     3,    12,    12,    28,    30,    14
   };
 
   const signed char
   Parser::yyr1_[] =
   {
-       0,    21,    22,    23,    23,    24,    24,    25,    25,    26,
-      26,    27,    27,    28,    29,    30,    30,    30,    30,    31,
-      32,    32,    33,    33,    34,    35,    35,    36
+       0,    21,    22,    23,    23,    24,    24,    25,    25,    25,
+      26,    26,    27,    27,    28,    29,    30,    30,    30,    30,
+      31,    32,    32,    33,    33,    34,    35,    35,    36
   };
 
   const signed char
   Parser::yyr2_[] =
   {
-       0,     2,     2,     2,     0,     5,     6,     3,     0,    10,
-      10,     2,     1,     4,     1,     3,     3,     3,     1,     2,
-       1,     3,     1,     1,     1,     1,     4,     1
+       0,     2,     2,     2,     0,     5,     7,     3,     1,     0,
+      10,    10,     2,     1,     4,     1,     3,     3,     3,     1,
+       2,     1,     3,     1,     1,     1,     1,     4,     1
   };
 
 
@@ -1802,9 +1812,9 @@ namespace DTL {
   const unsigned char
   Parser::yyrline_[] =
   {
-       0,   101,   101,   107,   113,   117,   122,   128,   135,   141,
-     149,   154,   159,   165,   171,   175,   180,   185,   190,   195,
-     203,   207,   211,   215,   219,   224,   228,   233
+       0,   101,   101,   107,   113,   117,   122,   129,   135,   141,
+     147,   155,   160,   165,   171,   177,   181,   186,   191,   196,
+     201,   209,   213,   217,   221,   225,   230,   234,   239
   };
 
   void
@@ -1885,9 +1895,9 @@ namespace DTL {
 
 #line 5 "parser.yy"
 } // DTL
-#line 1889 "parser.cc"
+#line 1899 "parser.cc"
 
-#line 241 "parser.yy"
+#line 247 "parser.yy"
 
 
 

@@ -1,12 +1,11 @@
 
-int col1_offset = 16;
-int col2_offset = 20;
-int col3_offset = 44;
+int col_offsets = {16,20,44,64,128};
 int row_size = 64;
 
 for (int row = 0; row < 43690; row++)
 {
-		out = (row*row_size) + col1_offset;
-		out = (row*row_size) + col2_offset;
-		out = (row*row_size) + col3_offset;
+	for (int j = 0; j < 3; j++)
+	{
+		out = (row*row_size) + col_offsets[j];
+	}
 }

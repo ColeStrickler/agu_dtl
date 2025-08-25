@@ -14,7 +14,7 @@ Magic magicu(uint32_t d);
 
 
 
-
+uint64_t alignTo8(uint64_t addr);
 
 
 

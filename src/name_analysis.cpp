@@ -9,6 +9,7 @@ using namespace DTL;
 
 bool ProgramNode::nameAnalysis(SymbolTable *symTab)
 {
+   
     symTab->enterScope();
     for (auto& stmt: myStatements)
     {
@@ -71,6 +72,7 @@ bool ConstDeclNode::nameAnalysis(SymbolTable* symTab)
 
 bool DTL::ConstArrayDeclNode::nameAnalysis(SymbolTable *symTab)
 {
+    
     auto name = myID->getName();
     auto type = BasicType::produce(BaseType::INTARRAY);
     if (symTab->clash(name))
@@ -110,6 +112,7 @@ bool OutStmtNode::nameAnalysis(SymbolTable* symTab)
 
 bool DTL::ArrayIndexNode::nameAnalysis(SymbolTable *symTab)
 {
+    
     return myID->nameAnalysis(symTab) && myIndexVar->nameAnalysis(symTab);
 }
 

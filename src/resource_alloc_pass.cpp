@@ -43,7 +43,7 @@ void DTL::ConstArrayDeclNode::resourceAllocation(ResourceAllocation* ralloc, int
 
     for (auto& val: myVals)
     {
-        values->push_back(static_cast<uint32_t>(val->GetVal()));
+        values.push_back(static_cast<uint32_t>(val->GetVal()));
     }
 
     ralloc->AllocConstArray(ralloc->rsrcAnalysis->GetConstArrayRegMapping(myID->getName()), values);
@@ -105,7 +105,7 @@ void DTL::ArrayIndexNode::resourceAllocation(ResourceAllocation *ralloc, int dep
 
     //int index_id = ra->GetConstRegMapping(myIndexVar->getName());
     //assert(index_id == -1); // We should never be indexing with a non loop
-    index_id = ralloc->ForLoopIDToMapping(myIndexVar->getName());
+    int index_id = ralloc->ForLoopIDToMapping(myIndexVar->getName());
     assert(index_id != -1);
 
     int array_id = ra->GetConstArrayRegMapping(myID->getName());
@@ -431,6 +431,11 @@ void DTL::ResourceAllocation::PrintInitStateRegisters(const std::string &file, u
         {
             write += hwStat->PrintConstRegWrite(baseaddr, c.first, c.second, 4);
         }
+        printf("const array\n");
+        for (auto& c: constArrayRegisters)
+        {
+            write += hwStat->PrintConstArrayWrite(baseaddr, c, 4);
+        }
 
 
         write += "\nWRITE_UINT8(" + to_hex(baseaddr+USED_OUTSTMT_REG) + "," + to_hex(static_cast<uint8_t>(OutStatementRouting.size())) +   ");\n";
@@ -451,6 +456,11 @@ void DTL::ResourceAllocation::DoInitStateRegisters(uint64_t baseAddr)
     for (auto& c : rsrcAnalysis->ConstValueMap)
     {
        hwStat->DoConstRegWrite(baseAddr, c.first, c.second, 4);
+    }
+    
+    for (auto& ca : constArrayRegisters)
+    {
+        hwStat->DoConstArrayWrite(baseAddr, ca, 4);
     }
 
     WRITE_UINT8(baseAddr+USED_OUTSTMT_REG, static_cast<uint8_t>(OutStatementRouting.size()));

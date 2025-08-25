@@ -53,6 +53,9 @@ int 	    { return makeBareToken(TokenKind::INT); }
 ";"	    { return makeBareToken(TokenKind::SEMICOL); }
 "*"	    { return makeBareToken(TokenKind::STAR); }
 ","		{ return makeBareToken(TokenKind::COMMA); }
+"["		{ return makeBareToken(TokenKind::LBRACKET); }
+"]"		{ return makeBareToken(TokenKind::RBRACKET); }
+
 ({LETTER}|_)({LETTER}|{DIGIT}|_)* { 
 			  Position * pos = new Position(lineNum, colNum,
 				lineNum, colNum + yyleng);

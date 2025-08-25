@@ -62,17 +62,18 @@ int main()
 {
     try {
         writeTokenStream("./test.dtl", "./dtltokens.out");
-		auto hwStat = new DTL::AGUHardwareStat(4, 4, 5, 6, 6, 4, 8);
+		auto hwStat = new DTL::AGUHardwareStat(4, 4, 5, 5, 6, 4, 3, 1);
 		auto start = std::chrono::high_resolution_clock::now();
         auto prog = parse("./test.dtl");
 		assert(prog != nullptr);
-
+		
 		auto na = DTL::NameAnalysis::build(prog);
 		if (na == nullptr)
 		{
 			printf("failed name analysis\n");
 			return -1;
 		}
+		
 		auto ta = DTL::TypeAnalysis::build(na);
 		if (ta == nullptr)
 			return -1;

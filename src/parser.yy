@@ -119,17 +119,23 @@ constdecl: type id ASSIGN intlit SEMICOL
             const Position * p = new Position($1->pos(), $5->pos());
             $$ = new ConstDeclNode(p, $1, $2, $4);
         }
-        | type id ASSIGN LPAREN intlist RPAREN
+        | type id ASSIGN LCURLY intlist RCURLY SEMICOL
         {
-            $$ = nullptr;
+             const Position * p = new Position($1->pos(), $6->pos());
+            $$ = new ConstArrayDeclNode($1->pos(), $1, $2, $5);
         }
 
 
 intlist: intlit COMMA intlist
         {
-            $3.push_back($1);
-            $$ = $3;
-
+            $$ = std::vector<DTL::IntLitNode*>();
+            $$.push_back($1);
+            $$.insert($$.end(), $3.begin(), $3.end());
+        }
+        | intlit
+        {
+            $$ = std::vector<DTL::IntLitNode*>();
+            $$.push_back($1);
         }
         | /* empty */ 
         {
