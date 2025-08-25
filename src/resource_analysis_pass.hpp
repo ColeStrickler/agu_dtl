@@ -7,9 +7,10 @@
 #include <algorithm>
 
 
+
 namespace DTL {
 
-
+class AGUHardwareStat;
 
 struct DTLUnitAllocation
 {
@@ -148,10 +149,11 @@ struct DTLResources
     
 class ResourceAnalysis{
 public:
-	static ResourceAnalysis * build(ProgramNode * astIn){
+	static ResourceAnalysis * build(ProgramNode * astIn, AGUHardwareStat* hwstat) {
 		ResourceAnalysis * resourceAnalysis = new ResourceAnalysis;
 		if (!resourceAnalysis) return nullptr;
 		
+		resourceAnalysis->hwStat = hwstat;
 		astIn->resourceAnalysis(resourceAnalysis, 0);
 		resourceAnalysis->ast = astIn;
 
@@ -180,16 +182,19 @@ public:
 		constRegArray++;
 	}
 
+	int GetConstArrayRegOffset() const;
 
-	int GetConstArrayRegMapping(std::string node_name)
+	
+
+	int GetConstArrayRegMapping(std::string node_name);
+	
+
+	int GetConstArrayRegRoutingIndex(std::string node_name) 
 	{
-		auto it = ConstArrayRegMapping.find(node_name);
-		if (it != ConstArrayRegMapping.end())
-			return it->second;
-		return -1;
+		int local = GetConstArrayRegMapping(node_name);
+		assert(local != -1);
+		return local + GetConstArrayRegOffset();
 	}
-
-
 
 	/*
 		Returns -1 on failure;
@@ -246,6 +251,7 @@ public:
 	DTLResources* GetResources() const {return ResourcesNeeded;}
 private:
 	DTLResources* ResourcesNeeded;
+	AGUHardwareStat* hwStat;
 
 
 	ResourceAnalysis() : ResourcesNeeded(new DTLResources())

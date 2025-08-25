@@ -1,6 +1,6 @@
 #include "resource_analysis_pass.hpp"
 #include "ast.hpp"
-
+#include "resource_alloc_pass.hpp"
 
 
 void DTL::ProgramNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
@@ -126,5 +126,15 @@ std::string DTL::TimesNode::PrintAST(int &node_num, std::ofstream &outfile)
 	return name;
 }
 
+int DTL::ResourceAnalysis::GetConstArrayRegOffset() const
+{
+    return hwStat->nConstRegisters;
+}
 
-
+int DTL::ResourceAnalysis::GetConstArrayRegMapping(std::string node_name)
+{
+	auto it = ConstArrayRegMapping.find(node_name);
+	if (it != ConstArrayRegMapping.end())
+		return it->second;
+	return -1;
+}

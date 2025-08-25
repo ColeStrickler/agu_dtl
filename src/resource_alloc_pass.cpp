@@ -108,14 +108,14 @@ void DTL::ArrayIndexNode::resourceAllocation(ResourceAllocation *ralloc, int dep
     int index_id = ralloc->ForLoopIDToMapping(myIndexVar->getName());
     assert(index_id != -1);
 
-    int array_id = ra->GetConstArrayRegMapping(myID->getName());
+    int array_id = ra->GetConstArrayRegRoutingIndex(myID->getName());
     assert(array_id != -1);
 
-
+    printf("array_id %d\n", array_id);
     // Ensure we do not already have a binding
     assert(ralloc->BindArrayIndex(array_id, index_id));
 
-
+    printf("ArrayIndexNode depth %d\n");
     out->MapNodeFuncUnit(this, array_id, depth);
 
 

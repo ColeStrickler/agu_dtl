@@ -231,7 +231,7 @@ public:
     void DoControlWrite(uint64_t baseAddress, int numOutStatement, int layer, int inRegNumber, int outRegNumber)
     {
         
-        if (outRegNumber == 255)
+        if (outRegNumber == 255 || inRegNumber == 255) // added this --> fixed the array issue
             return;
         assert(outRegNumber < __UINT8_MAX__);
 
@@ -255,8 +255,9 @@ public:
 
     std::string PrintControlWrite(uint64_t baseAddress, int numOutStatement, int layer, int inRegNumber, int outRegNumber)
     {
-        if (outRegNumber == 255)
+        if (outRegNumber == 255 || inRegNumber == 255) / added this --> fixed the array issue
             return "";
+        printf("controlWrite  [layer %d] %d->%d\n", layer, inRegNumber, outRegNumber);
         
 
         unsigned int layerByteOffset = layer * bytesLayer;
@@ -277,8 +278,8 @@ public:
         assert(VarOutMap[hash_str] <= bytesCell); // this maps to maxVarOut
 
 
-        printf("0x%x, 0x%x, 0x%x, 0x%x\n", layerByteOffset, cellByteOffset, outStatementOffset, cell_index);
-        printf("0x%x nOut %d, layer %d, inReg %d, outReg %d 0x%x\n", baseAddress, numOutStatement, layer, inRegNumber, outRegNumber, offset);
+        //printf("0x%x, 0x%x, 0x%x, 0x%x\n", layerByteOffset, cellByteOffset, outStatementOffset, cell_index);
+        //printf("0x%x nOut %d, layer %d, inReg %d, outReg %d 0x%x\n", baseAddress, numOutStatement, layer, inRegNumber, outRegNumber, offset);
         std::string write_value = std::to_string(static_cast<unsigned char>(outRegNumber));
 
         return "WRITE_UINT8(" + addr + ", " + write_value + ");\n";  
@@ -760,10 +761,7 @@ public:
         return hwStat->nConstRegisters + hwStat->nConstArray; // each const array can give 1 input at a time
     }
 
-    int GetConstArrayRegOffset() const
-    {
-        return hwStat->nConstRegisters;
-    }
+    
 
     /*
         We now know which for loop register is mapped to this ID
@@ -821,12 +819,13 @@ public:
 
         int a = currentOut->GetNodeFuncUnitMapping(fromA);
         int b = currentOut->GetNodeFuncUnitMapping(fromB);
-
+       
         /*
             This should never occur. All units should be mapped somewhere. 
         */
         assert(a != -1 && b != -1);
         int unit = currentOut->RequestMultUnit(layer, a, b);
+         printf("[mult layer%d], a %d::%d, b %d::%d --> %d\n", layer, a, fromA->myTag, b, fromB->myTag, unit);
         currentOut->MapNodeFuncUnit(multNode, unit, layer);
     }
 
@@ -836,12 +835,14 @@ public:
 
         int a = currentOut->GetNodeFuncUnitMapping(fromA);
         int b = currentOut->GetNodeFuncUnitMapping(fromB);
-        //printf("a %d, b %d\n", a, b);
+        
+        
         /*
             This should never occur. All units should be mapped somewhere. 
         */
         assert(a != -1 && b != -1);
         int unit = currentOut->RequestAddUnit(layer, a, b);
+        printf("[add layer%d], a %d::%d, b %d::%d ---> %d\n", layer, a, fromA->myTag, b, fromB->myTag, unit);
         currentOut->MapNodeFuncUnit(plusNode, unit, layer);
     }
 
@@ -849,12 +850,13 @@ public:
     {
         auto currentOut = GetCurrentOutStatement();
         int a = currentOut->GetNodeFuncUnitMapping(fromA);
-
+        
         /*
             This should never occur. All units should be mapped somewhere. 
         */
         assert(a != -1);
         int unit = currentOut->RequestPassThrough(layer, a);
+        printf("[passthru layer%d] passthru a %d::%d ---> %d\n", layer, a, fromA->myTag, unit);
         currentOut->MapNodeFuncUnit(plusNode, unit, layer);
     }
 

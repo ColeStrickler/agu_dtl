@@ -191,6 +191,7 @@ ASTNode *DTL::ArrayIndexNode::TransformPass(int currDepth, int requiredDepth)
     }
     else
     {
+        printf("ArrayIndexNode::TransformPass\n");
         auto ilnode = new IntLitNode(pos(), 0);
         auto dummyAdd = new PlusNode(pos(), this, ilnode);
         dummyAdd->setPassThrough();
