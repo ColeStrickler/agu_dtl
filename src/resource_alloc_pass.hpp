@@ -255,7 +255,7 @@ public:
 
     std::string PrintControlWrite(uint64_t baseAddress, int numOutStatement, int layer, int inRegNumber, int outRegNumber)
     {
-        if (outRegNumber == 255 || inRegNumber == 255) / added this --> fixed the array issue
+        if (outRegNumber == 255 || inRegNumber == 255) // added this --> fixed the array issue
             return "";
         printf("controlWrite  [layer %d] %d->%d\n", layer, inRegNumber, outRegNumber);
         
