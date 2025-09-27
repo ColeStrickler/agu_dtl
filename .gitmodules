@@ -1,0 +1,3 @@
+[submodule "dtu-runtime-driver"]
+	path = dtu-runtime-driver
+	url = https://github.com/ColeStrickler/dtu-runtime-driver.git
