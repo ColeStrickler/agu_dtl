@@ -9,7 +9,8 @@ typedef struct {
     int32_t add_indicator;
 } Magic;
 
-
+bool is_power_of_two(uint64_t x);
+uint64_t next_power_of_two(uint64_t x);
 Magic magicu(uint32_t d);
 
 

@@ -73,7 +73,7 @@ public:
     AGUHardwareStat(int nAdd, int nMult, int nLayers, int nConst, int nForLoop, int nPassThrough, int nOutStatements, int nConstArray) :\
         nLayerAddUnits(nAdd), nLayerMultUnits(nMult), nConstRegisters(nConst), nForLoopRegisters(nForLoop),\
         nLayers(nLayers), nLayerPassThrough(nPassThrough), nOutStatements(nOutStatements), nConstArray(nConstArray),\
-        nConstArraySize(32)
+        nConstArraySize(32), nMaxConfigs(1)
     {
         
         /*
@@ -366,6 +366,7 @@ public:
     int nForLoopRegisters;
     int nLayerPassThrough;
     int nOutStatements;
+    int nMaxConfigs;
 
 };
 
