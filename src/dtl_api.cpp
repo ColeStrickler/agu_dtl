@@ -1,5 +1,7 @@
 #include "dtl_api.hpp"
 #include "util.hpp"
+#include <algorithm>
+#include <cmath>
 #define ERR(msg) (std::cerr << msg << std::endl)
 
 
@@ -36,7 +38,7 @@ void DTL::API::ReadHardwareInfo()
     assert(false);
 }
 
-bool DTL::API::CompileAndProgramHardware(const std::string &dtlProgram) 
+bool DTL::API::CompileAndProgramHardware(const std::string &dtlProgram, EphemeralRegion* region) 
 {
     if (!Compile(dtlProgram))
         return false;
@@ -205,7 +207,6 @@ DTL::BuddyNode::BuddyNode(uint64_t TrackedSize, uint64_t TrackedOffset, BuddyNod
 {
     SetFree();
 
-
     m_LeftChild = nullptr;
     m_RightChild = nullptr;
 }
@@ -254,6 +255,8 @@ bool DTL::BuddyNode::isRoot()
 
 void DTL::BuddyNode::Coalesce()
 {
+   // printf("node 0x%llx coalescing!\n", m_TrackedOffset);
+
     auto left = GetLeft();
     auto right = GetRight();
 
@@ -284,18 +287,32 @@ uint64_t DTL::BuddyNode::GetTrackedSize()
 
 DTL::BuddyAllocator::BuddyAllocator(uint64_t region_size) 
 {
-    m_RootNode = new BuddyNode(region_size, 0, nullptr);
+    auto size = region_size;
+    if (!is_power_of_two(region_size))
+    {
+        size = next_power_of_two(region_size);
+    }
+    m_RootNode = new BuddyNode(size, 0, nullptr);
 }
 
 void DTL::BuddyAllocator::FreeNode(uint64_t offset) 
 {
     BuddyNode* node = FindNode(offset, m_RootNode);
     assert(node != nullptr);
+
+    node->SetFree();
+    node->Coalesce();
     
 }
 
 uint64_t DTL::BuddyAllocator::AllocNode(uint64_t size_needed) {
-  uint64_t AllocatedOffset = FindAndAllocFreeNode(size_needed, m_RootNode);
+
+    auto size  = std::max(size_needed, (uint64_t)(0x100000ULL));
+    if (!is_power_of_two(size))
+        size = next_power_of_two(size);
+
+
+  uint64_t AllocatedOffset = FindAndAllocFreeNode(size, m_RootNode);
   return AllocatedOffset;
 }
 
@@ -314,6 +331,7 @@ uint64_t DTL::BuddyAllocator::FindAndAllocFreeNode(uint64_t size_needed, BuddyNo
         if (next_power_of_two(size_needed) == currentNodeSize)
         {
             currentNode->SetInUse();
+
             return currentNode->GetTrackedOffset();
         }
         else
@@ -321,16 +339,28 @@ uint64_t DTL::BuddyAllocator::FindAndAllocFreeNode(uint64_t size_needed, BuddyNo
             currentNode->Split();
             uint64_t check_left = FindAndAllocFreeNode(size_needed, currentNode->GetLeft());
             if (check_left != BUDDY_ALLOC_FAILURE)
+            {
+                currentNode->SetInUse();
                 return check_left;
-            return FindAndAllocFreeNode(size_needed, currentNode->GetRight());
+            }
+            uint64_t check_right = FindAndAllocFreeNode(size_needed, currentNode->GetRight());
+            if (check_right != BUDDY_ALLOC_FAILURE)
+                currentNode->SetInUse();
+            return check_right;
         }
     }
     else
     {
         uint64_t check_left = FindAndAllocFreeNode(size_needed, currentNode->GetLeft());
         if (check_left != BUDDY_ALLOC_FAILURE)
+        {
+            currentNode->SetInUse();
             return check_left;
-        return FindAndAllocFreeNode(size_needed, currentNode->GetRight());
+        }
+        uint64_t check_right = FindAndAllocFreeNode(size_needed, currentNode->GetRight());
+        if (check_right != BUDDY_ALLOC_FAILURE)
+            currentNode->SetInUse();
+        return check_right;
     }
     return BUDDY_ALLOC_FAILURE;
 }
@@ -341,13 +371,23 @@ DTL::BuddyNode *DTL::BuddyAllocator::FindNode(uint64_t offset, BuddyNode* currNo
         return nullptr;
 
     auto currNodeOffset = currNode->GetTrackedOffset();
-    assert(offset >= currNodeOffset); // we should never be less than
-    
-
+    if(offset > currNodeOffset && offset > currNodeOffset + currNode->GetTrackedSize()) // we should never be less than
+    {
+        return nullptr; 
+    }   
+   // printf("here\n");
     if (offset == currNodeOffset)
     {
-        if (!currNode->isFree() && currNode->GetLeft() == nullptr && currNode->GetRight() == nullptr)
+        auto left = currNode->GetLeft();
+        auto right = currNode->GetRight();
+
+
+        if (!currNode->isFree() && left == nullptr && right == nullptr)
             return currNode;
+        else if (!currNode->isFree() && left != nullptr && right != nullptr && left->isFree() && right->isFree())
+        {
+            return currNode;
+        }
         else
         {
             // the left should have the same offset based on BuddyNode::Split() semantics
@@ -355,11 +395,13 @@ DTL::BuddyNode *DTL::BuddyAllocator::FindNode(uint64_t offset, BuddyNode* currNo
         }
     }
 
-    if (offset > currNodeOffset)
+    if (offset >= currNodeOffset + currNode->GetTrackedSize()/2)
     {
         // the right should always have a greater offset based on BuddyNode::Split() semantics
         return FindNode(offset, currNode->GetRight());
     }
+    else
+        return FindNode(offset, currNode->GetLeft());
 
 
     assert(false);
@@ -374,6 +416,10 @@ DTL::EphemeralRegion::EphemeralRegion(uint64_t region_offset, uint64_t region_si
     m_DTURuntimeDriverfd = open_fd(DEVICE_FILE);
 
 
+
+    /*
+        Will want to make this per config ?
+    */
     m_DTUConfigRegion = mmap(NULL, DTU_CONFIG_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, m_Regionfd, DTU_CONFIG_BASE);
     assert(m_DTUConfigRegion != nullptr);
 

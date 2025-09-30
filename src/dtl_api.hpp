@@ -57,6 +57,13 @@ public:
     */
 
 
+   /*
+        We need to add methods to write to the uncached backing of these regions and
+        to enable teardown
+
+   
+   */
+
 
 
     int Sync(); //
@@ -207,7 +214,7 @@ public:
     ~API();
     void SetControlBaseAddr(uint64_t newBaseAddr);
     void ReadHardwareInfo();
-    bool CompileAndProgramHardware(const std::string& dtlProgram);
+    bool CompileAndProgramHardware(const std::string& dtlProgram, EphemeralRegion* region);
     bool Compile(const std::string& dtlProgram);
     bool ProgramHardware();
     

@@ -9,6 +9,7 @@
 #include "ast_transform_pass.hpp"
 #include "resource_analysis_pass.hpp"
 #include "resource_alloc_pass.hpp"
+#include "dtl_api.hpp"
 
 static void writeTokenStream(const char * inPath, const char * outPath){
 	std::ifstream inStream(inPath);
@@ -58,10 +59,12 @@ static DTL::ProgramNode * parse(const char * inFile){
 
 	return root;
 }
-int main()
+
+
+
+int compile()
 {
-    try {
-        writeTokenStream("./test.dtl", "./dtltokens.out");
+	 writeTokenStream("./test.dtl", "./dtltokens.out");
 		auto hwStat = new DTL::AGUHardwareStat(4, 4, 5, 5, 6, 4, 3, 1);
 		auto start = std::chrono::high_resolution_clock::now();
         auto prog = parse("./test.dtl");
@@ -82,7 +85,6 @@ int main()
 		
 		auto ra = DTL::ResourceAnalysis::build(prog, hwStat);
 		//std::cout << ra->GetResources()->toString() << "\n";
-		
 		
 		
 		
@@ -109,8 +111,47 @@ int main()
 		ralloc->PrintControlWrites("./outcontrolseq", 0x4000000);
 		ralloc->PrintInitStateRegisters("./outcontrolseq", 0x4000000);
 
-		printf("here\n");
+}
+
+
+
+#include <stdio.h>
+
+int main()
+{
+    try {
+		auto allocator = new DTL::BuddyAllocator(0x1000ULL*0x1000ULL*128ULL);
+		int bad = 0;
+		for (int i = 0; i < 1000; i++)
+		{
+			std::vector<uint64_t> tmp;
+			for (int j = 0; j < 100; j++)
+			{
+				auto addr = allocator->AllocNode(0x10000ULL);
+				if (addr == BUDDY_ALLOC_FAILURE)
+					bad++;
+				else
+					tmp.push_back(addr);
+				//printf("got addr from allocator 0x%llx\n", addr);
+			}
+
+			for (auto& a : tmp)
+			{
+				allocator->FreeNode(a);
+			}
+			//break;
+			//printf("here %d\n", bad);
+			bad = 0;
+		}
 		
+		//printf("got addr from allocator 0x%llx\n", addr);
+		//allocator->FreeNode(addr);
+
+		//compile();
+		
+		
+
+
 
 		//ralloc->PrintDigraph(1, "./outStatement0Digraph");
     } catch (DTL::InternalError * e){

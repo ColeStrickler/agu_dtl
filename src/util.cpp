@@ -6,6 +6,7 @@ bool is_power_of_two(uint64_t x) {
 }
 
 uint64_t next_power_of_two(uint64_t x) {
+   // printf("next_power_of_two\n");
     if (x <= 1) return 1;
     x--;
     x |= x >> 1;
@@ -13,6 +14,7 @@ uint64_t next_power_of_two(uint64_t x) {
     x |= x >> 4;
     x |= x >> 8;
     x |= x >> 16;
+    x |= x >> 32;
     return x + 1;
 }
 
