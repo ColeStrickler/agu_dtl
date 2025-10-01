@@ -20,12 +20,27 @@ DTL::API::API(uint64_t realBackingStart, uint64_t realBackingSize) : m_ConfigBit
 }
 
 DTL::API::API(AGUHardwareStat *hwStat, uint64_t realBackingStart, uint64_t realBackingSize) 
-    : ControlBaseAddress(DTU_CONFIG_BASE), hwStat(hwStat), m_ConfigBitmap(0)
+    : AGUControlRegionBaseAddress(AGU_CONFIG_BASE), hwStat(hwStat), m_ConfigBitmap(0)
 {
 
     assert(is_power_of_two(realBackingSize) && realBackingSize%Megabyte == 0);
     assert(realBackingSize > Megabyte);
     m_BuddyAllocator = new BuddyAllocator(realBackingSize);
+
+    m_AGUControlRegionfd = open_fd("/dev/mem");
+    if (m_AGUControlRegionfd == -1)
+    {
+        SetError(-1);
+        return;
+    }
+
+    AGUControlRegionBaseAddress = (uint64_t)mmap(NULL, hwStat->nMaxConfigs*0x1000, PROT_READ | PROT_WRITE, MAP_SHARED, m_AGUControlRegionfd, AGU_CONFIG_BASE);
+    if (AGUControlRegionBaseAddress == (uint64_t)MAP_FAILED)
+    {
+        SetError(-1);
+        return;
+    }
+
 }
 
 DTL::API::~API() {
@@ -42,7 +57,7 @@ bool DTL::API::CompileAndProgramHardware(const std::string &dtlProgram, Ephemera
 {
     if (!Compile(dtlProgram))
         return false;
-    return ProgramHardware();
+    return ProgramHardware(region);
 }
 
 static void writeTokenStream(const char * inPath, const char * outPath){
@@ -123,12 +138,14 @@ bool DTL::API::Compile(const std::string &dtlProgram)
     return true;
 }
 
-bool DTL::API::ProgramHardware()
+
+bool DTL::API::ProgramHardware(EphemeralRegion* region)
 {
-    
-    ralloc->DoInitStateRegisters(ControlBaseAddress);
+    // because we map each config region in the TLRegisterNode I think we can just calculate a new base offset
+    uint64_t config_n_base = AGUControlRegionBaseAddress + DTU_CONFIG_OFFSET(region->GetConfig());
+    ralloc->DoInitStateRegisters(config_n_base);
     printf("FinishInitStateRegs\n");
-    ralloc->DoControlWrites(ControlBaseAddress);
+    ralloc->DoControlWrites(config_n_base);
     printf("Finished Control Writes\n");
     return true;
 }
@@ -154,6 +171,12 @@ DTL::EphemeralRegion *DTL::API::AllocEphemeralRegion(uint64_t size_needed)
     }
     auto ephemeral = new EphemeralRegion(region_offset, next_power_of_two(size_needed), config, m_RealBackingStart, hwStat);
     return ephemeral;
+}
+
+void DTL::API::FreeEphemeralRegion(EphemeralRegion *ephemeralRegion)
+{
+    m_BuddyAllocator->FreeNode(ephemeralRegion->GetRegionOffset());
+    delete ephemeralRegion;
 }
 
 uint64_t DTL::API::GetError()
@@ -197,9 +220,9 @@ void DTL::API::SetError(uint64_t Error)
     m_ErrorCode = Error;
 }
 
-void DTL::API::SetControlBaseAddr(uint64_t newControlBaseAddr)
+void DTL::API::SetAGUControlRegionBaseAddr(uint64_t newControlBaseAddr)
 {
-    ControlBaseAddress = newControlBaseAddr;
+    AGUControlRegionBaseAddress = newControlBaseAddr;
 }
 
 DTL::BuddyNode::BuddyNode(uint64_t TrackedSize, uint64_t TrackedOffset, BuddyNode* parent) 
@@ -292,6 +315,8 @@ DTL::BuddyAllocator::BuddyAllocator(uint64_t region_size)
     {
         size = next_power_of_two(region_size);
     }
+
+    printf("Root size: 0x%llx\n", size);
     m_RootNode = new BuddyNode(size, 0, nullptr);
 }
 
@@ -310,7 +335,6 @@ uint64_t DTL::BuddyAllocator::AllocNode(uint64_t size_needed) {
     auto size  = std::max(size_needed, (uint64_t)(0x100000ULL));
     if (!is_power_of_two(size))
         size = next_power_of_two(size);
-
 
   uint64_t AllocatedOffset = FindAndAllocFreeNode(size, m_RootNode);
   return AllocatedOffset;
@@ -419,9 +443,13 @@ DTL::EphemeralRegion::EphemeralRegion(uint64_t region_offset, uint64_t region_si
 
     /*
         Will want to make this per config ?
+
+
+
+        We need the DTU not the AGU config, because the DTU config is where the address indirection comes from
     */
     m_DTUConfigRegion = mmap(NULL, DTU_CONFIG_SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, m_Regionfd, DTU_CONFIG_BASE);
-    assert(m_DTUConfigRegion != nullptr);
+    assert(m_DTUConfigRegion != nullptr && m_DTUConfigRegion != MAP_FAILED);
 
 
 
@@ -437,18 +465,32 @@ DTL::EphemeralRegion::EphemeralRegion(uint64_t region_offset, uint64_t region_si
                                     MAP_SHARED,
                                     m_Regionfd,
                                     0);
-    assert(m_EphemeralRegionAccess != nullptr);
+    assert(m_EphemeralRegionAccess != nullptr && m_EphemeralRegionAccess != MAP_FAILED);
     int syncret = Sync();
     if (syncret != 0)
     {
         printf("DTL::EphemeralRegion::EphemeralRegion() %d\n", syncret);
     }
+
+
+
+    m_UncachedRegionAccess = mmap(NULL, DTU_UNCACHED_REGION_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, m_Regionfd, DTU_UNCACHED_REGION_ADDR);
+    assert(m_UncachedRegionAccess != nullptr && m_UncachedRegionAccess != MAP_FAILED);
+
+
+
+
+
+
 }
 
 DTL::EphemeralRegion::~EphemeralRegion()
 {
     munmap(m_EphemeralRegionAccess, m_RegionSize);
+    munmap(m_UncachedRegionAccess, DTU_UNCACHED_REGION_SIZE);
+    munmap(m_DTUConfigRegion, DTU_CONFIG_SIZE);
     close(m_Regionfd);
+    close(m_DTURuntimeDriverfd);
 }
 
 int DTL::EphemeralRegion::Sync()
@@ -466,14 +508,24 @@ int DTL::EphemeralRegion::Sync()
     return ret;
 }
 
-void *DTL::EphemeralRegion::GetHeadlessRegion() {
+void *DTL::EphemeralRegion::GetHeadlessReadRegion() {
   return m_EphemeralRegionAccess;
 }
 
-uint8_t DTL::EphemeralRegion::GuardedRead_8(uint64_t offset)
+void *DTL::EphemeralRegion::GetHeadlessWriteregion()
 {
-    assert(offset < m_RegionSize);
-    return *((uint16_t *)m_EphemeralRegionAccess);
+    return m_UncachedRegionAccess;
+}
+
+void DTL::EphemeralRegion::GuardedWrite_8(uint64_t offset, uint8_t data)
+{
+    assert(offset < DTU_UNCACHED_REGION_SIZE);
+    WRITE_UINT8(offset, data);
+}
+
+uint8_t DTL::EphemeralRegion::GuardedRead_8(uint64_t offset) {
+  assert(offset < m_RegionSize);
+  return *((uint16_t *)m_EphemeralRegionAccess);
 }
 
 uint16_t DTL::EphemeralRegion::GuardedRead_16(uint64_t offset) {
@@ -496,7 +548,7 @@ float DTL::EphemeralRegion::GuardedRead_Float(uint64_t offset) {
   return *((float *)m_EphemeralRegionAccess);
 }
 
-int DTL::EphemeralRegion::open_fd(const std::string& path) {
+int DTL::open_fd(const std::string& path) {
   int fd = open(path.c_str(), O_RDWR | O_SYNC);
   if (fd == -1) {
     printf("Can't open /dev/mem.\n");

@@ -34,9 +34,30 @@ typedef struct RemapPARequest
 ;
 
 #define DTU_CONFIG_SIZE 0xfff
-#define DTU_CONFIG_BASE 0x4000000ULL
+#define DTU_CONFIG_BASE 0x3000000ULL
+#define AGU_CONFIG_BASE 0x4000000ULL
+#define DTU_CONFIG_OFFSET(config) (config*0x1000)
+#define DTU_UNCACHED_REGION_ADDR 0x180000000ULL
+#define DTU_UNCACHED_REGION_SIZE 0x10000000ULL
+
+
+
 // this is the only place we should have to update
 #define UPDATE_CONFIG_PHYSMAP(base, config, maxConfigs, EphemeralConfigPhysStart) (WRITE_UINT64(base+(config*0x8)+(2*maxConfigs*0x8)+0x400, EphemeralConfigPhysStart))
+
+
+
+
+
+
+int open_fd(const std::string& path);
+
+
+
+
+
+
+
 
 class EphemeralRegion
 {
@@ -68,8 +89,12 @@ public:
 
     int Sync(); //
 
-    void* GetHeadlessRegion(); // get raw pointer to ephemeral region, no bounds checking, writes allowed
+    void* GetHeadlessReadRegion(); // get raw pointer to ephemeral region, no bounds checking, writes allowed
+    void* GetHeadlessWriteregion();
 
+    uint64_t GetRegionOffset() {return m_RegionOffset; }
+
+    void GuardedWrite_8(uint64_t offset, uint8_t data);
     uint8_t GuardedRead_8(uint64_t offset);
     uint16_t GuardedRead_16(uint64_t offset);
     uint32_t GuardedRead_32(uint64_t offset);
@@ -77,7 +102,7 @@ public:
 
     float GuardedRead_Float(uint64_t offset);
 
-
+    inline int GetConfig() {return m_ConfigNum;}
 
 private:
     uint64_t m_RegionOffset;
@@ -85,12 +110,14 @@ private:
     uint64_t m_RegionSize;
     int m_ConfigNum;
     void* m_EphemeralRegionAccess;
+    void* m_UncachedRegionAccess;
     int m_Regionfd;
     int m_DTURuntimeDriverfd;
     void* m_DTUConfigRegion;
     AGUHardwareStat* hwStat;
 
 
+    
     uint64_t m_CurrentEphemeralPhysicalAddr;
 
     int open_fd(const std::string& path);
@@ -212,11 +239,15 @@ public:
     API(uint64_t realBackingStart = 0x170000000UL, uint64_t realBackingSize = 0x10000000UL); // if we allow automatically reading 
     API(AGUHardwareStat* hwStat, uint64_t realBackingStart = 0x170000000UL, uint64_t realBackingSize = 0x10000000UL); // if we want to manually configure
     ~API();
-    void SetControlBaseAddr(uint64_t newBaseAddr);
+
+    /*
+        Should be a mmap'ed address being passed in
+    */
+    void SetAGUControlRegionBaseAddr(uint64_t newBaseAddr);
     void ReadHardwareInfo();
     bool CompileAndProgramHardware(const std::string& dtlProgram, EphemeralRegion* region);
     bool Compile(const std::string& dtlProgram);
-    bool ProgramHardware();
+    bool ProgramHardware(EphemeralRegion* region);
     
     /*
         We want to track allocations of the ephemeral region/support multiple configurations
@@ -239,14 +270,16 @@ private:
     void FreeConfig(int config);
     void SetError(uint64_t Error);
     uint64_t m_ConfigBitmap; // config 
-
+    uint64_t m_ReceivedPAFromDriver;
     uint64_t m_RealBackingStart;
     uint64_t m_RealBackingSize;
     BuddyAllocator* m_BuddyAllocator;
     AGUHardwareStat* hwStat;
-    uint64_t ControlBaseAddress;
-    DTL::ResourceAllocation* ralloc;
+    uint64_t AGUControlRegionBaseAddress; // will index off this
+    DTL::ResourceAllocation* ralloc; // possibly move this to the ephemeral region? 
 
+
+    int m_AGUControlRegionfd;
 
     uint64_t m_ErrorCode;
 };

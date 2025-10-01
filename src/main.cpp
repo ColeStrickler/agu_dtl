@@ -120,14 +120,14 @@ int compile()
 int main()
 {
     try {
-		auto allocator = new DTL::BuddyAllocator(0x1000ULL*0x1000ULL*128ULL);
+		auto allocator = new DTL::BuddyAllocator(1024*1024*128ULL);
 		int bad = 0;
 		for (int i = 0; i < 1000; i++)
 		{
 			std::vector<uint64_t> tmp;
-			for (int j = 0; j < 100; j++)
+			for (int j = 0; j < 132; j++)
 			{
-				auto addr = allocator->AllocNode(0x10000ULL);
+				auto addr = allocator->AllocNode(0x100000ULL);
 				if (addr == BUDDY_ALLOC_FAILURE)
 					bad++;
 				else
@@ -140,7 +140,7 @@ int main()
 				allocator->FreeNode(a);
 			}
 			//break;
-			//printf("here %d\n", bad);
+			printf("here %d\n", bad);
 			bad = 0;
 		}
 		
