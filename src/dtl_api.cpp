@@ -5,6 +5,49 @@
 #define ERR(msg) (std::cerr << msg << std::endl)
 
 
+static int open_fd(const std::string& path) {
+  int fd = open(path.c_str(), O_RDWR | O_SYNC);
+  if (fd == -1) {
+    printf("Can't open /dev/mem.\n");
+    exit(0);
+  }
+  return fd;
+}
+#define PAGE_SHIFT 12
+#define PAGE_SIZE (1ULL << PAGE_SHIFT)
+#define PFN_MASK ((1ULL << 55) - 1)
+
+
+static uint64_t va_to_pa(void *va) {
+    uint64_t value;
+    int pagemap_fd;
+    off_t offset = ((uintptr_t)va / PAGE_SIZE) * sizeof(uint64_t);
+
+    pagemap_fd = open("/proc/self/pagemap", O_RDONLY);
+    if (pagemap_fd < 0) {
+        perror("open");
+        return 0;
+    }
+
+    if (pread(pagemap_fd, &value, sizeof(value), offset) != sizeof(value)) {
+        perror("pread");
+        close(pagemap_fd);
+        return 0;
+    }
+
+    close(pagemap_fd);
+
+    if (!(value & (1ULL << 63))) {
+        // page not present
+        return 0;
+    }
+
+    uint64_t pfn = value & PFN_MASK;
+    return (pfn << PAGE_SHIFT) | ((uintptr_t)va & (PAGE_SIZE - 1));
+}
+
+
+
 
 DTL::API::API(uint64_t realBackingStart, uint64_t realBackingSize) : m_ConfigBitmap(0)
 {
@@ -20,8 +63,11 @@ DTL::API::API(uint64_t realBackingStart, uint64_t realBackingSize) : m_ConfigBit
 }
 
 DTL::API::API(AGUHardwareStat *hwStat, uint64_t realBackingStart, uint64_t realBackingSize) 
-    : AGUControlRegionBaseAddress(AGU_CONFIG_BASE), hwStat(hwStat), m_ConfigBitmap(0)
+    :  hwStat(hwStat), \
+        m_ConfigBitmap(0), m_RealBackingStart(realBackingStart), m_RealBackingSize(realBackingSize)
 {
+
+    SetError(0);
 
     assert(is_power_of_two(realBackingSize) && realBackingSize%Megabyte == 0);
     assert(realBackingSize > Megabyte);
@@ -30,13 +76,19 @@ DTL::API::API(AGUHardwareStat *hwStat, uint64_t realBackingStart, uint64_t realB
     m_AGUControlRegionfd = open_fd("/dev/mem");
     if (m_AGUControlRegionfd == -1)
     {
+        printf("Could not open /dev/mem\n");
         SetError(-1);
         return;
     }
 
-    AGUControlRegionBaseAddress = (uint64_t)mmap(NULL, hwStat->nMaxConfigs*0x1000, PROT_READ | PROT_WRITE, MAP_SHARED, m_AGUControlRegionfd, AGU_CONFIG_BASE);
+
+
+    auto control_region_size = hwStat->nMaxConfigs*0x1000;
+    printf("AGUControlRegionSize: 0x%x\n", control_region_size);
+    AGUControlRegionBaseAddress = (uint64_t)mmap(NULL, control_region_size, PROT_READ | PROT_WRITE, MAP_SHARED, m_AGUControlRegionfd, AGU_CONFIG_BASE);
     if (AGUControlRegionBaseAddress == (uint64_t)MAP_FAILED)
     {
+        printf("DTL::API::API() could not map AGUControlRegionBaseAddress\n");
         SetError(-1);
         return;
     }
@@ -143,6 +195,15 @@ bool DTL::API::ProgramHardware(EphemeralRegion* region)
 {
     // because we map each config region in the TLRegisterNode I think we can just calculate a new base offset
     uint64_t config_n_base = AGUControlRegionBaseAddress + DTU_CONFIG_OFFSET(region->GetConfig());
+
+    uint8_t byte_read = READ_UINT8(config_n_base+0x360);
+    printf("Test mapping config region 0x%x\n", byte_read);
+
+
+
+
+
+    printf("DTU_CONFIG_OFFSET(0x%x)\n", DTU_CONFIG_OFFSET(region->GetConfig()));
     ralloc->DoInitStateRegisters(config_n_base);
     printf("FinishInitStateRegs\n");
     ralloc->DoControlWrites(config_n_base);
@@ -176,6 +237,7 @@ DTL::EphemeralRegion *DTL::API::AllocEphemeralRegion(uint64_t size_needed)
 void DTL::API::FreeEphemeralRegion(EphemeralRegion *ephemeralRegion)
 {
     m_BuddyAllocator->FreeNode(ephemeralRegion->GetRegionOffset());
+    FreeConfig(ephemeralRegion->GetConfig());
     delete ephemeralRegion;
 }
 
@@ -200,6 +262,7 @@ int DTL::API::AllocateConfig() {
         if (((m_ConfigBitmap >> i) & 0x1ULL) == 0)
         {
             m_ConfigBitmap |= (1ULL << i);
+            printf("Allocating config %d\n", i);
             return i;
         }
     }
@@ -463,14 +526,24 @@ DTL::EphemeralRegion::EphemeralRegion(uint64_t region_offset, uint64_t region_si
                                     region_size,
                                     PROT_READ | PROT_WRITE,
                                     MAP_SHARED,
-                                    m_Regionfd,
+                                    m_DTURuntimeDriverfd,
                                     0);
+
+
+
+
     assert(m_EphemeralRegionAccess != nullptr && m_EphemeralRegionAccess != MAP_FAILED);
-    int syncret = Sync();
-    if (syncret != 0)
-    {
-        printf("DTL::EphemeralRegion::EphemeralRegion() %d\n", syncret);
-    }
+
+    m_CurrentEphemeralPhysicalAddr = va_to_pa(m_EphemeralRegionAccess);
+    printf("Got m_EphemeralRegionAccess PA = 0x%llx\n", m_CurrentEphemeralPhysicalAddr);
+    UPDATE_CONFIG_PHYSMAP(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_CurrentEphemeralPhysicalAddr);
+
+
+    //int syncret = Sync();
+    //if (syncret != 0)
+    //{
+    //    printf("DTL::EphemeralRegion::EphemeralRegion() %d\n", syncret);
+    //}
 
 
 
@@ -503,6 +576,8 @@ int DTL::EphemeralRegion::Sync()
         m_CurrentEphemeralPhysicalAddr = (uint64_t)req.u_NewPA;
         UPDATE_CONFIG_PHYSMAP(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_CurrentEphemeralPhysicalAddr);
     }
+    else
+        printf("DTL::EphemeralRegion::Sync() ioctl(IOCTL_REMAP_PA) failed!\n");
 
 
     return ret;
@@ -520,7 +595,7 @@ void *DTL::EphemeralRegion::GetHeadlessWriteregion()
 void DTL::EphemeralRegion::GuardedWrite_8(uint64_t offset, uint8_t data)
 {
     assert(offset < DTU_UNCACHED_REGION_SIZE);
-    WRITE_UINT8(offset, data);
+    WRITE_UINT8(m_UncachedRegionAccess + offset, data);
 }
 
 uint8_t DTL::EphemeralRegion::GuardedRead_8(uint64_t offset) {
@@ -546,13 +621,4 @@ uint64_t DTL::EphemeralRegion::GuardedRead_64(uint64_t offset) {
 float DTL::EphemeralRegion::GuardedRead_Float(uint64_t offset) {
   assert(offset < m_RegionSize);
   return *((float *)m_EphemeralRegionAccess);
-}
-
-int DTL::open_fd(const std::string& path) {
-  int fd = open(path.c_str(), O_RDWR | O_SYNC);
-  if (fd == -1) {
-    printf("Can't open /dev/mem.\n");
-    exit(0);
-  }
-  return fd;
 }

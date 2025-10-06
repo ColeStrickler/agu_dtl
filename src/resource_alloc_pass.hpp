@@ -120,7 +120,7 @@ public:
 
     inline uint64_t GetLoopRegsOffset() const
     {
-        return nOutStatements*(nLayers+1)*(nLayerPassThrough+nLayerMultUnits+nLayerAddUnits)*bytesCell;
+        return static_cast<uint64_t>(nOutStatements*(nLayers+1)*(nLayerPassThrough+nLayerMultUnits+nLayerAddUnits)*bytesCell);
     }
 
     inline uint64_t GetLoopIncRegsOffset(uint32_t byteWidth) const

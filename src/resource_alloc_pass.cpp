@@ -500,6 +500,7 @@ void DTL::ResourceAllocation::PrintControlWrites(const std::string &file,uint64_
 void DTL::AGUHardwareStat::DoForLoopWrite(uint64_t baseAddress, LoopReg &reg, uint32_t byte_width) 
 {
     uint64_t addr = baseAddress + GetLoopRegsOffset() + reg.reg_num*byte_width;
+    printf("LoopRegsOffset 0x%x\n", GetLoopRegsOffset());
     printf("DoForLoopWrite()1 0x%x, 0x%x\n", baseAddress, GetLoopRegsOffset() + reg.reg_num*byte_width);
     uint32_t write_value_ = static_cast<uint32_t>(reg.init_value);
     WRITE_UINT32(addr, write_value_);

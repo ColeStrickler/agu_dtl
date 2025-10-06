@@ -50,7 +50,6 @@ typedef struct RemapPARequest
 
 
 
-int open_fd(const std::string& path);
 
 
 
@@ -120,7 +119,7 @@ private:
     
     uint64_t m_CurrentEphemeralPhysicalAddr;
 
-    int open_fd(const std::string& path);
+    //int open_fd(const std::string& path);
 
     
 
