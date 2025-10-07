@@ -44,6 +44,9 @@ typedef struct RemapPARequest
 
 // this is the only place we should have to update
 #define UPDATE_CONFIG_PHYSMAP(base, config, maxConfigs, EphemeralConfigPhysStart) (WRITE_UINT64(base+(config*0x8)+(2*maxConfigs*0x8)+0x400, EphemeralConfigPhysStart))
+#define UPDATE_CONFIG_SIZE(base, config, maxConfigs, size) (WRITE_UINT64(base+(config*0x8)+(maxConfigs*0x8)+0x400, size))
+#define UPDATE_CONFIG_START(base, config, maxConfigs, size) (WRITE_UINT64(base+(config*0x8)+0x400, size))
+
 
 
 

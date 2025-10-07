@@ -515,7 +515,8 @@ DTL::EphemeralRegion::EphemeralRegion(uint64_t region_offset, uint64_t region_si
     assert(m_DTUConfigRegion != nullptr && m_DTUConfigRegion != MAP_FAILED);
 
 
-
+    UPDATE_CONFIG_SIZE(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_RegionSize);
+    UPDATE_CONFIG_START(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_PhysBackingStart);
     /*
         We just allocate a region of adequate size and then remap it
 
@@ -525,18 +526,26 @@ DTL::EphemeralRegion::EphemeralRegion(uint64_t region_offset, uint64_t region_si
     m_EphemeralRegionAccess = mmap(NULL,
                                     region_size,
                                     PROT_READ | PROT_WRITE,
-                                    MAP_SHARED,
-                                    m_DTURuntimeDriverfd,
+                                    MAP_SHARED | MAP_ANONYMOUS,
+                                    -1,
                                     0);
+    assert(m_EphemeralRegionAccess != nullptr && m_EphemeralRegionAccess != MAP_FAILED);
+    if(Sync() == -1)
+    {
+        printf("Failed to initialize EphemeralRegion()\n");
+        return;
+    }
+
+    
 
 
 
 
     assert(m_EphemeralRegionAccess != nullptr && m_EphemeralRegionAccess != MAP_FAILED);
 
-    m_CurrentEphemeralPhysicalAddr = va_to_pa(m_EphemeralRegionAccess);
-    printf("Got m_EphemeralRegionAccess PA = 0x%llx\n", m_CurrentEphemeralPhysicalAddr);
-    UPDATE_CONFIG_PHYSMAP(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_CurrentEphemeralPhysicalAddr);
+    //m_CurrentEphemeralPhysicalAddr = va_to_pa(m_EphemeralRegionAccess);
+    //printf("Got m_EphemeralRegionAccess PA = 0x%llx\n", m_CurrentEphemeralPhysicalAddr);
+    //UPDATE_CONFIG_PHYSMAP(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_CurrentEphemeralPhysicalAddr);
 
 
     //int syncret = Sync();
