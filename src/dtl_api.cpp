@@ -196,13 +196,6 @@ bool DTL::API::ProgramHardware(EphemeralRegion* region)
     // because we map each config region in the TLRegisterNode I think we can just calculate a new base offset
     uint64_t config_n_base = AGUControlRegionBaseAddress + DTU_CONFIG_OFFSET(region->GetConfig());
 
-    uint8_t byte_read = READ_UINT8(config_n_base+0x360);
-    printf("Test mapping config region 0x%x\n", byte_read);
-
-
-
-
-
     printf("DTU_CONFIG_OFFSET(0x%x)\n", DTU_CONFIG_OFFSET(region->GetConfig()));
     ralloc->DoInitStateRegisters(config_n_base);
     printf("FinishInitStateRegs\n");
@@ -248,7 +241,7 @@ uint64_t DTL::API::GetError()
 
 uint64_t DTL::API::AllocateRegion(uint64_t size) 
 {
-  assert(size < m_RealBackingSize);
+  assert(size <= m_RealBackingSize);
   uint64_t received_size = next_power_of_two(size);
   return m_BuddyAllocator->AllocNode(size);
 }

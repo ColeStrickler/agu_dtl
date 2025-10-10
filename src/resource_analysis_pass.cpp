@@ -84,10 +84,13 @@ void DTL::IntLitNode::resourceAnalysis(ResourceAnalysis *ra, int layer)
 void DTL::PlusNode::resourceAnalysis(ResourceAnalysis* ra, int layer)
 {
     if (isPassThrough())
+    {
         ra->UseNewPassThroughLayer(layer);
+    }
     else
         ra->UseNewAddUnitLayer(layer);
 
+        
 
     /*
         We will alocate layers backwards, such that layer N is actually layer 0, 

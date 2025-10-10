@@ -248,6 +248,18 @@ ASTNode *DTL::PlusNode::TransformPass()
 
 ASTNode *DTL::PlusNode::TransformPass(int currDepth, int requiredDepth)
 {   
+    // no need to push too many pass throughs too base level --> possibly do this optimization with times as well
+    if(myExp1->getTag() == NODETAG::IDNODE && myExp2->getTag() == NODETAG::IDNODE && currDepth + 1 < requiredDepth)
+    {
+        auto ilnode = new IntLitNode(pos(), 0);
+        auto dummyAdd = new PlusNode(pos(), myExp1, myExp2);
+        myExp1 = dummyAdd;
+        myExp2 = ilnode;
+        setPassThrough();
+        dummyAdd->TransformPass(currDepth+1, requiredDepth);
+        return this;
+    }
+
     myExp1 = static_cast<ExpNode*>(myExp1->TransformPass(currDepth+1, requiredDepth));
     if (!isPassThrough()) // we do not need to push zeros to the bottom
         myExp2 = static_cast<ExpNode*>(myExp2->TransformPass(currDepth+1, requiredDepth));

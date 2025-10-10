@@ -116,49 +116,74 @@ int compile()
 
 
 #include <stdio.h>
+std::string FileToString(const std::string& file_)
+{
+  std::ifstream file(file_);
+    if (!file) {
+        std::cerr << "Failed to open file\n";
+        return "";
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();  // Read entire file into the buffer
+    std::string contents = buffer.str();
+    return contents;
+}
+
+
 
 int main()
 {
-    try {
-		auto allocator = new DTL::BuddyAllocator(1024*1024*128ULL);
-		int bad = 0;
-		for (int i = 0; i < 1000; i++)
-		{
-			std::vector<uint64_t> tmp;
-			for (int j = 0; j < 132; j++)
-			{
-				auto addr = allocator->AllocNode(0x100000ULL);
-				if (addr == BUDDY_ALLOC_FAILURE)
-					bad++;
-				else
-					tmp.push_back(addr);
-				//printf("got addr from allocator 0x%llx\n", addr);
-			}
+	auto hwStat = new DTL::AGUHardwareStat(4, 4, 5, 5, 6, 4, 3, 1);
 
-			for (auto& a : tmp)
-			{
-				allocator->FreeNode(a);
-			}
-			//break;
-			printf("here %d\n", bad);
-			bad = 0;
-		}
-		
-		//printf("got addr from allocator 0x%llx\n", addr);
-		//allocator->FreeNode(addr);
+    std::istringstream input(FileToString("./test.dtl"));
+    DTL::ProgramNode * root = nullptr;
+    DTL::Scanner scanner(&input);
+	DTL::Parser parser(scanner, &root);
+    //parser.set_debug_level(1);  // Turn on debugging
+    int err = parser.parse();
+	if (err != 0){ printf("parse() errCode: %d\n", err); return false; }
 
-		//compile();
-		
-		
+    auto na = DTL::NameAnalysis::build(root);
+	if (na == nullptr) {
 
-
-
-		//ralloc->PrintDigraph(1, "./outStatement0Digraph");
-    } catch (DTL::InternalError * e){
-		std::cerr << "InternalError: " << e->msg() << std::endl;
-		return 1;
+		return false;
 	}
+	auto ta = DTL::TypeAnalysis::build(na);
+	if (ta == nullptr)
+	{
 
+        return false;
+    }
+	root->PrintAST("out_untransform.ast");
+	
+	
+
+    root = static_cast<DTL::ProgramNode*>(DTL::ASTTransformPass::Transform(root));
+    if (root == nullptr)
+    {
+
+        return false;
+    }
+	root->PrintAST("out.ast");
+		
+	auto ra = DTL::ResourceAnalysis::build(root, hwStat);
+    if (ra == nullptr)
+    {
+        //ERR("ResourceAnalysis Failed");
+        return false;
+    }
+    ra->GetResources()->GetNeededResourceStats();
+
+    auto ralloc = DTL::ResourceAllocation::build(ra, hwStat);
+    if (ralloc == nullptr)
+    {
+        //ERR("ResourceAllocation failed\n");
+        return false;
+    }
+
+	ralloc->PrintControlWrites("regwrites.out", AGU_CONFIG_BASE);
+	ralloc->PrintInitStateRegisters("regwrites.out", AGU_CONFIG_BASE);
 	
     printf("Successfully parsed!\n");
     return 0;

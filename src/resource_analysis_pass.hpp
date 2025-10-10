@@ -240,6 +240,7 @@ public:
 	
 	void UseNewPassThroughLayer(int layer) {
 		ResourcesNeeded->LayerFuncUnitAllocations[ResourcesNeeded->CurrentOutStatement()][layer].nPassThrough++;
+		printf("layer %d, npassthrough %d\n", layer, ResourcesNeeded->LayerFuncUnitAllocations[ResourcesNeeded->CurrentOutStatement()][layer].nPassThrough);
 	}
 
 	void UseNewConstArray(int size)

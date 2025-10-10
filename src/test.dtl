@@ -1,13 +1,11 @@
-
-
-
-int col_offsets = {16,20,44,64,128};
-int row_size = 64;
-
-for (int row = 0; row < 43690; row++)
-{
-	for (int j = 0; j < 3; j++)
-	{
-		out = (row*row_size) + col_offsets[j];
-	}
+for (int c_im = 0; c_im < 3; c_im++) {
+    for (int kh = 0; kh < 3; kh++) {
+        for (int kw = 0; kw < 3; kw++) {
+            for (int h = 0; h < 1078; h++) {
+                for (int w = 0; w < 1918; w++) {
+                    out = c_im*1829440 + (h + kh)*7680 + 4*(w + kw);
+                }
+            }
+        }
+    }
 }
