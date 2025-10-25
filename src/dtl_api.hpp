@@ -33,7 +33,7 @@ typedef struct RemapPARequest
 
 ;
 
-#define DTU_CONFIG_SIZE 0xfff
+#define DTU_CONFIG_SIZE 0x1000
 #define DTU_CONFIG_BASE 0x3000000ULL
 #define AGU_CONFIG_BASE 0x4000000ULL
 #define DTU_CONFIG_OFFSET(config) (config*0x1000)

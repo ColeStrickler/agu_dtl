@@ -142,7 +142,7 @@ static void writeTokenStream(const char * inPath, const char * outPath){
 
 bool DTL::API::Compile(const std::string &dtlProgram)
 {
-    writeTokenStream("./aguconfig", "tokens.out");
+    //writeTokenStream("./aguconfig", "tokens.out");
 
 
     std::istringstream input(dtlProgram);
@@ -211,6 +211,7 @@ DTL::EphemeralRegion *DTL::API::AllocEphemeralRegion(uint64_t size_needed)
         We allocate a region offset from the buddy allocator
     */
     uint64_t region_offset = AllocateRegion(size_needed);
+    printf("DTL::API::AllocEphemeralRegion() region_offset 0x%x\n", region_offset);
     if (region_offset == BUDDY_ALLOC_FAILURE)
     {
         SetError(BUDDY_ALLOC_FAILURE);
@@ -223,6 +224,7 @@ DTL::EphemeralRegion *DTL::API::AllocEphemeralRegion(uint64_t size_needed)
         SetError(CONFIG_ALLOC_FAILURE);
         return nullptr;
     }
+    printf("DTL::API::AllocEphemeralRegion() config %d\n", config);
     auto ephemeral = new EphemeralRegion(region_offset, next_power_of_two(size_needed), config, m_RealBackingStart, hwStat);
     return ephemeral;
 }
@@ -509,7 +511,9 @@ DTL::EphemeralRegion::EphemeralRegion(uint64_t region_offset, uint64_t region_si
 
 
     UPDATE_CONFIG_SIZE(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_RegionSize);
-    UPDATE_CONFIG_START(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_PhysBackingStart);
+
+    printf("m_PhysBackingStart 0x%x, region_offset 0x%x\n, region_size 0x%x\n", m_PhysBackingStart, region_offset, region_size);
+    UPDATE_CONFIG_START(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_RegionOffset + m_PhysBackingStart);
     /*
         We just allocate a region of adequate size and then remap it
 
@@ -549,7 +553,7 @@ DTL::EphemeralRegion::EphemeralRegion(uint64_t region_offset, uint64_t region_si
 
 
 
-    m_UncachedRegionAccess = mmap(NULL, DTU_UNCACHED_REGION_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, m_Regionfd, DTU_UNCACHED_REGION_ADDR);
+    m_UncachedRegionAccess = mmap(NULL, DTU_UNCACHED_REGION_SIZE, PROT_READ|PROT_WRITE, MAP_SHARED, m_Regionfd, region_offset + DTU_UNCACHED_REGION_ADDR);
     assert(m_UncachedRegionAccess != nullptr && m_UncachedRegionAccess != MAP_FAILED);
 
 
@@ -577,6 +581,7 @@ int DTL::EphemeralRegion::Sync()
     {
         m_CurrentEphemeralPhysicalAddr = (uint64_t)req.u_NewPA;
         UPDATE_CONFIG_PHYSMAP(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_CurrentEphemeralPhysicalAddr);
+        printf("new PA 0x%llx\n", m_CurrentEphemeralPhysicalAddr);
     }
     else
         printf("DTL::EphemeralRegion::Sync() ioctl(IOCTL_REMAP_PA) failed!\n");
