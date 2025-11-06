@@ -21,6 +21,8 @@ CFLAGS_X86    = $(CFLAGS_COMMON)
 
 # All C++ source files in current directory (excluding main.cpp)
 CPP_SRCS := $(filter-out main.cpp, $(wildcard *.cpp))
+OPT_SRCS := $(wildcard optimizations/*.cpp)
+CPP_SRCS += $(OPT_SRCS)
 
 # Object files for each build
 OBJ_RISCV = parser.o lexer.o $(CPP_SRCS:.cpp=.o)

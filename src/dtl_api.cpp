@@ -2,6 +2,8 @@
 #include "util.hpp"
 #include <algorithm>
 #include <cmath>
+
+
 #define ERR(msg) (std::cerr << msg << std::endl)
 
 
@@ -194,14 +196,22 @@ bool DTL::API::Compile(const std::string &dtlProgram)
 bool DTL::API::ProgramHardware(EphemeralRegion* region)
 {
     // because we map each config region in the TLRegisterNode I think we can just calculate a new base offset
-    uint64_t config_n_base = AGUControlRegionBaseAddress + DTU_CONFIG_OFFSET(region->GetConfig());
+    uint64_t config_n_base = AGUControlRegionBaseAddress + AGU_CONFIG_OFFSET(region->GetConfig());
 
-    printf("DTU_CONFIG_OFFSET(0x%x)\n", DTU_CONFIG_OFFSET(region->GetConfig()));
+    //printf("DTU_CONFIG_OFFSET(0x%x)\n", DTU_CONFIG_OFFSET(region->GetConfig()));
     ralloc->DoInitStateRegisters(config_n_base);
     printf("FinishInitStateRegs\n");
     ralloc->DoControlWrites(config_n_base);
     printf("Finished Control Writes\n");
     return true;
+}
+
+void DTL::API::ResetConfig(int config)
+{
+    uint64_t config_n_rst = AGUControlRegionBaseAddress + AGU_CONFIG_OFFSET(config) + AGU_CONFIG_RST;
+    WRITE_BOOL(config_n_rst, true);
+    while(READ_BOOL(config_n_rst) != true){};
+    WRITE_BOOL(config_n_rst, false);
 }
 
 DTL::EphemeralRegion *DTL::API::AllocEphemeralRegion(uint64_t size_needed)
@@ -240,6 +250,8 @@ uint64_t DTL::API::GetError()
 {
     return m_ErrorCode;
 }
+
+DTL::AGUHardwareStat *DTL::API::GetHWStat() { return hwStat; }
 
 uint64_t DTL::API::AllocateRegion(uint64_t size) 
 {
@@ -512,7 +524,7 @@ DTL::EphemeralRegion::EphemeralRegion(uint64_t region_offset, uint64_t region_si
 
     UPDATE_CONFIG_SIZE(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_RegionSize);
 
-    printf("m_PhysBackingStart 0x%x, region_offset 0x%x\n, region_size 0x%x\n", m_PhysBackingStart, region_offset, region_size);
+    printf("m_PhysBackingStart 0x%llx, region_offset 0x%x\n, region_size 0x%x\n", m_PhysBackingStart, region_offset, region_size);
     UPDATE_CONFIG_START(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_RegionOffset + m_PhysBackingStart);
     /*
         We just allocate a region of adequate size and then remap it
@@ -572,22 +584,24 @@ DTL::EphemeralRegion::~EphemeralRegion()
     close(m_DTURuntimeDriverfd);
 }
 
-int DTL::EphemeralRegion::Sync()
-{
-    RemapPARequest req;
-    req.u_VA = m_EphemeralRegionAccess;
-    int ret = ioctl(m_DTURuntimeDriverfd, IOCTL_REMAP_PA, &req);
-    if (ret == 0) // if successful, update config mapping
-    {
-        m_CurrentEphemeralPhysicalAddr = (uint64_t)req.u_NewPA;
-        UPDATE_CONFIG_PHYSMAP(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_CurrentEphemeralPhysicalAddr);
-        printf("new PA 0x%llx\n", m_CurrentEphemeralPhysicalAddr);
-    }
-    else
-        printf("DTL::EphemeralRegion::Sync() ioctl(IOCTL_REMAP_PA) failed!\n");
 
 
-    return ret;
+int DTL::EphemeralRegion::Sync() {
+  RemapPARequest req;
+  req.u_VA = m_EphemeralRegionAccess;
+  int ret = ioctl(m_DTURuntimeDriverfd, IOCTL_REMAP_PA, &req);
+  if (ret == 0) // if successful, update config mapping
+  {
+    m_CurrentEphemeralPhysicalAddr = (uint64_t)req.u_NewPA;
+    UPDATE_CONFIG_PHYSMAP(m_DTUConfigRegion,
+                          m_ConfigNum,
+                          hwStat->nMaxConfigs,
+                          m_CurrentEphemeralPhysicalAddr);
+    printf("new PA 0x%llx\n", m_CurrentEphemeralPhysicalAddr);
+  } else
+    printf("DTL::EphemeralRegion::Sync() ioctl(IOCTL_REMAP_PA) failed!\n");
+
+  return ret;
 }
 
 void *DTL::EphemeralRegion::GetHeadlessReadRegion() {

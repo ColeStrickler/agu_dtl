@@ -57,6 +57,8 @@ int DTL::TimesNode::GetMaxDepth()
     return 1 + std::max(myExp1->GetMaxDepth(), myExp2->GetMaxDepth());
 }
 
+
+
 int DTL::LessNode::GetMaxDepth()
 {
     assert(false); // should never hit since we only call beginning from OutStmtNode
@@ -69,6 +71,8 @@ int DTL::LessEqNode::GetMaxDepth()
     return 0;//1 + std::max(myExp1->GetMaxDepth(), myExp2->GetMaxDepth());
 }
 
+
+
 ASTNode *DTL::ProgramNode::TransformPass()
 {
     for (int i = 0; i < myStatements.size(); i++)
@@ -79,8 +83,6 @@ ASTNode *DTL::ProgramNode::TransformPass()
 
     return this;
 }
-
-
 
 ASTNode *DTL::ConstDeclNode::TransformPass()
 {
@@ -104,6 +106,7 @@ ASTNode *DTL::ConstArrayDeclNode::TransformPass(int currDepth, int requiredDepth
     return this;
 }
 
+
 std::string DTL::ConstDeclNode::GetIDString() const
 {
     return myID->getName();
@@ -118,6 +121,8 @@ ASTNode *DTL::PostIncStmtNode::TransformPass(int currDepth, int requiredDepth)
 {
     return this;
 }
+
+
 
 ASTNode *DTL::ForStmtNode::TransformPass(int currDepth, int requiredDepth)
 {
@@ -135,6 +140,7 @@ ASTNode *DTL::ForStmtNode::TransformPass(int currDepth, int requiredDepth)
 
     return this;
 }
+
 
 ASTNode *DTL::ForStmtNode::TransformPass()
 {
@@ -200,6 +206,7 @@ ASTNode *DTL::ArrayIndexNode::TransformPass(int currDepth, int requiredDepth)
     }
 }
 
+
 ASTNode *DTL::IDNode::TransformPass(int currDepth, int requiredDepth)
 {
 
@@ -241,10 +248,13 @@ ASTNode* DTL::IntLitNode::TransformPass(int currDepth, int requiredDepth)
     }
 }
 
+
 ASTNode *DTL::PlusNode::TransformPass()
 {
     return this; // only worried about restructing branches from OutStmtNode
 }
+
+
 
 ASTNode *DTL::PlusNode::TransformPass(int currDepth, int requiredDepth)
 {   
@@ -304,8 +314,6 @@ ASTNode *DTL::LessEqNode::TransformPass(int currDepth, int requiredDepth)
     return this;
 }
 
-
-ASTNode *DTL::IntTypeNode::TransformPass()
-{
-    return this;
+ASTNode *DTL::TypeNode::TransformPass() {
+  return this;
 }

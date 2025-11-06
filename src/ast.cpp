@@ -110,6 +110,8 @@ std::string DTL::TypeNode::PrintAST(int& node_num, std::ofstream& outfile)
 	return name;
 }
 
+
+
 std::string DTL::IntTypeNode::PrintAST(int &node_num, std::ofstream &outfile)
 {
 	node_num++;
@@ -154,3 +156,4 @@ std::string DTL::LessEqNode::PrintAST(int &node_num, std::ofstream &outfile)
 	
 	return name;
 }
+

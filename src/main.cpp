@@ -10,6 +10,7 @@
 #include "resource_analysis_pass.hpp"
 #include "resource_alloc_pass.hpp"
 #include "dtl_api.hpp"
+#include "optimizations/optimization_passes.hpp"
 
 static void writeTokenStream(const char * inPath, const char * outPath){
 	std::ifstream inStream(inPath);
@@ -156,8 +157,10 @@ int main()
         return false;
     }
 	root->PrintAST("out_untransform.ast");
+	printf("here\n");
 	
-	
+	root = static_cast<DTL::ProgramNode*>(DTL::ConstantFoldPass::ConstantFold(root));
+	root->PrintAST("out_constfold.ast");
 
     root = static_cast<DTL::ProgramNode*>(DTL::ASTTransformPass::Transform(root));
     if (root == nullptr)
@@ -174,6 +177,7 @@ int main()
         return false;
     }
     ra->GetResources()->GetNeededResourceStats();
+	auto rsrc_string = ra->GetResources()->toString();
 
     auto ralloc = DTL::ResourceAllocation::build(ra, hwStat);
     if (ralloc == nullptr)

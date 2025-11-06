@@ -12,8 +12,15 @@
 #include "type_analysis.hpp"
 #include <vector>
 #include <fstream>
+
+
+
+
 namespace DTL
 {
+
+	class ConstantFoldPass;
+
 
 	class TypeAnalysis;
 	class ResourceAnalysis;
@@ -49,7 +56,8 @@ namespace DTL
 		INTTYPENODE,
 		OUTSTMTNODE,
 		CONSTARRAYDECLNODE,
-		ARRAYINDEXNODE
+		ARRAYINDEXNODE,
+		UNARYEXPNODE
 	};
 
 	class ASTNode
@@ -64,6 +72,7 @@ namespace DTL
 		NODETAG getTag() const { return myTag; }
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) = 0;
 		virtual ASTNode *TransformPass() = 0;
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
 		// Note that there is no ASTNode::typeAnalysis. To allow
 		//  for different type signatures, type analysis is
 		//  implemented as needed in various subclasses
@@ -89,6 +98,7 @@ namespace DTL
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) { return ""; };
 		virtual void PrintAST(const std::string &file);
 		virtual ASTNode *TransformPass() override;
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 
 		// IRProgram * to3AC(TypeAnalysis * ta);
 		virtual ~ProgramNode() {}
@@ -114,6 +124,7 @@ namespace DTL
 		virtual ASTNode *TransformPass() = 0;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
 		virtual int GetMaxDepth() = 0;
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
 		// virtual Opd * flatten(Procedure * proc) = 0;
 	};
 
@@ -132,6 +143,7 @@ namespace DTL
 		virtual ASTNode *TransformPass() = 0;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
 		virtual int GetMaxDepth() = 0;
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
 		// virtual Opd * flatten(Procedure * proc) override = 0;
 	private:
 		SemSymbol *mySymbol;
@@ -149,7 +161,7 @@ namespace DTL
 		virtual int Collapse(ResourceAllocation *ralloc) = 0;
 		virtual ASTNode *TransformPass() = 0;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
-
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
 		int GetMaxDepth() { return 0; }
 		// virtual void to3AC(Procedure * proc) = 0;
 	};
@@ -168,6 +180,7 @@ namespace DTL
 		virtual int Collapse(ResourceAllocation *ralloc) = 0;
 		virtual ASTNode *TransformPass() = 0;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
 		// virtual void to3AC(IRProgram * prog) = 0;
 		// virtual void to3AC(Procedure * proc) override = 0;
 	};
@@ -191,6 +204,7 @@ namespace DTL
 		virtual int Collapse(ResourceAllocation *ralloc) override;
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth);
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		std::string GetIDString() const;
 	private:
 		TypeNode *myType;
@@ -215,6 +229,7 @@ namespace DTL
 		virtual int Collapse(ResourceAllocation *ralloc) override;
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth);
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		std::string GetIDString() const;
 	private:
 		TypeNode *myType;
@@ -237,6 +252,7 @@ namespace DTL
 		virtual int Collapse(ResourceAllocation *ralloc) override;
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual int GetMaxDepth();
 
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
@@ -261,6 +277,7 @@ namespace DTL
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual int Collapse(ResourceAllocation *ralloc) override;
 		std::string GetInitVar() const {return static_cast<ConstDeclNode*>(myInit)->GetIDString();}
 		// virtual void to3AC(Procedure * prog) override;
@@ -287,6 +304,7 @@ namespace DTL
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual int Collapse(ResourceAllocation *ralloc) override;
 		virtual ASTNode *TransformPass();
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth);
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
 		virtual int GetMaxDepth();
@@ -309,13 +327,16 @@ namespace DTL
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth) = 0;
 		virtual int Collapse(ResourceAllocation *ralloc) = 0;
-		virtual ASTNode *TransformPass() = 0;
+		virtual ASTNode *TransformPass();
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass);
 	};
 
 	class IntTypeNode : public TypeNode
 	{
 	public:
-		IntTypeNode(const Position *p) : TypeNode(p) {}
+		IntTypeNode(const Position *p) : TypeNode(p) {
+			myTag = NODETAG::INTTYPENODE;
+		}
 
 		virtual const DataType *getType() const { return BasicType::produce(BaseType::INT); }
 		// virtual bool nameAnalysis(SymbolTable * symTab) override = 0;
@@ -323,7 +344,6 @@ namespace DTL
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual int Collapse(ResourceAllocation *ralloc) override;
-		virtual ASTNode *TransformPass() override;
 
 		// virtual const DataType * getType() const override;
 	};
@@ -345,6 +365,7 @@ namespace DTL
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual int GetMaxDepth();
 		// virtual Opd * flatten(Procedure * proc) override;
 	private:
@@ -370,6 +391,7 @@ namespace DTL
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual int GetMaxDepth();
 		// virtual Opd * flatten(Procedure * proc) override;
 	private:
@@ -383,6 +405,7 @@ namespace DTL
 			: ExpNode(p)
 		{
 			this->myExp = expIn;
+			myTag = NODETAG::UNARYEXPNODE;
 		}
 		// virtual void unparse(std::ostream& out, int indent) override = 0;
 		virtual bool nameAnalysis(SymbolTable *symTab) override = 0;
@@ -391,6 +414,7 @@ namespace DTL
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override = 0;
 		virtual int Collapse(ResourceAllocation *ralloc) = 0;
 		virtual ASTNode *TranformPass() = 0;
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual int GetMaxDepth() = 0;
 		// virtual Opd * flatten(Procedure * prog) override = 0;
 	protected:
@@ -399,8 +423,11 @@ namespace DTL
 	class IntLitNode : public ExpNode
 	{
 	public:
-		IntLitNode(const Position *p, const int numIn)
-			: ExpNode(p), myNum(numIn) {}
+		IntLitNode(const Position *p, int numIn)
+			: ExpNode(p), myNum(numIn) 
+			{
+				myTag = NODETAG::INTLITNODE;
+			}
 		// virtual void unparseNested(std::ostream& out) override{
 		//	unparse(out, 0);
 		// }
@@ -414,11 +441,13 @@ namespace DTL
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual int GetMaxDepth();
 		int GetVal() const {return myNum;}
 		// virtual Opd * flatten(Procedure * prog) override;
+		int myNum;
 	private:
-		const int myNum;
+		
 	};
 
 	class BinaryExpNode : public ExpNode
@@ -433,6 +462,7 @@ namespace DTL
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth) = 0;
 		virtual int Collapse(ResourceAllocation *ralloc) = 0;
 		virtual ASTNode *TransformPass() = 0;
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
 		virtual int GetMaxDepth() = 0;
 		// virtual Opd * flatten(Procedure * prog) override = 0;
@@ -458,6 +488,7 @@ namespace DTL
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual int Collapse(ResourceAllocation *ralloc);
 		virtual ASTNode *TransformPass() override;
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
 		virtual int GetMaxDepth();
 		bool isPassThrough();
@@ -482,6 +513,7 @@ namespace DTL
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
 		virtual int GetMaxDepth();
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		// virtual Opd * flatten(Procedure * prog) override;
 	};
 
@@ -512,6 +544,7 @@ namespace DTL
 		virtual int GetMaxDepth();
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		// virtual Opd * flatten(Procedure * proc) override;
 	};
 
@@ -531,6 +564,7 @@ namespace DTL
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
 		virtual int GetMaxDepth();
+		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		// virtual Opd * flatten(Procedure * prog) override;
 	};
 
