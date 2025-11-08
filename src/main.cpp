@@ -12,6 +12,7 @@
 #include "dtl_api.hpp"
 #include "optimizations/optimization_passes.hpp"
 
+
 static void writeTokenStream(const char * inPath, const char * outPath){
 	std::ifstream inStream(inPath);
 	if (!inStream.good()){
@@ -159,8 +160,22 @@ int main()
 	root->PrintAST("out_untransform.ast");
 	printf("here\n");
 	
-	root = static_cast<DTL::ProgramNode*>(DTL::ConstantFoldPass::ConstantFold(root));
+
+	for (int i = 0; i < 4; i++)
+	{
+		int fold_count = 0;
+		int prop_count = 0;
+		root = static_cast<DTL::ProgramNode*>(DTL::ConstantFoldPass::ConstantFold(root, &fold_count));
+		root = static_cast<DTL::ProgramNode*>(DTL::ConstantPropagationPass::ConstantPropagation(root, &prop_count));
+		printf("OptIter %d: fold_count %d, prop_count %d\n", i, fold_count, prop_count);
+	}
+	
+	root = static_cast<DTL::ProgramNode*>(DTL::ConstantCoalescePass::ConstantCoalesce(root));
+	root = static_cast<DTL::ProgramNode*>(DTL::DeadCodeEliminationPass::DeadCodeElimination(root));
+	
 	root->PrintAST("out_constfold.ast");
+
+
 
     root = static_cast<DTL::ProgramNode*>(DTL::ASTTransformPass::Transform(root));
     if (root == nullptr)
@@ -178,6 +193,8 @@ int main()
     }
     ra->GetResources()->GetNeededResourceStats();
 	auto rsrc_string = ra->GetResources()->toString();
+		
+	std::cout << rsrc_string << "\n";
 
     auto ralloc = DTL::ResourceAllocation::build(ra, hwStat);
     if (ralloc == nullptr)
@@ -190,5 +207,8 @@ int main()
 	ralloc->PrintInitStateRegisters("regwrites.out", AGU_CONFIG_BASE);
 	
     printf("Successfully parsed!\n");
-    return 0;
+    
+	
+	std::cout << rsrc_string << "\n";
+	return 0;
 }

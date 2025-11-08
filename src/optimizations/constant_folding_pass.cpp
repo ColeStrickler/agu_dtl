@@ -7,27 +7,33 @@ ASTNode *DTL::ProgramNode::ConstFold(ConstantFoldPass* foldpass)
 {
     for (int i = 0; i < myStatements.size(); i++)
     {
-        printf("%d\n", i);
         myStatements[i] = (StmtNode*)myStatements[i]->ConstFold(foldpass);
     }
         
     return this;
 }
 
+
+
 ASTNode *DTL::ConstDeclNode::ConstFold(ConstantFoldPass* foldpass) // at the moment we can just leave constants as is 
 {
     return this;
 }
+
+
 
 ASTNode *DTL::ConstArrayDeclNode::ConstFold(ConstantFoldPass* foldpass) 
 {
     return this;
 }
 
+
+
 ASTNode *DTL::PostIncStmtNode::ConstFold(ConstantFoldPass* foldpass) 
 {
     return this;
 }
+
 
 
 ASTNode *DTL::ForStmtNode::ConstFold(ConstantFoldPass* foldpass) 
@@ -74,10 +80,16 @@ ASTNode *DTL::UnaryExpNode::ConstFold(ConstantFoldPass* foldpass)
    return this;
 }
 
+
 ASTNode *DTL::IntLitNode::ConstFold(ConstantFoldPass* foldpass) 
 {
     return this;
 }
+
+ASTNode *DTL::IntLitNode::ConstPropagation(DTL::ConstantPropagationPass *prop_pass) {
+  return this;
+}
+
 
 ASTNode *DTL::PlusNode::ConstFold(ConstantFoldPass* foldpass) 
 {
@@ -119,7 +131,6 @@ ASTNode *DTL::TimesNode::ConstFold(ConstantFoldPass* foldpass)
     auto left = myExp1->ConstFold(foldpass);
     auto right = myExp2->ConstFold(foldpass);
 
-    printf("tag1 %d, tag2 %d\n", left->getTag(), right->getTag());
 
     if (left->getTag() == DTL::NODETAG::INTLITNODE && right->getTag() == DTL::NODETAG::INTLITNODE)
     {
@@ -175,3 +186,5 @@ void DTL::ConstantFoldPass::IncFoldCount()
     printf("IncFold!\n");
     m_FoldCount++;
 }
+
+int DTL::ConstantFoldPass::GetFoldCount() { return m_FoldCount; }

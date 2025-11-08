@@ -15,16 +15,20 @@ namespace DTL{
 class ConstantFoldPass
 {
 public:
-    static ASTNode* ConstantFold(ProgramNode* prog)
+    static ASTNode* ConstantFold(ProgramNode* prog, int* fold_count)
     {
         auto foldpass = new ConstantFoldPass();
-        return prog->ConstFold(foldpass);
+        auto progret = prog->ConstFold(foldpass);
+        *fold_count = foldpass->m_FoldCount;
+        delete foldpass;
+        return progret;
     }
 
 
     void IncFoldCount();
+    int GetFoldCount();
 private:
-    ConstantFoldPass()
+    ConstantFoldPass() : m_FoldCount(0)
     {
 
     }

@@ -112,6 +112,10 @@ std::string DTL::ConstDeclNode::GetIDString() const
     return myID->getName();
 }
 
+std::string DTL::ConstArrayDeclNode::GetIDString() const {
+  return myID->getName();
+}
+
 ASTNode *DTL::PostIncStmtNode::TransformPass()
 {
     return this;
@@ -176,7 +180,6 @@ ASTNode *DTL::OutStmtNode::TransformPass(int currDepth, int requiredDepth)
 
     return this;
 }
-
 
 ASTNode *DTL::IDNode::TransformPass()
 {
@@ -314,6 +317,6 @@ ASTNode *DTL::LessEqNode::TransformPass(int currDepth, int requiredDepth)
     return this;
 }
 
-ASTNode *DTL::TypeNode::TransformPass() {
-  return this;
-}
+
+
+ASTNode *DTL::TypeNode::TransformPass() { return this; }

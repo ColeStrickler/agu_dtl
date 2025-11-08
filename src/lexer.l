@@ -39,7 +39,8 @@ STRELT (\\[nt"\\])|([^\\\n"])
 %{
 	this->yylval = lval;
 %}
-out         {return makeBareToken(TokenKind::OUT); }
+out         { return makeBareToken(TokenKind::OUT); }
+nopt		{ return makeBareToken(TokenKind::NOPT); }
 for         {return makeBareToken(TokenKind::FOR); }
 int 	    { return makeBareToken(TokenKind::INT); }
 "="         { return makeBareToken(TokenKind::ASSIGN); }

@@ -4,6 +4,9 @@
 
 #include "ast.hpp"
 #include "constant_folding_pass.hpp"
+#include "constant_propagation_pass.hpp"
+#include "constant_coalesce_pass.hpp"
+#include "dead_code_elimination_pass.hpp"
 
 namespace DTL{
 /*

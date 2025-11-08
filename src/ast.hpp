@@ -18,18 +18,20 @@
 
 namespace DTL
 {
-
+	// Optimization passes
 	class ConstantFoldPass;
-
-
+	class ConstantPropagationPass;
+	class ConstantCoalescePass;
+	class DeadCodeEliminationPass;
+	// standard passes
 	class TypeAnalysis;
 	class ResourceAnalysis;
 	class ResourceAllocation;
+	// pass resources
 	class Opd;
-
 	class SymbolTable;
 	class SemSymbol;
-
+	// forward node declarations
 	class DeclNode;
 	class VarDeclNode;
 	class StmtNode;
@@ -73,6 +75,9 @@ namespace DTL
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) = 0;
 		virtual ASTNode *TransformPass() = 0;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) = 0;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) = 0;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) = 0;
 		// Note that there is no ASTNode::typeAnalysis. To allow
 		//  for different type signatures, type analysis is
 		//  implemented as needed in various subclasses
@@ -98,7 +103,15 @@ namespace DTL
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) { return ""; };
 		virtual void PrintAST(const std::string &file);
 		virtual ASTNode *TransformPass() override;
+
+
+		/*
+			Optimization methods
+		*/
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
 
 		// IRProgram * to3AC(TypeAnalysis * ta);
 		virtual ~ProgramNode() {}
@@ -125,6 +138,10 @@ namespace DTL
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
 		virtual int GetMaxDepth() = 0;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) = 0;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) = 0;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) = 0;
+
 		// virtual Opd * flatten(Procedure * proc) = 0;
 	};
 
@@ -144,6 +161,10 @@ namespace DTL
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
 		virtual int GetMaxDepth() = 0;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) = 0;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) = 0;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) = 0;
+
 		// virtual Opd * flatten(Procedure * proc) override = 0;
 	private:
 		SemSymbol *mySymbol;
@@ -162,6 +183,10 @@ namespace DTL
 		virtual ASTNode *TransformPass() = 0;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) = 0;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) = 0;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) = 0;
+
 		int GetMaxDepth() { return 0; }
 		// virtual void to3AC(Procedure * proc) = 0;
 	};
@@ -181,6 +206,10 @@ namespace DTL
 		virtual ASTNode *TransformPass() = 0;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) = 0;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) = 0;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) = 0;
+
 		// virtual void to3AC(IRProgram * prog) = 0;
 		// virtual void to3AC(Procedure * proc) override = 0;
 	};
@@ -194,6 +223,7 @@ namespace DTL
 		ConstDeclNode(const Position *p, TypeNode *type, IDNode *id, IntLitNode *assignval) : DeclNode(p), myType(type), myID(id), myVal(assignval)
 		{
 			myTag = NODETAG::CONSTDECLNODE;
+			m_Opt = true;
 		}
 		// void unparse(std::ostream& out, int indent) override;
 		virtual void typeAnalysis(TypeAnalysis *) override;
@@ -205,8 +235,15 @@ namespace DTL
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth);
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
+
 		std::string GetIDString() const;
+		void SetOpt(bool opt) {m_Opt = opt;}
+		bool GetOpt() {return m_Opt;}
 	private:
+		bool m_Opt;
 		TypeNode *myType;
 		IDNode *myID;
 		IntLitNode *myVal;
@@ -230,6 +267,9 @@ namespace DTL
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth);
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
 		std::string GetIDString() const;
 	private:
 		TypeNode *myType;
@@ -253,6 +293,9 @@ namespace DTL
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
 		virtual int GetMaxDepth();
 
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
@@ -278,6 +321,9 @@ namespace DTL
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
 		virtual int Collapse(ResourceAllocation *ralloc) override;
 		std::string GetInitVar() const {return static_cast<ConstDeclNode*>(myInit)->GetIDString();}
 		// virtual void to3AC(Procedure * prog) override;
@@ -306,6 +352,9 @@ namespace DTL
 		virtual ASTNode *TransformPass();
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth);
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
 		virtual int GetMaxDepth();
 
@@ -327,6 +376,9 @@ namespace DTL
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth) = 0;
 		virtual int Collapse(ResourceAllocation *ralloc) = 0;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
 		virtual ASTNode *TransformPass();
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass);
 	};
@@ -344,6 +396,7 @@ namespace DTL
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual int Collapse(ResourceAllocation *ralloc) override;
+		
 
 		// virtual const DataType * getType() const override;
 	};
@@ -366,6 +419,9 @@ namespace DTL
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
 		virtual int GetMaxDepth();
 		// virtual Opd * flatten(Procedure * proc) override;
 	private:
@@ -392,6 +448,9 @@ namespace DTL
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
 		virtual int GetMaxDepth();
 		// virtual Opd * flatten(Procedure * proc) override;
 	private:
@@ -415,6 +474,9 @@ namespace DTL
 		virtual int Collapse(ResourceAllocation *ralloc) = 0;
 		virtual ASTNode *TranformPass() = 0;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
 		virtual int GetMaxDepth() = 0;
 		// virtual Opd * flatten(Procedure * prog) override = 0;
 	protected:
@@ -442,6 +504,9 @@ namespace DTL
 		virtual ASTNode *TransformPass() override;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
 		virtual int GetMaxDepth();
 		int GetVal() const {return myNum;}
 		// virtual Opd * flatten(Procedure * prog) override;
@@ -464,6 +529,9 @@ namespace DTL
 		virtual ASTNode *TransformPass() = 0;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
 		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
+		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass);
+		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
+		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
 		virtual int GetMaxDepth() = 0;
 		// virtual Opd * flatten(Procedure * prog) override = 0;
 	protected:

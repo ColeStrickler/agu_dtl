@@ -431,6 +431,7 @@ namespace DTL {
       char dummy9[sizeof (DTL::StmtNode*)];
 
       // ASSIGN
+      // NOPT
       // INT
       // LCURLY
       // LESS
@@ -501,23 +502,24 @@ namespace DTL {
     YYerror = 256,                 // error
     YYUNDEF = 257,                 // "invalid token"
     ASSIGN = 258,                  // ASSIGN
-    ID = 259,                      // ID
-    INT = 260,                     // INT
-    INTLITERAL = 261,              // INTLITERAL
-    LCURLY = 262,                  // LCURLY
-    LESS = 263,                    // LESS
-    LPAREN = 264,                  // LPAREN
-    CROSS = 265,                   // CROSS
-    POSTINC = 266,                 // POSTINC
-    RCURLY = 267,                  // RCURLY
-    RPAREN = 268,                  // RPAREN
-    SEMICOL = 269,                 // SEMICOL
-    STAR = 270,                    // STAR
-    FOR = 271,                     // FOR
-    OUT = 272,                     // OUT
-    COMMA = 273,                   // COMMA
-    LBRACKET = 274,                // LBRACKET
-    RBRACKET = 275                 // RBRACKET
+    NOPT = 259,                    // NOPT
+    ID = 260,                      // ID
+    INT = 261,                     // INT
+    INTLITERAL = 262,              // INTLITERAL
+    LCURLY = 263,                  // LCURLY
+    LESS = 264,                    // LESS
+    LPAREN = 265,                  // LPAREN
+    CROSS = 266,                   // CROSS
+    POSTINC = 267,                 // POSTINC
+    RCURLY = 268,                  // RCURLY
+    RPAREN = 269,                  // RPAREN
+    SEMICOL = 270,                 // SEMICOL
+    STAR = 271,                    // STAR
+    FOR = 272,                     // FOR
+    OUT = 273,                     // OUT
+    COMMA = 274,                   // COMMA
+    LBRACKET = 275,                // LBRACKET
+    RBRACKET = 276                 // RBRACKET
       };
       /// Backward compatibility alias (Bison 3.6).
       typedef token_kind_type yytokentype;
@@ -534,45 +536,46 @@ namespace DTL {
     {
       enum symbol_kind_type
       {
-        YYNTOKENS = 21, ///< Number of tokens.
+        YYNTOKENS = 22, ///< Number of tokens.
         S_YYEMPTY = -2,
         S_YYEOF = 0,                             // "end file"
         S_YYerror = 1,                           // error
         S_YYUNDEF = 2,                           // "invalid token"
         S_ASSIGN = 3,                            // ASSIGN
-        S_ID = 4,                                // ID
-        S_INT = 5,                               // INT
-        S_INTLITERAL = 6,                        // INTLITERAL
-        S_LCURLY = 7,                            // LCURLY
-        S_LESS = 8,                              // LESS
-        S_LPAREN = 9,                            // LPAREN
-        S_CROSS = 10,                            // CROSS
-        S_POSTINC = 11,                          // POSTINC
-        S_RCURLY = 12,                           // RCURLY
-        S_RPAREN = 13,                           // RPAREN
-        S_SEMICOL = 14,                          // SEMICOL
-        S_STAR = 15,                             // STAR
-        S_FOR = 16,                              // FOR
-        S_OUT = 17,                              // OUT
-        S_COMMA = 18,                            // COMMA
-        S_LBRACKET = 19,                         // LBRACKET
-        S_RBRACKET = 20,                         // RBRACKET
-        S_YYACCEPT = 21,                         // $accept
-        S_program = 22,                          // program
-        S_constdecls = 23,                       // constdecls
-        S_constdecl = 24,                        // constdecl
-        S_intlist = 25,                          // intlist
-        S_forstatement = 26,                     // forstatement
-        S_outstatements = 27,                    // outstatements
-        S_outstatement = 28,                     // outstatement
-        S_type = 29,                             // type
-        S_expr = 30,                             // expr
-        S_unarystmt = 31,                        // unarystmt
-        S_term = 32,                             // term
-        S_factor = 33,                           // factor
-        S_intlit = 34,                           // intlit
-        S_loc = 35,                              // loc
-        S_id = 36                                // id
+        S_NOPT = 4,                              // NOPT
+        S_ID = 5,                                // ID
+        S_INT = 6,                               // INT
+        S_INTLITERAL = 7,                        // INTLITERAL
+        S_LCURLY = 8,                            // LCURLY
+        S_LESS = 9,                              // LESS
+        S_LPAREN = 10,                           // LPAREN
+        S_CROSS = 11,                            // CROSS
+        S_POSTINC = 12,                          // POSTINC
+        S_RCURLY = 13,                           // RCURLY
+        S_RPAREN = 14,                           // RPAREN
+        S_SEMICOL = 15,                          // SEMICOL
+        S_STAR = 16,                             // STAR
+        S_FOR = 17,                              // FOR
+        S_OUT = 18,                              // OUT
+        S_COMMA = 19,                            // COMMA
+        S_LBRACKET = 20,                         // LBRACKET
+        S_RBRACKET = 21,                         // RBRACKET
+        S_YYACCEPT = 22,                         // $accept
+        S_program = 23,                          // program
+        S_constdecls = 24,                       // constdecls
+        S_constdecl = 25,                        // constdecl
+        S_intlist = 26,                          // intlist
+        S_forstatement = 27,                     // forstatement
+        S_outstatements = 28,                    // outstatements
+        S_outstatement = 29,                     // outstatement
+        S_type = 30,                             // type
+        S_expr = 31,                             // expr
+        S_unarystmt = 32,                        // unarystmt
+        S_term = 33,                             // term
+        S_factor = 34,                           // factor
+        S_intlit = 35,                           // intlit
+        S_loc = 36,                              // loc
+        S_id = 37                                // id
       };
     };
 
@@ -648,6 +651,7 @@ namespace DTL {
         break;
 
       case symbol_kind::S_ASSIGN: // ASSIGN
+      case symbol_kind::S_NOPT: // NOPT
       case symbol_kind::S_INT: // INT
       case symbol_kind::S_LCURLY: // LCURLY
       case symbol_kind::S_LESS: // LESS
@@ -921,6 +925,7 @@ switch (yykind)
         break;
 
       case symbol_kind::S_ASSIGN: // ASSIGN
+      case symbol_kind::S_NOPT: // NOPT
       case symbol_kind::S_INT: // INT
       case symbol_kind::S_LCURLY: // LCURLY
       case symbol_kind::S_LESS: // LESS
@@ -1174,6 +1179,21 @@ switch (yykind)
       make_ASSIGN (const DTL::Token *& v)
       {
         return symbol_type (token::ASSIGN, v);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
+      make_NOPT (DTL::Token * v)
+      {
+        return symbol_type (token::NOPT, std::move (v));
+      }
+#else
+      static
+      symbol_type
+      make_NOPT (const DTL::Token *& v)
+      {
+        return symbol_type (token::NOPT, v);
       }
 #endif
 #if 201103L <= YY_CPLUSPLUS
@@ -1759,7 +1779,7 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 62,     ///< Last index in yytable_.
+      yylast_ = 78,     ///< Last index in yytable_.
       yynnts_ = 16,  ///< Number of nonterminal symbols.
       yyfinal_ = 3 ///< Termination state number.
     };
@@ -1774,7 +1794,7 @@ switch (yykind)
 
 #line 5 "parser.yy"
 } // DTL
-#line 1778 "frontend.hh"
+#line 1798 "frontend.hh"
 
 
 

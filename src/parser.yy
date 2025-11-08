@@ -57,6 +57,7 @@
 
 %token                       END   0 "end file"
 %token	<DTL::Token *>       ASSIGN
+%token  <DTL::Token *>       NOPT
 %token	<DTL::IDToken *>     ID
 %token	<DTL::Token *>       INT
 %token	<DTL::IntLitToken *> INTLITERAL
@@ -118,6 +119,13 @@ constdecl: type id ASSIGN intlit SEMICOL
         {
             const Position * p = new Position($1->pos(), $5->pos());
             $$ = new ConstDeclNode(p, $1, $2, $4);
+        }
+        | NOPT type id ASSIGN intlit SEMICOL
+        {
+            const Position * p = new Position($2->pos(), $6->pos());
+            auto decl = new ConstDeclNode(p, $2, $3, $5);
+            decl->SetOpt(false);
+            $$ = decl;
         }
         | type id ASSIGN LCURLY intlist RCURLY SEMICOL
         {
