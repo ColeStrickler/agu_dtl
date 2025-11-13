@@ -137,6 +137,7 @@ std::string FileToString(const std::string& file_)
 int main()
 {
 	auto hwStat = new DTL::AGUHardwareStat(4, 4, 5, 5, 6, 4, 3, 1);
+	hwStat->bytesCell = 2; // maxVarOutputs = 2
 
     std::istringstream input(FileToString("./test.dtl"));
     DTL::ProgramNode * root = nullptr;
@@ -161,7 +162,7 @@ int main()
 	printf("here\n");
 	
 
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 2; i++)
 	{
 		int fold_count = 0;
 		int prop_count = 0;

@@ -30,7 +30,6 @@ ASTNode *DTL::ProgramNode::DeadCodeElimination(DTL::DeadCodeEliminationPass *eli
     if (pass == 1)
     {
         std::vector<StmtNode*> newStmts;
-        printf("\n\n\n\nstatements size!!!!!!!!1 %d\n\n\n\n", elim_pass->m_UsedConstDecls.size());
         for (int i = 0; i < myStatements.size(); i++) // 
         {
             auto stmt = myStatements[i];

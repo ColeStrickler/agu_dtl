@@ -1,15 +1,18 @@
-int height = 1080;
-int width = 1920;
-int data_size = 4;
+int batch_size = 8;
+int height = 64;
+int width = 64;
+int channels = 3;
 
 
-for (int c_im = 0; c_im < 3; c_im++) {
-    for (int kh = 0; kh < 3; kh++) {
-        for (int kw = 0; kw < 3; kw++) {
-            for (int h = 0; h < 1078; h++) {
-                for (int w = 0; w < 1918; w++) {
-                    out = c_im*(height*width*data_size) + (h + kh)*(height*data_size) + data_size*(w + kw);
-                }
+for (int c = 0; c < channels; c++)
+{
+    for (int h = 0; h < height; h++)
+    {
+        for (int n = 0; n < batch_size; n++)
+        {
+            for (int w = 0; w < width; w++)
+            {
+                out = w + n*(height*width*channels) + h*width + c*(height*width); 
             }
         }
     }

@@ -261,8 +261,12 @@ ASTNode *DTL::PlusNode::TransformPass()
 
 ASTNode *DTL::PlusNode::TransformPass(int currDepth, int requiredDepth)
 {   
+    bool bDepth = currDepth + 1 < requiredDepth;
+    bool n1 = myExp1->getTag() == NODETAG::INTLITNODE || myExp1->getTag() == NODETAG::IDNODE;
+    bool n2 = myExp2->getTag() == NODETAG::INTLITNODE || myExp2->getTag() == NODETAG::IDNODE;
+
     // no need to push too many pass throughs too base level --> possibly do this optimization with times as well
-    if(myExp1->getTag() == NODETAG::IDNODE && myExp2->getTag() == NODETAG::IDNODE && currDepth + 1 < requiredDepth)
+    if(n1 && n2 && bDepth)
     {
         auto ilnode = new IntLitNode(pos(), 0);
         auto dummyAdd = new PlusNode(pos(), myExp1, myExp2);
@@ -286,6 +290,25 @@ ASTNode *DTL::TimesNode::TransformPass()
 
 ASTNode *DTL::TimesNode::TransformPass(int currDepth, int requiredDepth)
 {   
+    bool bDepth = currDepth + 1 < requiredDepth;
+    bool n1 = myExp1->getTag() == NODETAG::INTLITNODE || myExp1->getTag() == NODETAG::IDNODE;
+    bool n2 = myExp2->getTag() == NODETAG::INTLITNODE || myExp2->getTag() == NODETAG::IDNODE;
+
+    // no need to push too many pass throughs too base level --> possibly do this optimization with times as well
+    // this effectively schedules as many ready operations as possible
+    if(n1 && n2 && bDepth)
+    {
+        auto ilnode = new IntLitNode(pos(), 0);
+        auto dummyPlus = new PlusNode(pos(), (ExpNode*)this->TransformPass(currDepth+1, requiredDepth), ilnode);
+        dummyPlus->setPassThrough();
+        //myExp1 = nullptr;
+        //myExp2 = nullptr;
+        ;
+        return dummyPlus;
+    }
+
+
+
     myExp1 = static_cast<ExpNode*>(myExp1->TransformPass(currDepth+1, requiredDepth));
     myExp2 = static_cast<ExpNode*>(myExp2->TransformPass(currDepth+1, requiredDepth));
     return this;
