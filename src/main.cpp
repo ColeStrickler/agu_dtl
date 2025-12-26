@@ -64,56 +64,7 @@ static DTL::ProgramNode * parse(const char * inFile){
 
 
 
-int compile()
-{
-	 writeTokenStream("./test.dtl", "./dtltokens.out");
-		auto hwStat = new DTL::AGUHardwareStat(4, 4, 5, 5, 6, 4, 3, 1);
-		auto start = std::chrono::high_resolution_clock::now();
-        auto prog = parse("./test.dtl");
-		assert(prog != nullptr);
-		
-		auto na = DTL::NameAnalysis::build(prog);
-		if (na == nullptr)
-		{
-			printf("failed name analysis\n");
-			return -1;
-		}
-		
-		auto ta = DTL::TypeAnalysis::build(na);
-		if (ta == nullptr)
-			return -1;
 
-		prog = static_cast<DTL::ProgramNode*>(DTL::ASTTransformPass::Transform(prog));
-		
-		auto ra = DTL::ResourceAnalysis::build(prog, hwStat);
-		//std::cout << ra->GetResources()->toString() << "\n";
-		
-		
-		
-
-		auto ralloc = DTL::ResourceAllocation::build(ra, hwStat);
-		auto end = std::chrono::high_resolution_clock::now();
-
-
-		/*
-			Would actually read hardware stats
-		*/
-		
-		
-		std::chrono::duration<double, std::milli> elapsed = end - start;
-
-		std::cout << "Time taken: " << elapsed.count() << " ms\n";
-
-
-		
-		prog->PrintAST("./astDigraph.dot");
-		
-
-
-		ralloc->PrintControlWrites("./outcontrolseq", 0x4000000);
-		ralloc->PrintInitStateRegisters("./outcontrolseq", 0x4000000);
-
-}
 
 
 
@@ -136,8 +87,8 @@ std::string FileToString(const std::string& file_)
 
 int main()
 {
-	auto hwStat = new DTL::AGUHardwareStat(4, 4, 5, 5, 6, 4, 3, 1);
-	hwStat->bytesCell = 2; // maxVarOutputs = 2
+	auto hwStat = new DTL::AGUHardwareStat(4, 4, 5, 5, 6, 4, 1, 1, 2);
+	//hwStat->bytesCell = 2; // maxVarOutputs = 2
 
     std::istringstream input(FileToString("./test.dtl"));
     DTL::ProgramNode * root = nullptr;
@@ -162,25 +113,14 @@ int main()
 	printf("here\n");
 	
 
-	for (int i = 0; i < 2; i++)
-	{
-		int fold_count = 0;
-		int prop_count = 0;
-		root = static_cast<DTL::ProgramNode*>(DTL::ConstantFoldPass::ConstantFold(root, &fold_count));
-		root = static_cast<DTL::ProgramNode*>(DTL::ConstantPropagationPass::ConstantPropagation(root, &prop_count));
-		printf("OptIter %d: fold_count %d, prop_count %d\n", i, fold_count, prop_count);
-	}
-	
-	root = static_cast<DTL::ProgramNode*>(DTL::ConstantCoalescePass::ConstantCoalesce(root));
-	root = static_cast<DTL::ProgramNode*>(DTL::DeadCodeEliminationPass::DeadCodeElimination(root));
-	
+	root = static_cast<DTL::ProgramNode*>(DTL::DTLOptimizer::OptimizeStatic(root, DTL::DTL_OPTLEVEL::OPTMAX));
 	root->PrintAST("out_constfold.ast");
 
 
 
-    root = static_cast<DTL::ProgramNode*>(DTL::ASTTransformPass::Transform(root));
+    root = static_cast<DTL::ProgramNode*>(DTL::ASTTransformPass::Transform(root, DTL_OPT_MAX));
     if (root == nullptr)
-    {
+    {     
 
         return false;
     }

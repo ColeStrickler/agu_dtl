@@ -167,7 +167,7 @@ bool DTL::API::Compile(const std::string &dtlProgram)
         ERR("Failed Type Analysis");
         return false;
     }
-    root = static_cast<DTL::ProgramNode*>(DTL::ASTTransformPass::Transform(root));
+    root = static_cast<DTL::ProgramNode*>(DTL::ASTTransformPass::Transform(root, DTL_OPT_MAX));
     if (root == nullptr)
     {
         ERR("ASTTransformPass() failed");

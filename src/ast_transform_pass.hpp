@@ -3,6 +3,7 @@
 
 
 #include "ast.hpp"
+#include "optimizations/optimization_passes.hpp"
 
 
 namespace DTL{
@@ -17,9 +18,10 @@ namespace DTL{
 class ASTTransformPass
 {
 public:
-    static ASTNode* Transform(ProgramNode* prog)
+    static ASTNode* Transform(ProgramNode* prog, uint8_t opt_flags)
     {
-        return prog->TransformPass();
+
+        return prog->TransformPass(opt_flags);
     }
 
 

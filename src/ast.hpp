@@ -73,7 +73,7 @@ namespace DTL
 		virtual bool nameAnalysis(SymbolTable *symTab) = 0;
 		NODETAG getTag() const { return myTag; }
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) = 0;
-		virtual ASTNode *TransformPass() = 0;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) = 0;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) = 0;
 		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) = 0;
@@ -102,7 +102,7 @@ namespace DTL
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) { return ""; };
 		virtual void PrintAST(const std::string &file);
-		virtual ASTNode *TransformPass() override;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) override;
 
 
 		/*
@@ -134,8 +134,8 @@ namespace DTL
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth) = 0;
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override = 0;
 		virtual int Collapse(ResourceAllocation *ralloc) = 0;
-		virtual ASTNode *TransformPass() = 0;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) = 0;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags) = 0;
 		virtual int GetMaxDepth() = 0;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) = 0;
@@ -157,8 +157,8 @@ namespace DTL
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth) = 0;
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override = 0;
 		virtual int Collapse(ResourceAllocation *ralloc) = 0;
-		virtual ASTNode *TransformPass() = 0;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) = 0;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags) = 0;
 		virtual int GetMaxDepth() = 0;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) = 0;
@@ -180,8 +180,8 @@ namespace DTL
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth) = 0;
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override = 0;
 		virtual int Collapse(ResourceAllocation *ralloc) = 0;
-		virtual ASTNode *TransformPass() = 0;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) = 0;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags) = 0;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) = 0;
 		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) = 0;
@@ -203,8 +203,8 @@ namespace DTL
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth) = 0;
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override = 0;
 		virtual int Collapse(ResourceAllocation *ralloc) = 0;
-		virtual ASTNode *TransformPass() = 0;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) = 0;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags) = 0;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) = 0;
 		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) = 0;
@@ -232,8 +232,8 @@ namespace DTL
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
 		virtual int Collapse(ResourceAllocation *ralloc) override;
-		virtual ASTNode *TransformPass() override;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth);
+		virtual ASTNode *TransformPass(uint8_t opt_flags) override;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags);
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
 		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
@@ -264,8 +264,8 @@ namespace DTL
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
 		virtual int Collapse(ResourceAllocation *ralloc) override;
-		virtual ASTNode *TransformPass() override;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth);
+		virtual ASTNode *TransformPass(uint8_t opt_flags) override;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags);
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
 		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
@@ -290,8 +290,8 @@ namespace DTL
 		virtual void resourceAnalysis(ResourceAnalysis *ra, int layer);
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual int Collapse(ResourceAllocation *ralloc) override;
-		virtual ASTNode *TransformPass() override;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) override;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags) override;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
 		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
@@ -318,8 +318,8 @@ namespace DTL
 		virtual void resourceAnalysis(ResourceAnalysis *ra, int layer);
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
-		virtual ASTNode *TransformPass() override;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) override;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags) override;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
 		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
@@ -349,9 +349,9 @@ namespace DTL
 		virtual void resourceAnalysis(ResourceAnalysis *ra, int layer);
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual int Collapse(ResourceAllocation *ralloc) override;
-		virtual ASTNode *TransformPass();
+		virtual ASTNode *TransformPass(uint8_t opt_flags);
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth);
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags);
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
 		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
 		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
@@ -379,7 +379,7 @@ namespace DTL
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
 		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
 		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
-		virtual ASTNode *TransformPass();
+		virtual ASTNode *TransformPass(uint8_t opt_flags);
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass);
 	};
 
@@ -416,8 +416,8 @@ namespace DTL
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual int Collapse(ResourceAllocation *ralloc) override;
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
-		virtual ASTNode *TransformPass() override;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) override;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags) override;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
 		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
@@ -445,8 +445,8 @@ namespace DTL
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual int Collapse(ResourceAllocation *ralloc) override;
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
-		virtual ASTNode *TransformPass() override;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) override;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags) override;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
 		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
@@ -501,8 +501,8 @@ namespace DTL
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual int Collapse(ResourceAllocation *ralloc);
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
-		virtual ASTNode *TransformPass() override;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) override;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags) override;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass) override;
 		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
@@ -526,9 +526,9 @@ namespace DTL
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override = 0;
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth) = 0;
 		virtual int Collapse(ResourceAllocation *ralloc) = 0;
-		virtual ASTNode *TransformPass() = 0;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) = 0;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) = 0;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) = 0;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags) = 0;
 		virtual ASTNode *ConstPropagation(DTL::ConstantPropagationPass* prop_pass);
 		virtual ASTNode *ConstCoalesce(DTL::ConstantCoalescePass* coalesce_pass, int pass) override;
 		virtual ASTNode *DeadCodeElimination(DTL::DeadCodeEliminationPass* elim_pass, int pass) override;
@@ -555,9 +555,9 @@ namespace DTL
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual int Collapse(ResourceAllocation *ralloc);
-		virtual ASTNode *TransformPass() override;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) override;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags) override;
 		virtual int GetMaxDepth();
 		bool isPassThrough();
 		void setPassThrough() { IsPassThrough = true; }
@@ -578,8 +578,8 @@ namespace DTL
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual std::string PrintAST(int &node_num, std::ofstream &outfile) override;
 		virtual int Collapse(ResourceAllocation *ralloc);
-		virtual ASTNode *TransformPass() override;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) override;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags) override;
 		virtual int GetMaxDepth();
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		// virtual Opd * flatten(Procedure * prog) override;
@@ -610,8 +610,8 @@ namespace DTL
 		}
 		virtual int Collapse(ResourceAllocation *ralloc);
 		virtual int GetMaxDepth();
-		virtual ASTNode *TransformPass() override;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) override;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags) override;
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		// virtual Opd * flatten(Procedure * proc) override;
 	};
@@ -629,8 +629,8 @@ namespace DTL
 		virtual void resourceAnalysis(ResourceAnalysis *ra, int layer) { return; };
 		virtual void resourceAllocation(ResourceAllocation *ralloc, int depth);
 		virtual int Collapse(ResourceAllocation *ralloc);
-		virtual ASTNode *TransformPass() override;
-		virtual ASTNode *TransformPass(int currDepth, int requiredDepth) override;
+		virtual ASTNode *TransformPass(uint8_t opt_flags) override;
+		virtual ASTNode *TransformPass(int currDepth, int RequiredDepth, uint8_t opt_flags) override;
 		virtual int GetMaxDepth();
 		virtual ASTNode *ConstFold(DTL::ConstantFoldPass* foldpass) override;
 		// virtual Opd * flatten(Procedure * prog) override;

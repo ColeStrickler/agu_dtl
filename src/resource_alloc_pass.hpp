@@ -70,7 +70,7 @@ struct ConstArray
 class AGUHardwareStat
 {
 public:
-    AGUHardwareStat(int nAdd, int nMult, int nLayers, int nConst, int nForLoop, int nPassThrough, int nOutStatements, int nConstArray) :\
+    AGUHardwareStat(int nAdd, int nMult, int nLayers, int nConst, int nForLoop, int nPassThrough, int nOutStatements, int nConstArray, int bytes_cell = 2) :\
         nLayerAddUnits(nAdd), nLayerMultUnits(nMult), nConstRegisters(nConst), nForLoopRegisters(nForLoop),\
         nLayers(nLayers), nLayerPassThrough(nPassThrough), nOutStatements(nOutStatements), nConstArray(nConstArray),\
         nConstArraySize(32), nMaxConfigs(1)
@@ -85,7 +85,7 @@ public:
             we will make each cell have 4 valid outs a byte wide
         */
         bytesMagic = 16;
-        bytesCell = 4;
+        bytesCell = bytes_cell;
         bytesLayer = bytesCell * (nAdd + nMult + nPassThrough);
 
         bytesOutStatement = (nLayers+1) * bytesLayer; // layer at beginning at at the end
