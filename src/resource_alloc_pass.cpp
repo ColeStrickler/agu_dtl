@@ -315,7 +315,7 @@ bool DTL::OutStmtRouting::PrintDigraph(const std::string &file)
 std::string DTL::OutStmtRouting::PrintControlWrites(uint64_t baseaddr, int numoutstatement) const
 {
     std::string ret;
-    printf("outstmt num %d\n", numoutstatement);
+   // printf("outstmt num %d\n", numoutstatement);
     for (auto& e: LayerRouting)
     {
          int i = e.first;
@@ -389,7 +389,7 @@ std::string DTL::MultUnit::toString(int layer)
 
 std::string DTL::PassThrough::toString(int layer)
 {
-    printf("pass thru\n");
+  //  printf("pass thru\n");
     std::string node_name = "\"" + std::to_string(layer) + "_" + std::to_string(RegAssignment) + "\"";
     std::string label = node_name + "[label=\"PassThru" +  std::to_string(layer) + "_" + std::to_string(RegAssignment)+ "\"];";
 
@@ -431,7 +431,7 @@ void DTL::ResourceAllocation::PrintInitStateRegisters(const std::string &file, u
         {
             write += hwStat->PrintConstRegWrite(baseaddr, c.first, c.second, 4);
         }
-        printf("const array\n");
+       // printf("const array\n");
         for (auto& c: constArrayRegisters)
         {
             write += hwStat->PrintConstArrayWrite(baseaddr, c, 4);
@@ -500,14 +500,14 @@ void DTL::ResourceAllocation::PrintControlWrites(const std::string &file,uint64_
 void DTL::AGUHardwareStat::DoForLoopWrite(uint64_t baseAddress, LoopReg &reg, uint32_t byte_width) 
 {
     uint64_t addr = baseAddress + GetLoopRegsOffset() + reg.reg_num*byte_width;
-    printf("LoopRegsOffset 0x%x\n", GetLoopRegsOffset());
-    printf("DoForLoopWrite()1 0x%x, 0x%x\n", baseAddress, GetLoopRegsOffset() + reg.reg_num*byte_width);
+    //printf("LoopRegsOffset 0x%x\n", GetLoopRegsOffset());
+    //printf("DoForLoopWrite()1 0x%x, 0x%x\n", baseAddress, GetLoopRegsOffset() + reg.reg_num*byte_width);
     uint32_t write_value_ = static_cast<uint32_t>(reg.init_value);
     WRITE_UINT32(addr, write_value_);
 
     addr = baseAddress + GetLoopIncRegsOffset(byte_width) + reg.reg_num*byte_width; // these should align
     write_value_ = static_cast<uint32_t>(reg.increment_condition);
-     printf("DoForLoopWrite()1 0x%x, 0x%x\n", baseAddress, GetLoopIncRegsOffset(byte_width) + reg.reg_num*byte_width);
+   //  printf("DoForLoopWrite()1 0x%x, 0x%x\n", baseAddress, GetLoopIncRegsOffset(byte_width) + reg.reg_num*byte_width);
     WRITE_UINT32(addr, write_value_);
 
     /*

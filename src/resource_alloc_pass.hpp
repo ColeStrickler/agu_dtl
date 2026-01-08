@@ -161,7 +161,7 @@ public:
     {
        
         uint64_t addr_ = baseAddress + GetConstantRegsOffset(byte_width) + constRegNum*byte_width;
-         printf("DoConstRegWrite() 0x%x\n", addr_);
+      //   printf("DoConstRegWrite() 0x%x\n", addr_);
         assert(byte_width == 4);
         WRITE_UINT32(addr_, constRegvalue);
     }
@@ -184,7 +184,7 @@ public:
 
     std::string PrintConstArrayWrite(uint64_t baseAddress, ConstArray& constArray, uint32_t byte_width)
     {
-        printf("here\n");
+        //printf("here\n");
         uint64_t baddr = baseAddress + GetConstArrayOffset(byte_width) + constArray.reg_num*(nConstArraySize*byte_width + 8);
 
         std::string ret;
@@ -247,7 +247,7 @@ public:
 
         int cell_index = VarOutMap[hash_str];
         uint64_t offset = layerByteOffset + cellByteOffset + outStatementOffset + cell_index;
-        printf("DoControlWrite() 0x%x +0x%x\n", baseAddress, offset);
+       // printf("DoControlWrite() 0x%x +0x%x\n", baseAddress, offset);
         VarOutMap[hash_str]++;
         assert(VarOutMap[hash_str] <= bytesCell); // this maps to maxVarOut
         WRITE_UINT8(baseAddress+offset, static_cast<unsigned char>(outRegNumber));
@@ -257,7 +257,7 @@ public:
     {
         if (outRegNumber == 255 || inRegNumber == 255) // added this --> fixed the array issue
             return "";
-        printf("controlWrite  [layer %d] %d->%d\n", layer, inRegNumber, outRegNumber);
+       // printf("controlWrite  [layer %d] %d->%d\n", layer, inRegNumber, outRegNumber);
         
 
         unsigned int layerByteOffset = layer * bytesLayer;
@@ -732,7 +732,7 @@ public:
             loopReg.hwDivMagic.add_indicator = magicnums.add_indicator;
             loopReg.hwDivMagic.M = magicnums.M;
             loopReg.hwDivMagic.s = magicnums.s;
-            printf("M %lu, S %lu, add_indicator %d inc_condition %d stride %lu\n", magicnums.M, magicnums.s, magicnums.add_indicator, loopReg.increment_condition, d);
+          //  printf("M %lu, S %lu, add_indicator %d inc_condition %d stride %lu\n", magicnums.M, magicnums.s, magicnums.add_indicator, loopReg.increment_condition, d);
 
             /*
                 This is equivalent to computing the stride for each loop counter
@@ -826,7 +826,7 @@ public:
         */
         assert(a != -1 && b != -1);
         int unit = currentOut->RequestMultUnit(layer, a, b);
-         printf("[mult layer%d], a %d::%d, b %d::%d --> %d\n", layer, a, fromA->myTag, b, fromB->myTag, unit);
+       //  printf("[mult layer%d], a %d::%d, b %d::%d --> %d\n", layer, a, fromA->myTag, b, fromB->myTag, unit);
         currentOut->MapNodeFuncUnit(multNode, unit, layer);
     }
 
@@ -843,7 +843,7 @@ public:
         */
         assert(a != -1 && b != -1);
         int unit = currentOut->RequestAddUnit(layer, a, b);
-        printf("[add layer%d], a %d::%d, b %d::%d ---> %d\n", layer, a, fromA->myTag, b, fromB->myTag, unit);
+        //printf("[add layer%d], a %d::%d, b %d::%d ---> %d\n", layer, a, fromA->myTag, b, fromB->myTag, unit);
         currentOut->MapNodeFuncUnit(plusNode, unit, layer);
     }
 
@@ -857,7 +857,7 @@ public:
         */
         assert(a != -1);
         int unit = currentOut->RequestPassThrough(layer, a);
-        printf("[passthru layer%d] passthru a %d::%d ---> %d\n", layer, a, fromA->myTag, unit);
+       // printf("[passthru layer%d] passthru a %d::%d ---> %d\n", layer, a, fromA->myTag, unit);
         currentOut->MapNodeFuncUnit(plusNode, unit, layer);
     }
 

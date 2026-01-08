@@ -144,7 +144,9 @@ static void writeTokenStream(const char * inPath, const char * outPath){
 
 bool DTL::API::Compile(const std::string &dtlProgram)
 {
-    //writeTokenStream("./aguconfig", "tokens.out");
+    /*
+        May want to handle memory management here differently to prevent leaks!
+    */
 
 
     std::istringstream input(dtlProgram);
@@ -167,6 +169,7 @@ bool DTL::API::Compile(const std::string &dtlProgram)
         ERR("Failed Type Analysis");
         return false;
     }
+    root = static_cast<DTL::ProgramNode*>(DTL::DTLOptimizer::OptimizeStatic(root, DTL::DTL_OPTLEVEL::OPTMAX));
     root = static_cast<DTL::ProgramNode*>(DTL::ASTTransformPass::Transform(root, DTL_OPT_MAX));
     if (root == nullptr)
     {
@@ -189,6 +192,8 @@ bool DTL::API::Compile(const std::string &dtlProgram)
         return false;
     }
 
+    hwStat->VarOutMap.clear(); // otherwise we we will get subsequent collisions
+
     return true;
 }
 
@@ -200,9 +205,9 @@ bool DTL::API::ProgramHardware(EphemeralRegion* region)
 
     //printf("DTU_CONFIG_OFFSET(0x%x)\n", DTU_CONFIG_OFFSET(region->GetConfig()));
     ralloc->DoInitStateRegisters(config_n_base);
-    printf("FinishInitStateRegs\n");
+   // printf("FinishInitStateRegs\n");
     ralloc->DoControlWrites(config_n_base);
-    printf("Finished Control Writes\n");
+  //  printf("Finished Control Writes\n");
     return true;
 }
 
@@ -283,6 +288,7 @@ void DTL::API::FreeConfig(int config)
 
 
     m_ConfigBitmap &= (~(1ULL << config));
+    ResetConfig(config);
 }
 
 void DTL::API::SetError(uint64_t Error)
