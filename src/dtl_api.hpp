@@ -191,6 +191,7 @@ public:
     bool isRoot();
     void Coalesce();
 
+    void DebugPrint();
 
     uint64_t GetTrackedOffset();
     uint64_t GetTrackedSize();
@@ -216,6 +217,9 @@ public:
     ~BuddyAllocator();
     void FreeNode(uint64_t offset);  
     uint64_t AllocNode(uint64_t size_needed);
+
+
+    void DebugPrintTree();
 
 
 
@@ -248,6 +252,8 @@ public:
     bool ProgramHardware(EphemeralRegion* region);
 
     void ResetConfig(int config);
+
+    void DebugPrintAllocator();
     
     /*
         We want to track allocations of the ephemeral region/support multiple configurations

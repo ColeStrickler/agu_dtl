@@ -219,6 +219,11 @@ void DTL::API::ResetConfig(int config)
     WRITE_BOOL(config_n_rst, false);
 }
 
+void DTL::API::DebugPrintAllocator() 
+{
+    m_BuddyAllocator->DebugPrintTree();
+}
+
 DTL::EphemeralRegion *DTL::API::AllocEphemeralRegion(uint64_t size_needed)
 {
 
@@ -349,29 +354,53 @@ bool DTL::BuddyNode::isFree()
 
 bool DTL::BuddyNode::isRoot() 
 { 
-    m_Parent == nullptr;
+    return m_Parent == nullptr;
 }
 
 void DTL::BuddyNode::Coalesce()
 {
-   // printf("node 0x%llx coalescing!\n", m_TrackedOffset);
+    //printf("node 0x%llx coalescing!\n", m_TrackedOffset);
 
     auto left = GetLeft();
     auto right = GetRight();
 
-    bool left_good = left != nullptr && left->isFree();
-    bool right_good = right != nullptr && right->isFree();
+    bool left_good = left == nullptr || left->isFree();
+    bool right_good = right == nullptr || right->isFree();
 
     if (left_good && right_good)
     {
-        delete right;
-        delete left;
+        if (left != nullptr)
+        {
+            delete left;
+            m_LeftChild = nullptr;
+        }
+        if (right != nullptr)
+        {
+             delete right;
+             m_RightChild = nullptr;
+        }
+
+        //printf("[Coalesce() Free Node] offset 0x%x, size 0x%x, in_use %d\n", m_TrackedOffset, m_TrackedSize, !m_IsFree);
         SetFree();
         if (!isRoot())
         {
+           // printf("coalesce parent!\n");
             m_Parent->Coalesce();
         }
     }
+
+
+}
+
+void DTL::BuddyNode::DebugPrint() 
+{
+   // printf("[BuddyNode] offset 0x%x, size 0x%x, in_use %d\n", m_TrackedOffset, m_TrackedSize, !m_IsFree);
+    
+    if (m_LeftChild != nullptr)
+        m_LeftChild->DebugPrint();
+
+    if(m_RightChild != nullptr)
+        m_RightChild->DebugPrint();
 }
 
 uint64_t DTL::BuddyNode::GetTrackedOffset() 
@@ -392,7 +421,7 @@ DTL::BuddyAllocator::BuddyAllocator(uint64_t region_size)
         size = next_power_of_two(region_size);
     }
 
-    printf("Root size: 0x%llx\n", size);
+   // printf("Root size: 0x%llx\n", size);
     m_RootNode = new BuddyNode(size, 0, nullptr);
 }
 
@@ -400,6 +429,9 @@ void DTL::BuddyAllocator::FreeNode(uint64_t offset)
 {
     BuddyNode* node = FindNode(offset, m_RootNode);
     assert(node != nullptr);
+    assert(node->GetLeft() == nullptr || node->GetLeft()->isFree());
+    assert(node->GetRight() == nullptr || node->GetRight()->isFree());
+ //   printf("[FreeNode] offset 0x%x, size 0x%x, in_use %d\n", node->GetTrackedOffset(), node->GetTrackedSize(), !node->isFree());
 
     node->SetFree();
     node->Coalesce();
@@ -414,6 +446,11 @@ uint64_t DTL::BuddyAllocator::AllocNode(uint64_t size_needed) {
 
   uint64_t AllocatedOffset = FindAndAllocFreeNode(size, m_RootNode);
   return AllocatedOffset;
+}
+
+void DTL::BuddyAllocator::DebugPrintTree() 
+{
+    m_RootNode->DebugPrint();
 }
 
 uint64_t DTL::BuddyAllocator::FindAndAllocFreeNode(uint64_t size_needed, BuddyNode *currentNode) 
@@ -530,7 +567,7 @@ DTL::EphemeralRegion::EphemeralRegion(uint64_t region_offset, uint64_t region_si
 
     UPDATE_CONFIG_SIZE(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_RegionSize);
 
-    printf("m_PhysBackingStart 0x%llx, region_offset 0x%x\n, region_size 0x%x\n", m_PhysBackingStart, region_offset, region_size);
+   // printf("m_PhysBackingStart 0x%llx, region_offset 0x%x\n, region_size 0x%x\n", m_PhysBackingStart, region_offset, region_size);
     UPDATE_CONFIG_START(m_DTUConfigRegion, m_ConfigNum, hwStat->nMaxConfigs, m_RegionOffset + m_PhysBackingStart);
     /*
         We just allocate a region of adequate size and then remap it
@@ -603,7 +640,7 @@ int DTL::EphemeralRegion::Sync() {
                           m_ConfigNum,
                           hwStat->nMaxConfigs,
                           m_CurrentEphemeralPhysicalAddr);
-    printf("new PA 0x%llx\n", m_CurrentEphemeralPhysicalAddr);
+    //printf("new PA 0x%llx\n", m_CurrentEphemeralPhysicalAddr);
   } else
     printf("DTL::EphemeralRegion::Sync() ioctl(IOCTL_REMAP_PA) failed!\n");
 
