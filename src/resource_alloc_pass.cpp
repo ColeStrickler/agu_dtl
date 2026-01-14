@@ -473,6 +473,8 @@ void DTL::ResourceAllocation::DoControlWrites(uint64_t baseaddr)
     {
         auto& outstmt = OutStatementRouting[i];
         outstmt->DoControlWrites(baseaddr, i);
+        hwStat->VarOutMap.clear(); // I believe we can clear this since each out statement will use different resources
+        printf("her!!e\n");
     }
 }
 
@@ -489,6 +491,8 @@ void DTL::ResourceAllocation::PrintControlWrites(const std::string &file,uint64_
         auto& outstmt = OutStatementRouting[i];
         printf("here\n");
         out += outstmt->PrintControlWrites(baseaddr, i);
+        hwStat->VarOutMap.clear(); // I believe we can clear this since each out statement will use different resources
+        printf("her!!e\n");
     }
     outfile << out;
     outfile.close();

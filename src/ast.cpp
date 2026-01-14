@@ -136,7 +136,7 @@ std::string DTL::IntLitNode::PrintAST(int &node_num, std::ofstream &outfile)
 std::string DTL::PlusNode::PrintAST(int &node_num, std::ofstream &outfile)
 {
 	node_num++;
-	std::string name = "PlusNode" + std::to_string(node_num);
+	std::string name = (isPassThrough() ? "PassThrough" : "PlusNode") + std::to_string(node_num);
 	auto exp1NodeString = myExp1->PrintAST(node_num, outfile);
 	auto exp2NodeString = myExp2->PrintAST(node_num, outfile);
 	outfile << name << " -> " << exp1NodeString << ";\n";

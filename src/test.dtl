@@ -1,13 +1,24 @@
-int col_offsets = {4,32,48};
-int row_size = 64;
+int stride_d1 = 1;
+int stride_d2 = 2;
+int stride_d3 = 3;
+int data_size = 4;
+int cube_locs = {1,2,3,4,5,6,7,8,9,10,11};
 
 
-                    for (int i = 0; i < 43690; i++)
-                    {
-                        for (int j = 0; j < 3; j++)
-                        {
-                            out = i*row_size + col_offsets[j];
-                        }
-                    }
-                    
 
+for (int i = 0; i < 64; i++)
+{
+    for (int a = 0; a < 8; a++)
+    {
+        for (int x = 0; x < 2; x++)
+        {
+            for (int y = 0; y < 2; y++)
+            {
+                for (int z = 0; z < 2; z++)
+                {
+                    out = cube_locs[a] + (i*(stride_d3*data_size) + x*(stride_d2*data_size)) + (y*(stride_d1*data_size) + z*data_size);
+                }
+            }
+        }
+    }
+}

@@ -257,7 +257,7 @@ public:
     {
         if (outRegNumber == 255 || inRegNumber == 255) // added this --> fixed the array issue
             return "";
-       // printf("controlWrite  [layer %d] %d->%d\n", layer, inRegNumber, outRegNumber);
+        printf("controlWrite  [layer %d] %d->%d\n", layer, inRegNumber, outRegNumber);
         
 
         unsigned int layerByteOffset = layer * bytesLayer;
@@ -826,7 +826,7 @@ public:
         */
         assert(a != -1 && b != -1);
         int unit = currentOut->RequestMultUnit(layer, a, b);
-       //  printf("[mult layer%d], a %d::%d, b %d::%d --> %d\n", layer, a, fromA->myTag, b, fromB->myTag, unit);
+         printf("[mult layer%d], a %d::%d, b %d::%d --> %d\n", layer, a, fromA->myTag, b, fromB->myTag, unit);
         currentOut->MapNodeFuncUnit(multNode, unit, layer);
     }
 
@@ -843,7 +843,7 @@ public:
         */
         assert(a != -1 && b != -1);
         int unit = currentOut->RequestAddUnit(layer, a, b);
-        //printf("[add layer%d], a %d::%d, b %d::%d ---> %d\n", layer, a, fromA->myTag, b, fromB->myTag, unit);
+        printf("[add layer%d], a %d::%d, b %d::%d ---> %d\n", layer, a, fromA->myTag, b, fromB->myTag, unit);
         currentOut->MapNodeFuncUnit(plusNode, unit, layer);
     }
 
@@ -857,7 +857,7 @@ public:
         */
         assert(a != -1);
         int unit = currentOut->RequestPassThrough(layer, a);
-       // printf("[passthru layer%d] passthru a %d::%d ---> %d\n", layer, a, fromA->myTag, unit);
+        printf("[passthru layer%d] passthru a %d::%d ---> %d\n", layer, a, fromA->myTag, unit);
         currentOut->MapNodeFuncUnit(plusNode, unit, layer);
     }
 
